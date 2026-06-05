@@ -32,6 +32,8 @@ type Driver struct {
 	Speed       float64      `json:"speed"`
 	Status      string       `json:"status"`
 	Destination *Destination `json:"destination,omitempty"`
+	Queue       []Destination `json:"queue,omitempty"`
+	OrderCount  int          `json:"order_count"`
 	LastUpdate  time.Time    `json:"last_update"`
 }
 
@@ -156,8 +158,38 @@ func (dm *DriverManager) AssignDestination(driverID string, dest *Destination) {
 	dm.mu.Lock()
 	defer dm.mu.Unlock()
 	if driver, ok := dm.drivers[driverID]; ok {
-		driver.Destination = dest
-		driver.Status = "en_route"
+		if driver.Status == "available" || driver.Status == "delivering" {
+			if driver.Destination == nil || driver.Status == "delivering" {
+				driver.Destination = dest
+				driver.Status = "en_route"
+				return
+			}
+		}
+		driver.Queue = append(driver.Queue, *dest)
+		if driver.Status != "en_route" {
+			driver.Status = "en_route"
+		}
+	}
+}
+
+func (dm *DriverManager) AssignMultiDestination(driverID string, dests []Destination) {
+	dm.mu.Lock()
+	defer dm.mu.Unlock()
+	if driver, ok := dm.drivers[driverID]; ok {
+		if len(dests) == 0 {
+			return
+		}
+		if driver.Status == "available" || driver.Status == "delivering" {
+			if driver.Destination == nil || driver.Status == "delivering" {
+				driver.Destination = &dests[0]
+				driver.Status = "en_route"
+				if len(dests) > 1 {
+					driver.Queue = append(driver.Queue, dests[1:]...)
+				}
+				return
+			}
+		}
+		driver.Queue = append(driver.Queue, dests...)
 	}
 }
 
@@ -180,8 +212,23 @@ func (dm *DriverManager) moveTowardDestination(driver *Driver) {
 	dLng := dest.Lng - driver.Lng
 	dist := math.Sqrt(dLat*dLat + dLng*dLng)
 	if dist < 0.0001 {
-		driver.Status = "delivering"
-		driver.Speed = 0
+		driver.OrderCount++
+		switch driver.Status {
+		case "delivering":
+			if len(driver.Queue) > 0 {
+				next := driver.Queue[0]
+				driver.Queue = driver.Queue[1:]
+				driver.Destination = &next
+				driver.Status = "en_route"
+			} else {
+				driver.Status = "available"
+				driver.Destination = nil
+				driver.Speed = 20 + dm.rnd.Float64()*40
+			}
+		default:
+			driver.Status = "delivering"
+			driver.Speed = 0
+		}
 		return
 	}
 	heading := math.Atan2(dLng, dLat) * 180 / math.Pi
@@ -218,6 +265,7 @@ type DriverUpdate struct {
 	Type    string   `json:"type"`
 	Drivers []Driver `json:"drivers,omitempty"`
 	Driver  *Driver  `json:"driver,omitempty"`
+	Orders  int      `json:"orders,omitempty"`
 }
 
 type Server struct {
@@ -236,7 +284,7 @@ func NewServer() *Server {
 		broadcast:  make(chan DriverUpdate, 100),
 		register:   make(chan *websocket.Conn),
 		unregister: make(chan *websocket.Conn),
-		drivers:    NewDriverManager(1000),
+		drivers:    NewDriverManager(1005),
 		destDB:     NewDestinationDB(),
 	}
 	go s.run()
@@ -300,28 +348,35 @@ func (s *Server) handleAssignOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req struct {
-		DriverID string `json:"driver_id"`
+		DriverID string       `json:"driver_id"`
+		Destinations []Destination `json:"destinations,omitempty"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
-	driver := s.drivers.GetDriver(req.DriverID)
-	if driver == nil {
+	// Verify driver exists before mutating
+	if s.drivers.GetDriver(req.DriverID) == nil {
 		http.Error(w, "Driver not found", http.StatusNotFound)
 		return
 	}
-	dest := s.destDB.GetRandomDestination()
-	if dest == nil {
-		http.Error(w, "No destinations available", http.StatusInternalServerError)
-		return
+	if len(req.Destinations) > 0 {
+		s.drivers.AssignMultiDestination(req.DriverID, req.Destinations)
+	} else {
+		dest := s.destDB.GetRandomDestination()
+		if dest == nil {
+			http.Error(w, "No destinations available", http.StatusInternalServerError)
+			return
+		}
+		s.drivers.AssignDestination(req.DriverID, dest)
 	}
-	s.drivers.AssignDestination(req.DriverID, dest)
+	// Fetch fresh state after mutation — prev code fetched BEFORE, causing stale broadcast
+	driver := s.drivers.GetDriver(req.DriverID)
 	s.broadcast <- DriverUpdate{Type: "assignment", Driver: driver}
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"success":     true,
-		"driver":      driver,
-		"destination": dest,
+		"success":    true,
+		"driver":     driver,
+		"queue_size": len(driver.Queue),
 	})
 }
 

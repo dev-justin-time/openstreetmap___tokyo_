@@ -97,6 +97,35 @@ body { color: #e2e2e8; font-family: 'Inter', sans-serif; }
 .achieve-badge.locked { opacity: 0.3; background: rgba(255,255,255,0.04); color: rgba(226,226,232,0.4); }
 #gamePanel .achieve-grid { display: flex; flex-wrap: wrap; gap: 2px; }
 
+/* Delivery feed */
+.feed-entry { display: flex; align-items: center; gap: 6px; padding: 3px 0; font-size: 10px; color: rgba(226,226,232,0.6); font-family: 'JetBrains Mono', monospace; animation: feedIn 0.25s ease; border-bottom: 1px solid rgba(255,255,255,0.03); }
+.feed-entry .icon { font-size: 12px; }
+.feed-entry .time { color: rgba(226,226,232,0.25); margin-right: auto; font-size: 9px; }
+@keyframes feedIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: translateX(0); } }
+
+/* Driver leaderboard */
+.lb-item { display: flex; align-items: center; gap: 6px; padding: 3px 6px; border-radius: 4px; font-size: 10px; font-family: 'JetBrains Mono', monospace; margin-bottom: 2px; background: rgba(255,255,255,0.03); }
+.lb-item .rank { width: 14px; text-align: center; font-weight: 700; }
+.lb-item .rank.gold { color: #ffd166; }
+.lb-item .rank.silver { color: #c0c0c0; }
+.lb-item .rank.bronze { color: #cd7f32; }
+.lb-item .name { flex: 1; color: rgba(226,226,232,0.6); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lb-item .dels { color: #ffb2b7; font-weight: 600; }
+
+/* Missions */
+.mission { display: flex; align-items: center; gap: 6px; padding: 5px 8px; border-radius: 6px; font-size: 10px; margin-bottom: 3px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); }
+.mission .icon { font-size: 14px; }
+.mission .info { flex: 1; }
+.mission .title { color: rgba(226,226,232,0.7); font-weight: 600; }
+.mission .desc { color: rgba(226,226,232,0.4); font-size: 9px; }
+.mission .pct { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: #4ae183; }
+.mission.done { opacity: 0.5; border-color: rgba(74,225,131,0.3); }
+.mission.done .pct { color: #4ae183; }
+
+/* Confetti */
+.confetti-piece { position: fixed; width: 6px; height: 6px; pointer-events: none; z-index: 9999; animation: confettiFall 1.5s ease forwards; }
+@keyframes confettiFall { 0% { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); } 100% { opacity: 0; transform: translateY(200px) rotate(720deg) scale(0.3); } }
+
 /* Toast notifications */
 #toastContainer { position: fixed; top: 64px; left: 50%; transform: translateX(-50%); z-index: 2000; display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; }
 
@@ -231,6 +260,15 @@ body { color: #e2e2e8; font-family: 'Inter', sans-serif; }
     <div class="divider"></div>
     <div class="achieve-title">Achievements</div>
     <div class="achieve-grid" id="achieveGrid"></div>
+    <div class="divider"></div>
+    <div class="achieve-title">Delivery Feed</div>
+    <div id="deliveryFeed" style="max-height:100px;overflow-y:auto;margin-bottom:4px;scrollbar-width:thin"></div>
+    <div class="divider"></div>
+    <div class="achieve-title">Driver Leaderboard</div>
+    <div id="driverLeaderboard" style="margin-bottom:4px"></div>
+    <div class="divider"></div>
+    <div class="achieve-title">Missions</div>
+    <div id="missionsContainer"></div>
   </div>
 </div>
 
@@ -321,6 +359,11 @@ body { color: #e2e2e8; font-family: 'Inter', sans-serif; }
       <label class="pnl-toggle"><input type="checkbox" data-panel="apiPanel"><span>NVIDIA API</span></label>
     </div>
     <button id="btnToggleAllPanels" style="width:100%;padding:6px;border:none;border-radius:6px;background:rgba(255,255,255,0.06);color:rgba(226,226,232,0.5);font-size:10px;font-weight:600;letter-spacing:0.05em;cursor:pointer;text-transform:uppercase;margin-bottom:10px">Toggle All Panels</button>
+    <div class="section-title">VISUALIZATION</div>
+    <div style="margin-bottom:10px">
+      <label class="pnl-toggle"><input type="checkbox" checked id="visRoutes"><span>Routes</span></label>
+      <label class="pnl-toggle"><input type="checkbox" checked id="visTrails"><span>Trails</span></label>
+    </div>
     <div class="section-title">CONNECTION</div>
     <div style="margin-bottom:6px">
       <div style="display:flex;justify-content:space-between;margin-bottom:3px">
@@ -350,6 +393,7 @@ body { color: #e2e2e8; font-family: 'Inter', sans-serif; }
   <div class="stat" style="background:rgba(255,209,102,0.1)"><span class="num" style="color:#ffd166" id="ctrlEnRoute">0</span><span style="color:rgba(226,226,232,0.5)">en route</span></div>
   <div class="stat" style="background:rgba(108,195,255,0.1)"><span class="num" style="color:#6cc3ff" id="ctrlDelivering">0</span><span style="color:rgba(226,226,232,0.5)">delivering</span></div>
   <button class="primary" id="btnAssign"><span class="material-symbols-outlined" style="font-size:16px">send</span> Assign Random Order</button>
+  <button class="primary" id="btnAssign5" style="background:#6cc3ff;font-size:10px"><span class="material-symbols-outlined" style="font-size:14px">local_shipping</span> Assign 5</button>
   <button class="secondary" id="btnRecenter"><span class="material-symbols-outlined" style="font-size:16px">my_location</span> Recenter</button>
 </div>
 
@@ -360,9 +404,11 @@ const API_BASE = 'http://localhost:8080';
 const NYC_LNG_LAT = [-73.9855, 40.7580];
 const ZOOM = 12;
 const TARGET_FPS = 30;
+const TRAIL_LENGTH = 80;
 
 // ─── State ───────────────────────────────────────────────────────────────────
 let driverData = {};
+let driverTrails = {};
 let orderCount = 0;
 let ws = null;
 let wsReconnectTimer = null;
@@ -505,6 +551,96 @@ function processGameOrder() {
   updateGameUI();
 }
 
+// ─── Delivery Feed ──────────────────────────────────────────────────────────
+let prevOrderCounts = {};
+
+function addFeedEntry(icon, msg, color) {
+  const feed = document.getElementById('deliveryFeed');
+  if (!feed) return;
+  const t = document.createElement('div');
+  t.className = 'feed-entry';
+  t.innerHTML = '<span class="icon" style="color:' + (color || 'rgba(226,226,232,0.4)') + '">' + icon + '</span> <span>' + msg + '</span> <span class="time">' + new Date().toLocaleTimeString() + '</span>';
+  feed.prepend(t);
+  while (feed.children.length > 20) feed.removeChild(feed.lastChild);
+}
+
+function checkDeliveryCompletions(drivers) {
+  for (const d of drivers) {
+    const prev = prevOrderCounts[d.id] || 0;
+    const cur = d.order_count || 0;
+    if (cur > prev) {
+      const delta = cur - prev;
+      addFeedEntry('check_circle', d.id + ' delivered ' + delta + ' order' + (delta > 1 ? 's' : ''), '#4ae183');
+      if (!game.driverDeliveries[d.id]) game.driverDeliveries[d.id] = 0;
+      game.driverDeliveries[d.id] += delta;
+      game.totalOrders += delta;
+      const scoreGain = Math.round(50 * delta);
+      const xpGain = Math.round(10 * delta);
+      game.score += scoreGain;
+      addXP(xpGain);
+      checkAchievements();
+      if (game.totalOrders % 50 === 0 && game.totalOrders > 0) celebrate();
+    }
+    prevOrderCounts[d.id] = cur;
+  }
+  updateLeaderboard();
+  updateMissions();
+  updateGameUI();
+}
+
+// ─── Driver Leaderboard ─────────────────────────────────────────────────────
+function updateLeaderboard() {
+  const lb = document.getElementById('driverLeaderboard');
+  if (!lb) return;
+  const sorted = Object.values(driverData).filter(d => d.order_count > 0).sort((a, b) => (b.order_count || 0) - (a.order_count || 0)).slice(0, 5);
+  if (sorted.length === 0) { lb.innerHTML = '<div style="font-size:9px;color:rgba(226,226,232,0.3);padding:4px 0">No deliveries yet</div>'; return; }
+  const medals = [{ cls: 'gold', icon: 'emoji_events' }, { cls: 'silver', icon: 'military_tech' }, { cls: 'bronze', icon: 'stars' }];
+  lb.innerHTML = sorted.map((d, i) => {
+    const m = medals[i];
+    return '<div class="lb-item"><span class="rank' + (m ? ' ' + m.cls : '') + '">' + (m ? '<span class="material-symbols-outlined" style="font-size:12px">' + m.icon + '</span>' : (i + 1)) + '</span><span class="name">' + d.id + '</span><span class="dels">' + d.order_count + '</span></div>';
+  }).join('');
+}
+
+// ─── Missions ───────────────────────────────────────────────────────────────
+const MISSION_DEFS = [
+  { id: 'm_orders', icon: 'local_shipping', title: 'Route Runner', desc: 'Complete deliveries', check: s => s.totalOrders, goal: 30 },
+  { id: 'm_streak', icon: 'trending_up', title: 'On a Roll', desc: 'Reach streak', check: s => s.streak, goal: 10 },
+  { id: 'm_combo', icon: 'whatshot', title: 'Combo King', desc: 'Reach combo', check: s => Math.round(s.combo * 10) / 10, goal: 4 },
+];
+let missions = MISSION_DEFS.map(m => ({ ...m, progress: 0, done: false }));
+
+function updateMissions() {
+  const container = document.getElementById('missionsContainer');
+  if (!container) return;
+  missions.forEach(m => {
+    m.progress = Math.min(m.goal, m.check(game));
+    if (m.progress >= m.goal && !m.done) { m.done = true; addFeedEntry('emoji_events', 'Mission complete: ' + m.title, '#ffd166'); celebrate(); }
+  });
+  container.innerHTML = missions.map(m => {
+    const pct = Math.round((m.progress / m.goal) * 100);
+    return '<div class="mission' + (m.done ? ' done' : '') + '"><span class="icon material-symbols-outlined" style="color:' + (m.done ? '#4ae183' : 'rgba(226,226,232,0.4)') + '">' + m.icon + '</span><div class="info"><div class="title">' + m.title + '</div><div class="desc">' + m.desc + '</div></div><span class="pct">' + pct + '%</span></div>';
+  }).join('');
+}
+
+// ─── Celebration ────────────────────────────────────────────────────────────
+function celebrate() {
+  const colors = ['#ff375f', '#ffd166', '#4ae183', '#6cc3ff', '#ffb2b7'];
+  for (let i = 0; i < 30; i++) {
+    const p = document.createElement('div');
+    p.className = 'confetti-piece';
+    p.style.left = (10 + Math.random() * 80) + '%';
+    p.style.top = (10 + Math.random() * 30) + '%';
+    p.style.background = colors[Math.floor(Math.random() * colors.length)];
+    p.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+    p.style.width = (3 + Math.random() * 5) + 'px';
+    p.style.height = (3 + Math.random() * 5) + 'px';
+    p.style.animationDuration = (1 + Math.random()) + 's';
+    p.style.animationDelay = (Math.random() * 0.5) + 's';
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 2500);
+  }
+}
+
 // ─── GeoJSON Conversion ────────────────────────────────────────────────────
 function driversToGeoJSON(driversArray) {
   return {
@@ -512,9 +648,45 @@ function driversToGeoJSON(driversArray) {
     features: driversArray.map(d => ({
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [d.lng, d.lat] },
-      properties: { id: d.id, status: d.status || 'available' }
+      properties: { id: d.id, status: d.status || 'available', heading: d.heading || 0 }
     }))
   };
+}
+
+function updateTrail(id, lat, lng) {
+  if (!driverTrails[id]) driverTrails[id] = [];
+  driverTrails[id].push({ lat, lng });
+  if (driverTrails[id].length > TRAIL_LENGTH) driverTrails[id].shift();
+}
+
+function trailsToGeoJSON() {
+  const features = [];
+  for (const id in driverTrails) {
+    const pts = driverTrails[id];
+    if (pts.length < 2) continue;
+    const d = driverData[id];
+    features.push({
+      type: 'Feature',
+      geometry: { type: 'LineString', coordinates: pts.map(p => [p.lng, p.lat]) },
+      properties: { id, status: d ? d.status : 'available' }
+    });
+  }
+  return { type: 'FeatureCollection', features };
+}
+
+function routesToGeoJSON() {
+  const features = [];
+  for (const id in driverData) {
+    const d = driverData[id];
+    if (d.destination && (d.status === 'en_route' || d.status === 'delivering')) {
+      features.push({
+        type: 'Feature',
+        geometry: { type: 'LineString', coordinates: [[d.lng, d.lat], [d.destination.lng, d.destination.lat]] },
+        properties: { id, status: d.status }
+      });
+    }
+  }
+  return { type: 'FeatureCollection', features };
 }
 
 function updateStats() {
@@ -643,6 +815,16 @@ map.on('load', () => {
       'circle-opacity': 0.25, 'circle-blur': 1.5
     }
   });
+  // Neon ping glow — pulses radius & opacity for radar-ping effect
+  map.addLayer({
+    id: 'driver-glow-ping', type: 'circle', source: 'drivers',
+    filter: ['!', ['has', 'point_count']],
+    paint: {
+      'circle-radius': 16,
+      'circle-color': ['match', ['get', 'status'], 'available', '#4ae183', 'en_route', '#ffd166', 'delivering', '#6cc3ff', '#9e9e9e'],
+      'circle-opacity': 0.15, 'circle-blur': 3
+    }
+  });
   map.addLayer({
     id: 'driver-unclustered', type: 'circle', source: 'drivers',
     filter: ['!', ['has', 'point_count']],
@@ -652,9 +834,27 @@ map.on('load', () => {
       'circle-stroke-width': 2.5, 'circle-stroke-color': 'rgba(255,255,255,0.5)', 'circle-opacity': 1
     }
   });
+  // Route lines — from en_route/delivering driver to destination
+  map.addSource('routes', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+  map.addLayer({
+    id: 'route-lines', type: 'line', source: 'routes',
+    paint: {
+      'line-color': ['match', ['get', 'status'], 'en_route', '#ffd166', 'delivering', '#6cc3ff', 'rgba(255,255,255,0.2)'],
+      'line-width': 2, 'line-opacity': 0.5, 'line-dasharray': [2, 3]
+    }
+  });
+  // Trail lines — last N positions per driver, fade out with age
+  map.addSource('trails', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+  map.addLayer({
+    id: 'trail-lines', type: 'line', source: 'trails',
+    paint: {
+      'line-color': ['match', ['get', 'status'], 'available', '#4ae183', 'en_route', '#ffd166', 'delivering', '#6cc3ff', '#9e9e9e'],
+      'line-width': 1.5, 'line-opacity': 0.25
+    }
+  });
   mapReady = true;
   updateConnectionUI();
-  if (pendingGeoJSON !== null) { map.getSource('drivers').setData(pendingGeoJSON); pendingGeoJSON = null; }
+  if (pendingGeoJSON !== null) { map.getSource('drivers').setData(pendingGeoJSON); const rs = map.getSource('routes'); if (rs) rs.setData(routesToGeoJSON()); const ts = map.getSource('trails'); if (ts) ts.setData(trailsToGeoJSON()); pendingGeoJSON = null; }
   map.on('click', 'driver-clusters', (e) => {
     const f = e.features[0];
     map.getSource('drivers').getClusterExpansionZoom(f.properties.cluster_id, (err, z) => { if (!err) map.easeTo({ center: f.geometry.coordinates, zoom: z, duration: 500 }); });
@@ -665,6 +865,7 @@ map.on('load', () => {
     const cm = { available: '#4ae183', en_route: '#ffd166', delivering: '#6cc3ff' };
     const c = cm[status] || '#4ae183';
     const deliveries = game.driverDeliveries[id] || 0;
+    const pending = (d && d.queue && d.queue.length) || 0;
     new maplibregl.Popup({ closeButton: true, closeOnClick: true, maxWidth: '260px' })
       .setLngLat(coords)
       .setHTML(
@@ -673,10 +874,10 @@ map.on('load', () => {
         '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">' +
         '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + c + '"></span>' +
         '<span style="font-size:11px;text-transform:capitalize;color:' + c + '">' + status + '</span>' +
-        '<span style="margin-left:auto;font-size:10px;color:rgba(226,226,232,0.4)">' + deliveries + ' deliveries</span></div>' +
+        '<span style="margin-left:auto;font-size:10px;color:rgba(226,226,232,0.4)">' + (d.order_count || 0) + ' done' + (pending ? ' · ' + pending + ' pend' : '') + '</span></div>' +
         '<div style="font-size:10px;color:rgba(226,226,232,0.4);font-family:JetBrains Mono,monospace">' +
         coords[1].toFixed(4) + ', ' + coords[0].toFixed(4) + '</div>' +
-        '<button onclick="assignToDriver(\'' + id + '\')" style="margin-top:8px;padding:4px 12px;background:#ff375f;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;width:100%">Assign Order</button>' +
+        '<button onclick="assignToDriver(\'' + id + '\',3)" style="margin-top:8px;padding:4px 12px;background:#ff375f;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;width:100%">Assign 3 Orders</button>' +
         '</div>'
       ).addTo(map);
     showDriverPopup(id);
@@ -690,28 +891,58 @@ map.on('load', () => {
 // ─── Map Updater ──────────────────────────────────────────────────────────
 const mapUpdater = new ThrottledRAF((geoJSON) => {
   if (!mapReady) { pendingGeoJSON = geoJSON; return; }
-  const source = map.getSource('drivers');
-  if (source) source.setData(geoJSON);
+  const src = map.getSource('drivers');
+  if (src) src.setData(geoJSON);
+  const rs = map.getSource('routes');
+  if (rs) rs.setData(routesToGeoJSON());
+  const ts = map.getSource('trails');
+  if (ts) ts.setData(trailsToGeoJSON());
 }, TARGET_FPS);
 
+// ─── Neon glow pinger ──────────────────────────────────────────────────────
+let glowTime = 0;
+function pingGlow() {
+  if (!mapReady) { requestAnimationFrame(pingGlow); return; }
+  glowTime += 0.03;
+  const pulse = 0.5 + 0.5 * Math.sin(glowTime);
+  const radius = 14 + 8 * pulse;
+  const opacity = 0.05 + 0.2 * pulse;
+  const layer = map.getLayer('driver-glow-ping');
+  if (layer) {
+    map.setPaintProperty('driver-glow-ping', 'circle-radius', radius);
+    map.setPaintProperty('driver-glow-ping', 'circle-opacity', opacity);
+  }
+  requestAnimationFrame(pingGlow);
+}
+pingGlow();
+
 // ─── API Calls ──────────────────────────────────────────────────────────────
-async function assignToDriver(driverId) {
+async function assignToDriver(driverId, count) {
+  count = count || 1;
   hideDriverPopup();
   const base = window.API_BASE || API_BASE;
   try {
+    const body = { driver_id: driverId };
+    if (count > 1) {
+      body.destinations = [];
+      for (let i = 0; i < count; i++) {
+        body.destinations.push({});
+      }
+    }
     const resp = await fetch(base + '/api/assign', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ driver_id: driverId })
+      body: JSON.stringify(body)
     });
     if (resp.ok) {
-      orderCount++;
+      orderCount += count;
       if (!game.driverDeliveries[driverId]) game.driverDeliveries[driverId] = 0;
-      game.driverDeliveries[driverId]++;
+      game.driverDeliveries[driverId] += count;
       processGameOrder();
       updateStats();
-      logTelemetry('ORDER', 'Assigned to ' + driverId);
+      logTelemetry('ORDER', count + ' order(s) assigned to ' + driverId);
       if (driverData[driverId]) {
         driverData[driverId].status = 'en_route';
+        driverData[driverId].order_count = (driverData[driverId].order_count || 0) + count;
         mapUpdater.update(driversToGeoJSON(Object.values(driverData)));
       }
     } else {
@@ -727,8 +958,11 @@ async function assignToDriver(driverId) {
 async function assignRandomOrder() {
   const avail = Object.values(driverData).filter(d => d.status === 'available');
   if (avail.length === 0) { logTelemetry('INFO', 'No available drivers'); return; }
-  const picked = avail[Math.floor(Math.random() * avail.length)];
-  await assignToDriver(picked.id);
+  const count = Math.floor(Math.random() * 3) + 1;
+  const sorted = avail.sort(() => Math.random() - 0.5).slice(0, count);
+  for (const d of sorted) {
+    await assignToDriver(d.id, 1);
+  }
 }
 
 async function fetchDrivers() {
@@ -738,7 +972,7 @@ async function fetchDrivers() {
     if (!resp.ok) return;
     const data = await resp.json();
     if (data.drivers) {
-      for (const d of data.drivers) { driverData[d.id] = { id: d.id, lat: d.lat, lng: d.lng, status: d.status || 'available' }; }
+      for (const d of data.drivers) { driverData[d.id] = { id: d.id, lat: d.lat, lng: d.lng, heading: d.heading || 0, status: d.status || 'available', order_count: d.order_count || 0, queue: d.queue || [], destination: d.destination || null }; updateTrail(d.id, d.lat, d.lng); }
       mapUpdater.update(driversToGeoJSON(Object.values(driverData)));
       updateStats();
     }
@@ -748,34 +982,46 @@ async function fetchDrivers() {
 // ─── WebSocket ──────────────────────────────────────────────────────────────
 function connectWS() {
   if (ws && ws.readyState === WebSocket.OPEN) return;
-  try { ws = new WebSocket(WS_URL); } catch (e) { scheduleReconnect(); return; }
+  document.getElementById('settingsWSStatus').textContent = 'CONNECTING';
+  document.getElementById('settingsWSStatus').style.color = '#ffd166';
+  try { ws = new WebSocket(window.WS_URL || WS_URL); } catch (e) { scheduleReconnect(); return; }
   ws.onopen = () => {
     document.getElementById('statusDot').style.background = '#4ae183';
     document.getElementById('statusText').textContent = 'CONNECTED';
     document.getElementById('wsDot').style.background = '#4ae183';
     document.getElementById('wsStatus').textContent = 'WebSocket LIVE';
+    document.getElementById('settingsWSStatus').textContent = 'LIVE';
+    document.getElementById('settingsWSStatus').style.color = '#4ae183';
     logTelemetry('WS', 'Connected');
     fetchDrivers();
+    updateConnectionUI();
   };
   ws.onmessage = (e) => {
     try {
       const data = JSON.parse(e.data);
       if (data.type === 'init' && data.drivers) {
-        for (const d of data.drivers) { driverData[d.id] = { id: d.id, lat: d.lat, lng: d.lng, status: d.status || 'available' }; }
-        mapUpdater.update(driversToGeoJSON(Object.values(driverData)));
-        updateStats();
-        logTelemetry('INIT', data.drivers.length + ' drivers loaded');
-      } else if (data.type === 'update' && data.drivers) {
-        for (const d of data.drivers) { driverData[d.id] = { id: d.id, lat: d.lat, lng: d.lng, status: d.status || 'available' }; }
-        mapUpdater.update(driversToGeoJSON(Object.values(driverData)));
-        updateStats();
-      } else if (data.type === 'assignment' && data.driver) {
-        const d = data.driver;
-        if (driverData[d.id]) driverData[d.id].status = d.status || 'en_route';
-        mapUpdater.update(driversToGeoJSON(Object.values(driverData)));
-        logTelemetry('ASSIGN', d.id + ' → ' + (d.status || 'en_route'));
-        updateStats();
-      }
+        for (const d of data.drivers) { driverData[d.id] = { id: d.id, lat: d.lat, lng: d.lng, heading: d.heading || 0, status: d.status || 'available', order_count: d.order_count || 0, queue: d.queue || [], destination: d.destination || null }; updateTrail(d.id, d.lat, d.lng); prevOrderCounts[d.id] = d.order_count || 0; }
+          mapUpdater.update(driversToGeoJSON(Object.values(driverData)));
+          updateStats();
+          updateConnectionUI();
+          updateLeaderboard();
+          updateMissions();
+          logTelemetry('INIT', data.drivers.length + ' drivers loaded');
+        } else if (data.type === 'update' && data.drivers) {
+          for (const d of data.drivers) { driverData[d.id] = { id: d.id, lat: d.lat, lng: d.lng, heading: d.heading || 0, status: d.status || 'available', order_count: d.order_count || 0, queue: d.queue || [], destination: d.destination || null }; updateTrail(d.id, d.lat, d.lng); }
+          mapUpdater.update(driversToGeoJSON(Object.values(driverData)));
+          updateStats();
+          updateConnectionUI();
+          checkDeliveryCompletions(data.drivers);
+        } else if (data.type === 'assignment' && data.driver) {
+          const d = data.driver;
+          if (driverData[d.id]) { driverData[d.id].status = d.status || 'en_route'; driverData[d.id].order_count = d.order_count || 0; driverData[d.id].queue = d.queue || []; driverData[d.id].destination = d.destination || null; prevOrderCounts[d.id] = d.order_count || 0; }
+          mapUpdater.update(driversToGeoJSON(Object.values(driverData)));
+          logTelemetry('ASSIGN', d.id + ' → ' + (d.status || 'en_route'));
+          updateStats();
+          updateConnectionUI();
+          updateLeaderboard();
+        }
     } catch (err) { /* ignore */ }
   };
   ws.onclose = () => {
@@ -783,6 +1029,8 @@ function connectWS() {
     document.getElementById('statusText').textContent = 'DISCONNECTED';
     document.getElementById('wsDot').style.background = '#ff375f';
     document.getElementById('wsStatus').textContent = 'WebSocket OFFLINE';
+    document.getElementById('settingsWSStatus').textContent = 'OFFLINE';
+    document.getElementById('settingsWSStatus').style.color = '#ff375f';
     logTelemetry('WS', 'Disconnected');
     scheduleReconnect();
   };
@@ -801,15 +1049,19 @@ function showDriverPopup(id) {
   const status = d.status || 'unknown';
   const cm = { available: '#4ae183', en_route: '#ffd166', delivering: '#6cc3ff' };
   const c = cm[status] || '#4ae183';
-  const deliveries = game.driverDeliveries[id] || 0;
+  const deliveries = d.order_count || 0;
+  const pending = (d.queue && d.queue.length) || 0;
   el.innerHTML =
     '<h3 style="color:#e2e2e8">' + id + '</h3>' +
     '<div class="info"><span style="display:inline-flex;align-items:center;gap:4px;color:' + c + '">' +
     '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:' + c + '"></span> ' + status +
-    '</span> <span style="margin-left:8px;color:rgba(226,226,232,0.4);font-size:10px">' + deliveries + ' deliveries</span></div>' +
+    '</span> <span style="margin-left:8px;color:rgba(226,226,232,0.4);font-size:10px">' + deliveries + ' delivered';
+  if (pending > 0) el.innerHTML += ' · ' + pending + ' pending';
+  el.innerHTML += '</span></div>' +
     '<div class="actions">' +
-    '<button onclick="assignToDriver(\'' + id + '\')" style="background:#ff375f;color:#fff">Assign Order</button>' +
-    '<button onclick="document.getElementById(\'driverPopup\').classList.remove(\'show\')" style="background:rgba(255,255,255,0.08);color:#e2e2e8">Close</button>' +
+    '<button onclick="assignToDriver(\'' + id + '\',3)" style="background:#ff375f;color:#fff">Assign 3 Orders</button>' +
+    '<button onclick="assignToDriver(\'' + id + '\',1)" style="background:rgba(255,255,255,0.08);color:#e2e2e8;margin-left:4px">Assign 1</button>' +
+    '<button onclick="document.getElementById(\'driverPopup\').classList.remove(\'show\')" style="background:rgba(255,255,255,0.08);color:#e2e2e8;margin-left:4px">Close</button>' +
     '</div>';
   el.classList.add('show');
 }
@@ -828,6 +1080,12 @@ function hideDriverPopup() { document.getElementById('driverPopup').classList.re
 
 // ─── UI Events ───────────────────────────────────────────────────────────
 document.getElementById('btnAssign').addEventListener('click', assignRandomOrder);
+document.getElementById('btnAssign5').addEventListener('click', () => {
+  const avail = Object.values(driverData).filter(d => d.status === 'available');
+  for (let i = 0; i < 5 && i < avail.length; i++) {
+    assignToDriver(avail[i].id, 3);
+  }
+});
 document.getElementById('btnRecenter').addEventListener('click', () => { map.flyTo({ center: NYC_LNG_LAT, zoom: ZOOM, duration: 1000 }); });
 document.getElementById('btnGameToggle').addEventListener('click', () => {
   const panel = document.getElementById('gamePanel');
@@ -967,69 +1225,6 @@ function updateConnectionUI() {
   } catch (e) { /* UI update best-effort */ }
 }
 
-// Override connectWS to update settings UI
-const origConnectWS = connectWS;
-connectWS = function() {
-  const origOpen = ws && ws.onopen;
-  const origClose = ws && ws.onclose;
-  const wsUrl = window.WS_URL || WS_URL;
-  document.getElementById('settingsWSStatus').textContent = 'CONNECTING';
-  document.getElementById('settingsWSStatus').style.color = '#ffd166';
-  try {
-    ws = new WebSocket(wsUrl);
-  } catch (e) {
-    document.getElementById('settingsWSStatus').textContent = 'ERROR';
-    document.getElementById('settingsWSStatus').style.color = '#ff375f';
-    scheduleReconnect();
-    return;
-  }
-  ws.onopen = () => {
-    document.getElementById('statusDot').style.background = '#4ae183';
-    document.getElementById('statusText').textContent = 'CONNECTED';
-    document.getElementById('wsDot').style.background = '#4ae183';
-    document.getElementById('wsStatus').textContent = 'WebSocket LIVE';
-    document.getElementById('settingsWSStatus').textContent = 'LIVE';
-    document.getElementById('settingsWSStatus').style.color = '#4ae183';
-    logTelemetry('WS', 'Connected to ' + wsUrl);
-    fetchDrivers();
-  };
-  ws.onmessage = (e) => {
-    try {
-      const data = JSON.parse(e.data);
-      if (data.type === 'init' && data.drivers) {
-        for (const d of data.drivers) { driverData[d.id] = { id: d.id, lat: d.lat, lng: d.lng, status: d.status || 'available' }; }
-        mapUpdater.update(driversToGeoJSON(Object.values(driverData)));
-        updateStats();
-        updateConnectionUI();
-        logTelemetry('INIT', data.drivers.length + ' drivers loaded');
-      } else if (data.type === 'update' && data.drivers) {
-        for (const d of data.drivers) { driverData[d.id] = { id: d.id, lat: d.lat, lng: d.lng, status: d.status || 'available' }; }
-        mapUpdater.update(driversToGeoJSON(Object.values(driverData)));
-        updateStats();
-        updateConnectionUI();
-      } else if (data.type === 'assignment' && data.driver) {
-        const d = data.driver;
-        if (driverData[d.id]) driverData[d.id].status = d.status || 'en_route';
-        mapUpdater.update(driversToGeoJSON(Object.values(driverData)));
-        logTelemetry('ASSIGN', d.id + ' → ' + (d.status || 'en_route'));
-        updateStats();
-        updateConnectionUI();
-      }
-    } catch (err) { /* ignore */ }
-  };
-  ws.onclose = () => {
-    document.getElementById('statusDot').style.background = '#ff375f';
-    document.getElementById('statusText').textContent = 'DISCONNECTED';
-    document.getElementById('wsDot').style.background = '#ff375f';
-    document.getElementById('wsStatus').textContent = 'WebSocket OFFLINE';
-    document.getElementById('settingsWSStatus').textContent = 'OFFLINE';
-    document.getElementById('settingsWSStatus').style.color = '#ff375f';
-    logTelemetry('WS', 'Disconnected');
-    scheduleReconnect();
-  };
-  ws.onerror = () => { ws.close(); };
-};
-
 // Patch existing connectWS usage: call our new version
 
 let allPanelsVisible = false;
@@ -1046,8 +1241,24 @@ function toggleAllPanels() {
   logTelemetry('PANELS', allPanelsVisible ? 'All shown' : 'All hidden');
 }
 
+document.getElementById('visRoutes').addEventListener('change', function() {
+  const layers = ['route-lines'];
+  for (const l of layers) {
+    const vis = map.getLayer(l);
+    if (vis) map.setLayoutProperty(l, 'visibility', this.checked ? 'visible' : 'none');
+  }
+});
+document.getElementById('visTrails').addEventListener('change', function() {
+  const layers = ['trail-lines'];
+  for (const l of layers) {
+    const vis = map.getLayer(l);
+    if (vis) map.setLayoutProperty(l, 'visibility', this.checked ? 'visible' : 'none');
+  }
+});
+
 document.addEventListener('keydown', (e) => {
   if (e.key === 'a' || e.key === 'A') assignRandomOrder();
+  if (e.key === '5') { const a = Object.values(driverData).filter(d => d.status === 'available'); for (let i = 0; i < 5 && i < a.length; i++) assignToDriver(a[i].id, 3); }
   if (e.key === 'r' || e.key === 'R') map.flyTo({ center: NYC_LNG_LAT, zoom: ZOOM, duration: 1000 });
   if (e.key === 'g' || e.key === 'G') document.getElementById('gamePanel').classList.toggle('show');
   if (e.key === 'n' || e.key === 'N') document.getElementById('apiPanel').classList.toggle('show');
