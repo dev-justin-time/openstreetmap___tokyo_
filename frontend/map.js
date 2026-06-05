@@ -66,7 +66,7 @@ export function setupForcedMapRefresh() {
         map.eachLayer((layer) => {
           if (layer instanceof L.TileLayer && typeof layer._update === "function") {
             try {
-              layer._update();
+              layer.redraw();
             } catch (e) { /* ignore per-layer errors */ }
           }
         });
@@ -93,7 +93,7 @@ export function setupMapRefresh() {
         try {
           if (layer && layer._tiles && typeof layer._update === "function") {
             // Explicitly call _update for tile layers
-            layer._update();
+            layer.redraw();
           }
         } catch (e) { /* ignore */ }
       });
@@ -111,16 +111,16 @@ export function setupMapRefresh() {
       if (driverMarker && typeof driverMarker.redraw === "function") driverMarker.redraw();
       map.eachLayer((layer) => {
         if (layer && typeof layer.redraw === "function") {
-          try { layer.redraw(); } catch (e) {}
+          try { layer.redraw(); } catch (e) { console.warn("Layer redraw failed", e); }
         }
       });
-    } catch (e) {}
+    } catch (e) { console.warn("Zoom handler error", e); }
   });
   map.on("move", () => {
     try {
       if (window._routeLine && typeof window._routeLine.redraw === "function") window._routeLine.redraw();
       if (driverMarker && typeof driverMarker.redraw === "function") driverMarker.redraw();
-    } catch (e) {}
+    } catch (e) { console.warn("Move handler error", e); }
   });
   window.addEventListener("resize", scheduleInvalidate, { passive: true });
 }

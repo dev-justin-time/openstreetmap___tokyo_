@@ -2,36 +2,20 @@
 import { map } from "./map.js";
 import { appConfig } from "./config.js";
 
-// @tweakable [use remote romanization via Nominatim (true) or return original name immediately (false)]
-const UTIL_USE_REMOTE_ROMANIZE = true;
-
 // Utility: detect CJK characters quickly
 export function containsCJK(s) {
   return /[\u3000-\u30FF\u4E00-\u9FFF\uAC00-\uD7AF]/.test(s || "");
 }
 
-export async function romanizePlaceNameIfNeeded(name, latlng) {
-  if (!UTIL_USE_REMOTE_ROMANIZE) return name;
-  try {
-    const api = await import('./api.js');
-    if (typeof api.romanizePlaceNameIfNeeded === 'function') {
-      return await api.romanizePlaceNameIfNeeded(name, latlng);
-    }
-  } catch (e) {
-    console.warn("romanizePlaceNameIfNeeded fallback:", e);
-  }
-  return name;
-}
-
 export function formatDistanceForDisplay(meters, isImperial) {
   if (isImperial) {
     const miles = meters * 0.000621371;
-    if (miles >= 0.1) return `${miles.toFixed(2)} mi`;
+    if (miles >= 0.1) return `${miles.toFixed(2)} ${appConfig.UI_LABELS.mi}`;
     const feet = meters * 3.28084;
-    return `${Math.round(feet)} ft`;
+    return `${Math.round(feet)} ${appConfig.UI_LABELS.ft}`;
   } else {
-    if (meters >= 1000) return `${(meters / 1000).toFixed(1)} km`;
-    return `${Math.round(meters)} m`;
+    if (meters >= 1000) return `${(meters / 1000).toFixed(1)} ${appConfig.UI_LABELS.km}`;
+    return `${Math.round(meters)} ${appConfig.UI_LABELS.m}`;
   }
 }
 

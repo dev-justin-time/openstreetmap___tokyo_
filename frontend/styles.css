@@ -477,8 +477,111 @@ main{
   filter: grayscale(100%) !important;
 }
 
+/* Gear panel styles */
+.gear-icon {
+  margin-left: 0.75rem;
+  cursor: pointer;
+}
+.gear-icon i {
+  font-size: 1.9rem;
+  color: #444;
+}
 
+.gear-panel {
+  position: absolute;
+  top: 3.5rem;
+  right: 1rem;
+  width: 360px;
+  max-width: calc(100% - 32px);
+  background: white;
+  z-index: 6;
+  padding: 1rem;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+  border-radius: 10px;
+  transform-origin: top right;
+  transition: transform 0.18s ease, opacity 0.18s ease;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-8px) scale(0.98);
+}
 
+.gear-panel[aria-hidden="false"] {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.gear-header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom: 0.5rem;
+}
+
+/* tabs in gear panel */
+.gear-tabs {
+  display:inline-flex;
+  gap:6px;
+}
+.gear-tabs button {
+  background: transparent;
+  border: 0;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #666;
+  border-radius: 6px;
+}
+.gear-tabs button[aria-selected="true"] {
+  background: #f0e7ff;
+  color: #8b37ff;
+  font-weight: 600;
+}
+
+/* gear tab content */
+.gear-tab {
+  font-size: 0.95rem;
+  color: #222;
+}
+.assign-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.assign-grid label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.85rem;
+  color: #333;
+}
+.assign-grid select, .assign-grid input, .assign-grid textarea {
+  margin-top: 6px;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #e6e6e6;
+  font-size: 0.9rem;
+}
+.assign-grid textarea {
+  resize: vertical;
+}
+.gear-tab.hidden {
+  display: none;
+}
+
+.gear-header h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.gear-body {
+  font-size: 0.95rem;
+  color: #222;
+}
+
+.gear-panel .close-icon {
+  cursor: pointer;
+  color: #666;
+}
 
 :root{
   --bg: #ffffff;

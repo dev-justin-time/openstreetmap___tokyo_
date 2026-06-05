@@ -1,10 +1,24 @@
 // api.js
 import { appConfig } from "./config.js";
-import { containsCJK } from "./utils.js"; // Import directly as it's a utility
+import { containsCJK } from "./utils.js";
+
+/* Nominatim debounce state (shared across all Nominatim calls) */
+let _lastNominatimAt = 0;
+let NOMINATIM_DEBOUNCE_MS = appConfig.OSM_NOMINATIM_DEBOUNCE_MS || 600;
+
+async function _nominatimDebounce() {
+  const now = Date.now();
+  if (now - _lastNominatimAt < NOMINATIM_DEBOUNCE_MS) {
+    await new Promise(r => setTimeout(r, NOMINATIM_DEBOUNCE_MS - (now - _lastNominatimAt)));
+  }
+  _lastNominatimAt = Date.now();
+}
+
+const NOMINATIM_UA = "OSM-Integration/1.0 (+https://example.org)";
 
 // Utility: fetch route from OSRM public server (driving profile)
 export async function fetchRoute(from, to) {
-  const url = `https://router.project-osrm.org/route/v1/driving/${from.lng},${from.lat};${to.lng},${to.lat}?overview=full&geometries=geojson&steps=true`;
+  const url = `${appConfig.OSRM_BASE}${from.lng},${from.lat};${to.lng},${to.lat}?overview=full&geometries=geojson&steps=true`;
   const res = await fetch(url);
   if (!res.ok) throw new Error("Routing failed");
   const data = await res.json();
@@ -21,7 +35,7 @@ export async function fetchGasStations(center, radius = 10000) {
       relation["amenity"="fuel"](around:${radius},${center.lat},${center.lng});
     );
     out center;`;
-  const url = "https://overpass-api.de/api/interpreter";
+  const url = appConfig.OSM_OVERPASS_BASE;
   const res = await fetch(url, { method: "POST", body: q });
   if (!res.ok) throw new Error("Overpass query failed");
   const data = await res.json();
@@ -30,7 +44,7 @@ export async function fetchGasStations(center, radius = 10000) {
 
 // Utility: fetch multiple route alternatives from OSRM and return the best (fastest) one
 export async function fetchRouteAlternatives(from, to, maxAlternatives = 3) {
-  const url = `https://router.project-osrm.org/route/v1/driving/${from.lng},${from.lat};${to.lng},${to.lat}?overview=full&geometries=geojson&steps=true&alternatives=${Math.max(1, Math.min(10, maxAlternatives))}`;
+  const url = `${appConfig.OSRM_BASE}${from.lng},${from.lat};${to.lng},${to.lat}?overview=full&geometries=geojson&steps=true&alternatives=${Math.max(1, Math.min(10, maxAlternatives))}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error("Routing failed (alternatives)");
   const data = await res.json();
@@ -44,10 +58,20 @@ export async function fetchRouteAlternatives(from, to, maxAlternatives = 3) {
   return best;
 }
 
+// Search places using Nominatim
+export async function searchPlace(q, limit = 5) {
+  await _nominatimDebounce();
+  const url = `${appConfig.OSM_NOMINATIM_BASE}/search?format=jsonv2&q=${encodeURIComponent(q)}&limit=${Number(limit)}&accept-language=en`;
+  const res = await fetch(url, { headers: { "User-Agent": NOMINATIM_UA } });
+  if (!res.ok) throw new Error("Nominatim search failed");
+  return res.json();
+}
+
 // Reverse geocode to get country name
 export async function reverseGeocodeCountry(latlng) {
-  const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latlng.lat}&lon=${latlng.lng}&zoom=1&addressdetails=0`;
-  const res = await fetch(url);
+  await _nominatimDebounce();
+  const url = `${appConfig.OSM_NOMINATIM_BASE}/reverse?format=jsonv2&lat=${latlng.lat}&lon=${latlng.lng}&zoom=1&addressdetails=0`;
+  const res = await fetch(url, { headers: { "User-Agent": NOMINATIM_UA } });
   if (!res.ok) return null;
   const j = await res.json();
   return j.address && j.address.country ? j.address.country : null;
@@ -59,8 +83,9 @@ export async function romanizePlaceNameIfNeeded(name, latlng) {
     if (!name) return name;
     if (!containsCJK(name)) return name;
     if (latlng && latlng.length === 2) {
-      const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latlng[0]}&lon=${latlng[1]}&accept-language=en`;
-      const res = await fetch(url);
+      await _nominatimDebounce();
+      const url = `${appConfig.OSM_NOMINATIM_BASE}/reverse?format=jsonv2&lat=${latlng[0]}&lon=${latlng[1]}&accept-language=en`;
+      const res = await fetch(url, { headers: { "User-Agent": NOMINATIM_UA } });
       if (!res.ok) return name;
       const j = await res.json();
       const cand = (j && (j.name || j.display_name)) ? (j.name || j.display_name) : name;

@@ -89,6 +89,14 @@ export const appConfig = {
   /* @tweakable [Chance per km of an incident occurring (0-1); GUI shows percent] */
   INCIDENT_PROBABILITY_PER_KM: 0.02,
 
+  // API URLs
+  /* @tweakable [OSRM routing server base URL] */
+  OSRM_BASE: "https://router.project-osrm.org/route/v1/driving/",
+  /* @tweakable [Nominatim base URL used for place search / reverse geocoding] */
+  OSM_NOMINATIM_BASE: "https://nominatim.openstreetmap.org",
+  /* @tweakable [Overpass API base URL used to query OSM features] */
+  OSM_OVERPASS_BASE: "https://overpass-api.de/api/interpreter",
+
   // UI Labels (English default)
   UI_LABELS: {
     connect: "Connect",

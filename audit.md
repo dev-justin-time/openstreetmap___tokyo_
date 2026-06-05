@@ -7,7 +7,7 @@ Architecture summary
 - Rust: primary/high-performance GPX processor (streaming parse, distance/elevation), exposes HTTP endpoints (POST /process-gpx) and a lightweight tracker (POST /track, GET /drivers, GET /events).
 - Go: API gateway and queue manager; accepts uploads at /upload, forwards to Rust primary, appends NDJSON queue entries for Python workers, runs simulators and helper endpoints (/generate-drivers, /driverhome).
 - Python: secondary worker that polls the queue, performs rich spatial analysis (gpxpy, geopandas, osmnx, pandas, shapely), and writes artifact PNGs/JSON and stored reports.
-- JavaScript: frontend UI (Leaflet) with GPX upload, live driver markers, SSE/HTTP polling to Rust, and local persistence.
+- JavaScript: frontend UI (Leaflet) with GPX upload, live driver markers, SSE/HTTP polling to Rust, delivery simulation, and local persistence.
 
 Claims validated
 - "Rust for raw speed": The Rust service uses warp + gpx crates and is designed to parse and summarize GPX quickly; it is the correct choice for CPU-bound streaming parsing and fast summaries.
@@ -27,6 +27,18 @@ Functional checks performed (against repo)
 - Fixed a syntax/compile-time issue in services/go/main.go: missing strconv import and an extra brace after escapeForJSON led to JS upload failing with a server-side error that manifested as an unexpected token on the frontend.
 - Confirmed frontend app.js uses dynamic import for frontend/api-client.js and displays JSON responses; ensured the GPX file input hook posts to /upload which the Go gateway processes.
 - Verified Rust tracker code implements sharding via INSTANCE_INDEX / INSTANCE_COUNT and uses an in-memory cap (500) with eviction; simulator in Go posts to ports 3030.. based on stable FNV-ish hashing.
+
+Refactoring / fixes applied
+- Root `app.js` deleted — features merged into `frontend/app.js` which is now the sole entry point loaded by `index.html`.
+- `frontend/osmIntegration.js` removed — its debouncing/User-Agent logic and `searchPlace` function merged into `frontend/api.js`.
+- Fixed critical ES module namespace mutation bug: `routeCoords`/`routeOriginalCoords` were assigned directly via dynamic import (`sim.routeCoords = coords`), which silently fails because module namespace properties are read-only. Added `setRouteCoords()`/`setRouteOriginalCoords()` setter functions in `simulation.js`.
+- Replaced ~15 redundant dynamic imports (`import('./ui.js').then(m => m.updateHUD())`) with direct static calls — `updateHUD` was already statically imported.
+- Moved all hardcoded API URLs (OSRM, Nominatim, Overpass) into `config.js` as `OSRM_BASE`, `OSM_NOMINATIM_BASE`, `OSM_OVERPASS_BASE`.
+- `UI_LABELS` dictionary in `config.js` is now fully wired into `ui.js`, `app.js`, and `utils.js` — all hardcoded UI strings replaced with `appConfig.UI_LABELS.*` references.
+- Replaced private `layer._update()` with public `layer.redraw()` in `map.js`.
+- Removed circular `romanizePlaceNameIfNeeded` wrapper in `utils.js` (delegated to `api.js` via dynamic import). `ui.js` now imports directly from `api.js`.
+- Added `console.warn` to significant empty catch blocks.
+- Replaced Spanish `'No hay conductores disponibles'` with `appConfig.UI_LABELS.noDrivers`.
 
 Recommendations
 - Replace plaintext queue.log with a durable queue or object storage + metadata queue.
@@ -130,18 +142,18 @@ This document lists technologies, logic, and concrete high-value patterns that a
 
 @@ Line 1 (prev 1) @@
   # Example config & installer snippets
-  
+
   This file contains example package.json, Cargo.toml, tsconfig.json and simple installer files (Dockerfile, docker-compose.yml, Makefile) you can adapt for the project.
-  
+
   ------------------------------------------------------------
   1) package.json (frontend / admin tooling)
   ------------------------------------------------------------
   /* @tweakable [Frontend Node engine major version to require for builds] */
   const NODE_ENGINE = ">=16"
-  
+
   /* @tweakable [Project frontend package version] */
   const FRONTEND_VERSION = "0.1.0"
-  
+
   {
     "name": "osm-sim-frontend",
     "version": "0.1.0",
@@ -164,16 +176,16 @@ This document lists technologies, logic, and concrete high-value patterns that a
       "prettier": "^2.0.0"
     }
   }
-  
+
   ------------------------------------------------------------
   2) services/rust/Cargo.toml (example)
   ------------------------------------------------------------
   /* @tweakable [Rust edition used by services/rust crate] */
   const RUST_EDITION = "2021"
-  
+
   /* @tweakable [Rust service crate version] */
   const RUST_SERVICE_VERSION = "0.1.0"
-  
+
   [package]
   name = "gpx-parser-service"
   version = "0.1.0"
@@ -181,23 +193,23 @@ This document lists technologies, logic, and concrete high-value patterns that a
   authors = ["Dev <dev@example.com>"]
   description = "Lightweight GPX parsing & summary service (example)"
   license = "MIT"
-  
+
   [dependencies]
   serde = { version = "1.0", features = ["derive"] }
   serde_json = "1.0"
   warp = "0.3"
   tokio = { version = "1", features = ["full"] }
   gpx = "0.10"
-  
+
   [profile.release]
   opt-level = 3
-  
+
   ------------------------------------------------------------
   3) tsconfig.json (for optional TS tooling)
   ------------------------------------------------------------
   /* @tweakable [Allow JS interop in TS projects] */
   const TS_ALLOW_JS = true
-  
+
   {
     "compilerOptions": {
       "target": "ES2020",
@@ -217,31 +229,31 @@ This document lists technologies, logic, and concrete high-value patterns that a
     "include": ["*.js", "*.ts", "**/*.js", "**/*.ts"],
     "exclude": ["node_modules", "dist"]
   }
-  
+
   ------------------------------------------------------------
   4) Dockerfile (simple multi-service frontend / static server)
   ------------------------------------------------------------
   /* @tweakable [Static server port exposed by Dockerfile] */
   const DOCKER_PORT = 8080
-  
+
   # Use a tiny static server image for frontend ES modules
   FROM node:18-alpine AS builder
   WORKDIR /app
   COPY . .
   RUN npm install --only=prod serve
-  
+
   FROM node:18-alpine
   WORKDIR /app
   COPY --from=builder /app /app
   EXPOSE 8080
   CMD ["npx", "serve", "-s", ".", "-l", "8080"]
-  
+
   ------------------------------------------------------------
   5) docker-compose.yml (compose to run route-engine    frontend    rust)
   ------------------------------------------------------------
   /* @tweakable [Go route-engine listening port] */
   const ROUTE_ENGINE_PORT = 8081
-  
+
   version: "3.8"
   services:
     frontend:
@@ -264,106 +276,103 @@ This document lists technologies, logic, and concrete high-value patterns that a
       image: gpx-parser-service:latest
       ports:
         - "8082:8082"
-  
+
   ------------------------------------------------------------
   6) Makefile (convenience tasks)
   ------------------------------------------------------------
   /* @tweakable [Default docker-compose profile to use for quick dev] */
   const MAKE_COMPOSE_PROFILE = "dev"
-  
+
   .PHONY: up down build lint
-  
+
   up:
   	docker-compose up --build
-  
+
   down:
   	docker-compose down
-  
+
   build:
   	docker-compose build
-  
+
   lint:
   	# Frontend lint
   	npx eslint .
-  
+
   clean:
   	rm -rf dist
-  
+
   ------------------------------------------------------------
   Notes
   - These examples are intentionally minimal and meant as starting templates.
   - Adjust versions, extra dependencies and build steps to match your CI/CD preferences.
   - @tweakable annotations at top of each section let you quickly tune engine, edition, ports and profile values referenced in the snippets.
 
+  -@tweakable annotations at top of each section let you quickly tune engine, edition, ports and profile values referenced in the snippets.
 
+  ## Working demo: expanded configs & runnable playbook
 
-
-  - @tweakable annotations at top of each section let you quickly tune engine, edition, ports and profile values referenced in the snippets.
-  =======
-  # Working demo: expanded configs & runnable playbook
-  
   This file now contains concrete, ready-to-run demo assets and instructions to launch the project locally (frontend, Go route-engine, Rust GPX service) using Docker Compose or locally via Make targets. Each key configurable value exposed for tuning uses a @tweakable JSDoc-style annotation so you can adjust behavior without editing service code.
-  
+
   Quick overview
   - docker-compose.yml will spin up: frontend static server (serve), route-engine (Go) and gpx-service (Rust).
   - .env supplies tunable values fed into the Go route-engine.
   - Makefile provides convenience commands.
   - Minimal package.json and services/rust/Cargo.toml are included as runnable examples.
-  
+
   Tweakables (edit here or override via .env)
   - MAX_DRIVERS: maximum number of managed drivers for the route engine
   - INITIAL_DRIVER_COUNT: number of synthetic drivers generated at startup
   - ROUTE_ENGINE_PORT: port exposed by the Go engine
   - FRONTEND_PORT: port used to serve frontend static files
-  
+
   /* @tweakable [Max number of drivers route-engine will manage (for demo)] */
   const MAX_DRIVERS = 5000;
-  
+
   /* @tweakable [Number of synthetic drivers to create at startup for demo] */
   const INITIAL_DRIVER_COUNT = 100;
-  
+
   /* @tweakable [Port to expose the Go route engine on the host] */
   const ROUTE_ENGINE_PORT = 8081;
-  
+
   /* @tweakable [Port to expose the frontend static server on the host] */
   const FRONTEND_PORT = 8080;
-  
+
   Files included below are templates you can write into your repo to run the demo.
-  
+
   1) .env (create at repo root)
-3.18
-  1
+ 3.18
+   1
 @@ Line 1 (prev 1) @@
   7) services/rust/Dockerfile
-drivers.json
-  1
+ drivers.json
+   1
 @@ Line 1 (prev 1) @@
   2) docker-compose.yml
-0.3
-  1
+ 0.3
+   1
 @@ Line 1 (prev 1) @@
   6) services/go/Dockerfile (simple Dockerfile for the route-engine)
-0.1.0
-  1
+ 0.1.0
+   1
 @@ Line 1 (prev 1) @@
   5) services/rust/Cargo.toml (minimal runnable example)
-3.8
-  1
+ 3.8
+   1
 @@ Line 1 (prev 1) @@
   3) Makefile (repo root)
-main.go
-  1
+ main.go
+   1
 @@ Line 1 (prev 1) @@
   4) package.json (repo root frontend helper)
 
 
   /* @tweakable [Include optional backend packages (Rust/Go/Python) suggestions in the list] */
   INCLUDE_OPTIONAL_BACKENDS = true
-  
+
   # Project dependency inventory
-  
+
   This file lists libraries, services and runtime dependencies currently used by the repository (client and server), plus recommended/optional packages you may want to add for production or feature enhancements.
-  
+
   ## Frontend (browser)
   - leaflet (tiles & map UI)
     - usage: included via importmap -> https://unpkg.com/leaflet@1.9.4/dist/leaflet-src.esm.js
@@ -372,25 +381,26 @@ main.go
     - usage: fonts.googleapis.com
     - purpose: typography only.
   - OSRM public routing API
-    - usage: fetch calls to https://router.project-osrm.org
+    - usage: fetch calls via config.js OSRM_BASE
     - purpose: route planning (no package; external HTTP service).
   - Overpass API / Nominatim
-    - usage: fetch POST/GET to public Overpass and Nominatim endpoints
+    - usage: fetch POST/GET to public Overpass and Nominatim endpoints via config.js
     - purpose: POI queries, reverse geocoding, place search (external services).
   - Optional / recommended client libs:
     - nipplejs (mobile joystick control) — recommended for mobile control integration.
     - a small fetch/retry helper (axios or ky) — optional, improves robustness of remote calls.
-  
+
   ## Frontend (local JS modules in repo)
-  - config.js, map.js, api.js, simulation.js, ui.js, utils.js, gui.js, betaBanner.js, confirmModal.js, osmIntegration.js
+  - config.js, map.js, api.js, simulation.js, ui.js, utils.js, gui.js, app-state.js, betaBanner.js, confirmModal.js
     - usage: internal modular code (no external package manager required).
     - purpose: app logic, simulation, OSM integrations.
-  
+  - osmIntegration.js — removed (features merged into api.js).
+
   ## Driver app (mobile web)
   - leaflet (same as frontend)
   - material icons (Google) — used in driver_app index.html
   - navigator.geolocation (browser API) — used for live location update.
-  
+
   ## Backend: Go (route-engine)
   - Standard library:
     - net/http, encoding/json, math, time, sync, os, context, log, fmt, rand, strconv, strings
@@ -401,7 +411,7 @@ main.go
     - pgx or gorm — if migrating to PostgreSQL/PostGIS for persistence & geospatial indexing.
     - promhttp / prometheus client — for metrics.
     - cors middleware — if serving APIs across origins.
-  
+
   ## Backend: Rust (GPX parser service)
   - (See services/rust/Cargo.toml) — recommended crates (if not already present):
     - actix-web or warp (HTTP server)
@@ -412,7 +422,7 @@ main.go
     - rayon (optional) — parallel processing for heavy GPX jobs
   - Optional:
     - clap (CLI), prometheus (metrics), sqlx (DB)
-  
+
   ## Backend: Python (worker)
   - Recommended packages:
     - gpxpy (GPX parsing)
@@ -422,18 +432,18 @@ main.go
     - matplotlib (plots)
     - requests (HTTP helpers)
     - boto3 (if uploading to S3)
-  - Runtime: Python 3.8  
-  
+  - Runtime: Python 3.8
+
   ## Dev / Tooling (suggested)
   - Docker & docker-compose — orchestrate Rust, Go, Python services and frontend static server.
   - Node (optional) — for local tooling, bundlers, or to install dev helpers (not required for current plain ES modules).
   - Makefile or simple scripts for local start.
-  
+
   ## Runtime / Operational considerations
   - Reverse geocoding / Overpass: consider proxying or rate-limiting (no package; infra policy).
   - Tile provider: consider alternative tile hosts or API keys for production.
   - Monitoring & logging libraries for Go/Rust/Python as recommended above.
-  
+
   ## How to adjust this list
   Edit the boolean at the top of this file to include or exclude optional backend suggestions:
   /* @tweakable [Include optional backend packages (Rust/Go/Python) suggestions in the list] */

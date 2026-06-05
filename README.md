@@ -6,20 +6,28 @@ Architecture overview and language-specific use cases:
 - Rust (services/rust): high-performance GPX parsing and fast primary summaries. Use Rust for CPU-bound tasks that must process millions of track points quickly (haversine/distance, elevation accumulation, streaming parsing), produce deterministic JSON summaries, and act as the fastest-path/primary processor.
 - Go (services/go): reliable API gateway, concurrency and I/O management. Use Go to accept uploads, validate/authenticate requests, implement efficient forwarding/queuing, maintain a durable SQLite-backed queue, and coordinate microservice interactions (timeouts, retries, backpressure).
 - Python (services/python): rich spatial analysis and data science. Use Python for secondary/heavy-weight jobs (gpxpy parsing for detailed GPX features, geopandas/osmnx for OSM network matching, pandas for statistical summaries, shapely for geometry ops, matplotlib for plotting, and ML or heuristics for itinerary classification).
-- JavaScript / Frontend (index.html, app.js, frontend/api-client.js): interactive visualization and lightweight browser processing. Use JS/Leaflet/Turf in-browser for immediate mapping, grayscale tiles, displaying live location, client-side GPX parsing for preview, and uploading to the backend; keep UI responsive and small.
+- JavaScript / Frontend (frontend/): interactive visualization and browser-based simulation. Uses Leaflet for mapping, OSRM routing, Overpass POI queries, Nominatim geocoding, and a full delivery simulation (car animation, HUD, fuel/money economy, driver tracking).
 - Protobuf (proto/track.proto): structured interchange for Point, TrackSegment, TrackSummary and batched DriverUpdate / TrackBatch messages, for future gRPC/Protobuf telemetry.
 
 Quick start (dev)
 - Start Rust service (primary processor): cd services/rust && cargo run
 - Start Go gateway (API + queue): go run services/go/main.go
 - Start Python worker (secondary analysis): python3 services/python/worker.py
-- Frontend: open index.html in a dev server; the frontend expects /upload proxied to the Go gateway in development.
+- Frontend: serve the root directory (e.g. `npx serve . -l 8080`); the frontend expects /upload proxied to the Go gateway in development.
 
 File descriptions
-- index.html — Frontend single-page UI (Leaflet map, controls, GPX upload input, driver list & gear panel).
-- styles.css — Frontend styling for the map, panels and controls.
-- app.js — Frontend logic: map init, geolocation, driver polling, gear panel and GPX upload hook.
-- frontend/api-client.js — Minimal client helper: uploadGpxFile(file) posts GPX to the Go gateway.
+- index.html — Frontend single-page UI (Leaflet map, controls, simulation, driver list & gear panel).
+- frontend/app.js — Unified frontend entry point: map init, simulation, driver polling, gear panel, GPX upload.
+- frontend/config.js — Central configuration: app settings, API URLs (OSRM, Nominatim, Overpass), tweakables, UI_LABELS dictionary.
+- frontend/map.js — Leaflet map setup, tile layer management, zoom/move handlers, driver marker glow.
+- frontend/api.js — API clients: OSRM routing, Overpass gas station queries, Nominatim search/reverse-geocode (with debouncing/User-Agent), place name romanization.
+- frontend/simulation.js — Delivery simulation engine: car animation along route, speed/fuel/money state, turn-by-turn navigation, country detection, gas station purchasing.
+- frontend/ui.js — HUD rendering: speed, fuel, money, route info, ETA, remaining distance, follow toggle, turn instructions.
+- frontend/utils.js — Pure utility functions: CJK detection, distance formatting, maneuver formatting, turn step index building, maneuver SVG icons.
+- frontend/gui.js — GUI panel for simulation controls: teleport, cruise speed, acceleration mode, speed limit toggles, infinite fuel.
+- frontend/app-state.js — Shared state module: driver markers, layer group, runtime settings persistence.
+- frontend/betaBanner.js — Beta warning banner component.
+- frontend/confirmModal.js — Route overwrite confirmation modal.
 - proto/track.proto — Protobuf schema for Point, TrackSegment, TrackSummary and batched DriverUpdate / TrackBatch messages.
 - services/rust/* — Rust primary processor and lightweight tracker (endpoints: POST /process-gpx, POST /track[ -batch ], GET /drivers, /events, /metrics). Implements a sharded in-memory ring buffer and SSE events.
 - services/go/* — Go API gateway, queue (SQLite) plumbing, worker pool, simulator and helpers (endpoints: /upload, /generate-drivers, /driverhome, /nearby, /metrics).
@@ -32,12 +40,11 @@ File descriptions
   - services/go/simulator.go — simulator that batches driver updates and posts to Rust tracker.
 - services/python/* — Python worker that consumes the SQLite queue, runs secondary analysis (gpxpy, geopandas, matplotlib) and writes analysis artifacts.
 - services/go/ and queue_store/ — runtime data: queue_store contains persisted GPX payloads and queue.db.
-- frontend/app-state.js — module that centralizes shared frontend state (driverMarkers, driversLayerGroup, runtime settings).
 
 Mermaid architecture diagram
 ```mermaid
 flowchart LR
-  Browser["Browser (index.html / app.js)"]
+  Browser["Browser (index.html / frontend/ modules)"]
   GoAPI["Go Gateway\n(/upload, /nearby, /generate-drivers)"]
   Rust["Rust Primary\n(/process-gpx, /track-batch, /drivers, /events)"]
   SQLite["SQLite Queue\n(queue_store/queue.db + payloads)"]
@@ -59,3 +66,4 @@ flowchart LR
   style Rust fill:#fff7f7,stroke:#ff375f
   style SQLite fill:#f7fff7,stroke:#2ecc71
   style Python fill:#fffaf0,stroke:#8b37ff
+```

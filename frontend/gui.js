@@ -1,9 +1,9 @@
 // gui.js
 import { appConfig } from "./config.js";
 import { updateHUD, updateTurnUI, showLoading, hideLoading } from "./ui.js";
-import { setCurrencyForCountryCode, fuelLiters, money, setFuelLiters, setMoney, setCurrentCountryName, setFollowCar, setCurrentRouteName, setCurrentRoadType, startAnimation, getEffectiveCruiseKmph } from "./simulation.js";
+import { setCurrencyForCountryCode, fuelLiters, money, setFuelLiters, setMoney, setCurrentCountryName, setFollowCar, setCurrentRouteName, setCurrentRoadType, startAnimation, getEffectiveCruiseKmph, updateCountryDisplay, gasMarkers } from "./simulation.js";
 import { driverMarker, map, markerLayer, addMarker } from "./map.js";
-import { fetchRouteAlternatives, fetchRoute } from "./api.js";
+import { fetchRouteAlternatives, fetchRoute, searchPlace } from "./api.js";
 import { showConfirmModal } from "./confirmModal.js";
 
 export function initGUI() {
@@ -129,11 +129,8 @@ export function initGUI() {
       if (!q) return;
       try {
         showLoading("Searching city...");
-        const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(q)}&limit=1&accept-language=en`;
-        const res = await fetch(url);
+        const arr = await searchPlace(q, 1);
         hideLoading();
-        if (!res.ok) return;
-        const arr = await res.json();
         if (!arr || arr.length === 0) return;
         const place = arr[0];
         const lat = parseFloat(place.lat);
@@ -142,19 +139,17 @@ export function initGUI() {
         map.setView([lat, lon], Math.max(12, Math.min(14, map.getZoom())));
         const newPos = L.latLng(lat, lon);
         driverMarker.setLatLng(newPos);
-        import('./simulation.js').then(sim => sim.updateCountryDisplay(newPos));
+        updateCountryDisplay(newPos);
 
         if (window._routeLine) {
           const ok = await showConfirmModal();
           if (ok) {
             try { map.removeLayer(window._routeLine); } catch {}
             window._routeLine = null;
-            import('./simulation.js').then(sim => {
-              sim.gasMarkers.forEach(m => { try { map.removeLayer(m); } catch { } });
-              sim.gasMarkers.length = 0;
-              sim.CURRENT_ROUTE_NAME = "";
-              sim.CURRENT_ROAD_TYPE = "";
-            });
+            gasMarkers.forEach(m => { try { map.removeLayer(m); } catch { } });
+            gasMarkers.length = 0;
+            setCurrentRouteName("");
+            setCurrentRoadType("");
             updateHUD();
           }
         }

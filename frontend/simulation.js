@@ -5,7 +5,7 @@ import { map, driverMarker } from "./map.js";
 import { updateHUD, updateTurnUI } from "./ui.js";
 import { showConfirmModal } from "./confirmModal.js";
 import { buildStepsIndex, distanceToIndexFraction } from "./utils.js";
-import { reverseGeocodeCountry } from "./api.js";
+import { reverseGeocodeCountry, fetchGasStations } from "./api.js";
 
 // Simulation state
 export let routeGeo = null;
@@ -25,6 +25,13 @@ export let CURRENT_ROUTE_NAME = "";
 export let CURRENT_ROAD_TYPE = ""; // "road" | "highway" | "unknown"
 export let gasMarkers = [];
 
+export function setRouteCoords(coords) {
+  routeCoords = coords;
+}
+export function setRouteOriginalCoords(coords) {
+  routeOriginalCoords = coords;
+}
+
 // Incident state
 export let _crashMarker = null;
 export let _crashed = false;
@@ -37,8 +44,7 @@ let _lastCountryGeocodeLatLng = null;
 /* @tweakable [programmatically set the displayed current country name in the HUD] */
 export function setCurrentCountryName(name) {
   CURRENT_COUNTRY_NAME = name || "—";
-  // trigger HUD update in a best-effort, dynamic import to avoid cycles
-  import('./ui.js').then(m => m.updateHUD()).catch(()=>{});
+  updateHUD();
 }
 
 /* @tweakable [toggle map follow mode (pan-to-driver) programmatically] */
@@ -48,8 +54,8 @@ export function setFollowCar(val) {
 
 /* @tweakable [programmatically set the current route name shown in HUD] */
 export function setCurrentRouteName(name) {
-  CURRENT_ROUTE_NAME = name || "";
-  import('./ui.js').then(m => m.updateHUD()).catch(()=>{});
+  CURRENT_ROUTE_NAME = name || "—";
+  updateHUD();
 }
 
 /* @tweakable [programmatically set the fuel level (liters) shown in the HUD] */
@@ -59,7 +65,7 @@ export function setFuelLiters(l) {
   } catch (e) {
     fuelLiters = Math.max(0, +(l || 0));
   }
-  import('./ui.js').then(m => m.updateHUD()).catch(()=>{});
+  updateHUD();
 }
 
 /* @tweakable [programmatically set the money balance shown in the HUD] */
@@ -69,13 +75,13 @@ export function setMoney(m) {
   } catch (e) {
     money = +(m || 0);
   }
-  import('./ui.js').then(mo => mo.updateHUD()).catch(()=>{});
+  updateHUD();
 }
 
 /* @tweakable [programmatically set the current road type shown in HUD (e.g., "highway"|"road")] */
 export function setCurrentRoadType(t) {
   CURRENT_ROAD_TYPE = t || "";
-  import('./ui.js').then(m => m.updateHUD()).catch(()=>{});
+  updateHUD();
 }
 
 /* @tweakable [default currency used when country code is unknown] */
@@ -102,8 +108,7 @@ export function setCurrencyForCountryCode(cc) {
     }
     const code = cc.toUpperCase();
     currency = COUNTRY_CODE_TO_CURRENCY[code] || DEFAULT_CURRENCY;
-    // Trigger HUD update
-    import('./ui.js').then(m => m.updateHUD()).catch(()=>{});
+    updateHUD();
   } catch (e) {
     console.warn("setCurrencyForCountryCode failed:", e);
     currency = DEFAULT_CURRENCY;
@@ -444,38 +449,34 @@ export function updateCountryDisplay(currentLatLng) {
 
 // Logic for gas stations
 export function placeGasStations(center) {
-  // This needs `fetchGasStations` from `api.js`
-  import('./api.js').then(({ fetchGasStations }) => {
-    fetchGasStations(center, 10000).then(results => {
-      gasMarkers.forEach(m => { try { map.removeLayer(m); } catch { } });
-      gasMarkers.length = 0; // Clear previous markers
-
-      results.forEach((el) => {
-        let lat = el.lat || (el.center && el.center.lat);
-        let lon = el.lon || (el.center && el.center.lon);
-        if (!lat || !lon) return;
-        const icon = L.divIcon({
-          html: "⛽",
-          className: "gas-emoji",
-          iconSize: [20, 20],
-          iconAnchor: [10, 10],
-        });
-        const m = L.marker([lat, lon], { icon }).addTo(map);
-        m.on("click", () => {
-          const needed = Math.max(0, appConfig.FUEL_TANK_CAPACITY - fuelLiters);
-          if (needed <= 0) return;
-          const affordableLiters = Math.floor((money / fuelPricePerLiter) * 100) / 100;
-          const buy = Math.min(needed, affordableLiters);
-          if (buy <= 0) return;
-          const cost = +(buy * fuelPricePerLiter).toFixed(2);
-          fuelLiters = Math.min(appConfig.FUEL_TANK_CAPACITY, fuelLiters + buy);
-          money = Math.max(0, +(money - cost).toFixed(2));
-          updateHUD();
-        });
-        gasMarkers.push(m);
+  fetchGasStations(center, 10000).then(results => {
+    gasMarkers.forEach(m => { try { map.removeLayer(m); } catch { } });
+    gasMarkers.length = 0;
+    results.forEach((el) => {
+      let lat = el.lat || (el.center && el.center.lat);
+      let lon = el.lon || (el.center && el.center.lon);
+      if (!lat || !lon) return;
+      const icon = L.divIcon({
+        html: "⛽",
+        className: "gas-emoji",
+        iconSize: [20, 20],
+        iconAnchor: [10, 10],
       });
-    }).catch(e => {
-      console.warn("Gas station fetch failed:", e);
+      const m = L.marker([lat, lon], { icon }).addTo(map);
+      m.on("click", () => {
+        const needed = Math.max(0, appConfig.FUEL_TANK_CAPACITY - fuelLiters);
+        if (needed <= 0) return;
+        const affordableLiters = Math.floor((money / fuelPricePerLiter) * 100) / 100;
+        const buy = Math.min(needed, affordableLiters);
+        if (buy <= 0) return;
+        const cost = +(buy * fuelPricePerLiter).toFixed(2);
+        fuelLiters = Math.min(appConfig.FUEL_TANK_CAPACITY, fuelLiters + buy);
+        money = Math.max(0, +(money - cost).toFixed(2));
+        updateHUD();
+      });
+      gasMarkers.push(m);
     });
+  }).catch(e => {
+    console.warn("Gas station fetch failed:", e);
   });
 }

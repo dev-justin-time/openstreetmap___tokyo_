@@ -1,20 +1,3 @@
-let map;
-let marker;
-let isConnected = false;
-let startTime = null;
-let connectionHistory = [];
-let timerInterval = null;
-let watchId = null;
-
-
-
-
-
-
-
-
-
-/* ...existing code... */
 import { appConfig } from "./config.js";
 import { map, driverMarker, addMarker, refreshDriverGlow, setupMapRefresh, setupForcedMapRefresh } from "./map.js";
 import {
@@ -27,23 +10,35 @@ import {
   gasMarkers,
   CURRENT_COUNTRY_NAME,
   setFollowCar,
+  setRouteCoords,
+  setRouteOriginalCoords,
+  setCurrentCountryName,
+  setCurrentRouteName,
+  setCurrentRoadType,
 } from "./simulation.js";
 import { updateHUD, showLoading, hideLoading } from "./ui.js";
 import { fetchRoute, fetchRouteAlternatives } from "./api.js";
 import { initGUI } from "./gui.js";
 import { showConfirmModal } from "./confirmModal.js";
 import { initBetaBanner } from "./betaBanner.js";
+import { APP_STATE, getDriverIds, registerMarker, removeMarker, setDriversLayerGroup, getDriversLayerGroup, loadRuntimeSettingsFromStorage, persistRuntimeSettingsToStorage } from './app-state.js';
+import * as L from "leaflet";
+
+let marker;
+let isConnected = false;
+let startTime = null;
+let connectionHistory = [];
+let timerInterval = null;
+let watchId = null;
 
 // Expose tweakables for external modification
 window.__tweakables = window.__tweakables || {};
 Object.assign(window.__tweakables, {
-  /* @tweakable [set the beta banner text shown to users] */
   setBetaBannerText(t) {
     appConfig.OSM_BETA_BANNER_TEXT = String(t);
     const i = document.getElementById("osm-beta-inner");
     if (i) i.textContent = appConfig.OSM_BETA_BANNER_TEXT;
   },
-  /* @tweakable [toggle beta banner visibility] */
   setBetaBannerVisible(b) {
     appConfig.OSM_BETA_BANNER_VISIBLE = Boolean(b);
     const bEl = document.getElementById("osm-beta-banner");
@@ -52,104 +47,67 @@ Object.assign(window.__tweakables, {
       bEl.setAttribute("aria-hidden", appConfig.OSM_BETA_BANNER_VISIBLE ? "false" : "true");
     }
   },
-  // Map specific tweaks
-  /* @tweakable [Set the driver marker glow size in pixels] */
   setDriverGlow(px) { appConfig.GUI_DRIVER_GLOW_SIZE_PX = px; refreshDriverGlow(); },
-  /* @tweakable [Set the route line color] */
   setRouteColor(c) {
     appConfig.GUI_ROUTE_COLOR = c;
     if (window._routeLine) window._routeLine.setStyle({ color: appConfig.GUI_ROUTE_COLOR });
   },
-  /* @tweakable [Set the route line weight (thickness) in pixels] */
   setRouteWeight(w) {
     appConfig.GUI_ROUTE_WEIGHT_PX = w;
     if (window._routeLine) window._routeLine.setStyle({ weight: appConfig.GUI_ROUTE_WEIGHT_PX });
   },
-  /* @tweakable [Set the interval in milliseconds for forced periodic tile layer refreshing (0 to disable)] */
   setTileRefreshInterval: (ms) => {
     appConfig.TILE_LAYER_FORCED_REFRESH_INTERVAL_MS = Number(ms);
-    setupForcedMapRefresh(); // Re-initialize the interval with the new setting
+    setupForcedMapRefresh();
   },
-  // Simulation specific tweaks
-  /* @tweakable [global speed realism multiplier; >1 = faster/less conservative speeds] */
   setSpeedMultiplier(m) { appConfig.GUI_SPEED_REALISM_MULTIPLIER = Number(m); },
-  /* @tweakable [set max acceleration (m/s^2)] */
   setMaxAccel(a) { appConfig.MAX_ACCEL = Number(a); },
-  /* @tweakable [set max deceleration (m/s^2)] */
   setMaxDecel(d) { appConfig.MAX_DECEL = Number(d); },
-  /* @tweakable [turbo strictness (0-1) biasing duration vs distance when selecting best alternative] */
   setTurboStrictness(s) { appConfig.TURBO_STRICTNESS = Number(s); },
-  /* @tweakable [minimum enforced highway speed in km/h] */
   setHighwayMinKmph(n) { appConfig.GUI_HIGHWAY_MIN_KMPH = Number(n); },
-  /* @tweakable [toggle showing the current country name in the HUD] */
   setShowCountry(b) { appConfig.GUI_SHOW_COUNTRY = Boolean(b); updateHUD(); },
-  /* @tweakable [toggle visibility of the HUD/info panel (true = visible)] */
   setShowInfoPanel(b) { appConfig.GUI_INFO_PANEL_VISIBLE = Boolean(b); import('./ui.js').then(m => m.setInfoPanelVisible(appConfig.GUI_INFO_PANEL_VISIBLE)).catch(() => {}); },
-  /* @tweakable [debounce time in ms for reverse geocoding calls to update country display] */
   setCountryGeocodeDebounceMs(ms) { appConfig.COUNTRY_REVERSE_GEOCODE_DEBOUNCE_MS = Number(ms); },
-  /* @tweakable [minimum distance in meters the car must move before re-fetching country name] */
   setCountryGeocodeMinDistM(m) { appConfig.COUNTRY_REVERSE_GEOCODE_MIN_DIST_M = Number(m); }
 });
 
-// expose the current invert-turns flag as a named export to avoid import errors from code expecting it
-/* @tweakable [export proxy for invert turn directions flag so legacy imports from ./app.js work] */
 export const GUI_INVERT_TURN_DIRECTIONS = appConfig.GUI_INVERT_TURN_DIRECTIONS;
 
-// Initial setup functions
 (async function initApp() {
-  // Try to reverse geocode driver start to set currency and country name
   try {
     const p = `${appConfig.TOKYO.lat},${appConfig.TOKYO.lng}`;
-    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${appConfig.TOKYO.lat}&lon=${appConfig.TOKYO.lng}`);
+    const res = await fetch(`${appConfig.OSM_NOMINATIM_BASE}/reverse?format=jsonv2&lat=${appConfig.TOKYO.lat}&lon=${appConfig.TOKYO.lng}`);
     if (res.ok) {
       const j = await res.json();
       const cc = j.address && j.address.country_code ? j.address.country_code.toUpperCase() : null;
       if (cc) setCurrencyForCountryCode(cc);
       if (j.address && j.address.country) {
-        /* @tweakable [use setter to avoid assigning to read-only module export] */
-        import('./simulation.js').then(sim => sim.setCurrentCountryName(j.address.country));
+        setCurrentCountryName(j.address.country);
       }
     }
   } catch (e) {
-    // ignore; keep defaults
   } finally {
-    updateHUD(); // Ensure HUD reflects initial country/currency
+    updateHUD();
   }
 
-  // Set initial driver glow
   refreshDriverGlow();
-
-  // Setup map refresh on interactions
   setupMapRefresh();
-  // Setup periodic forced map refresh
   setupForcedMapRefresh();
-
-  // Initialize GUI controls and their listeners
   initGUI();
-
-  // Initialize beta banner
   initBetaBanner();
-
-  // Add a subtle initial marker for the city center
   addMarker(appConfig.TOKYO.lat, appConfig.TOKYO.lng, "Tokyo (approx center)");
-  // ensure driver circle placed at start
   driverMarker.setLatLng([appConfig.TOKYO.lat, appConfig.TOKYO.lng]);
-  updateCountryDisplay(driverMarker.getLatLng()); // Initial country display update
-
+  updateCountryDisplay(driverMarker.getLatLng());
 })();
 
-// Click to add marker: compute route from driver current position to clicked point and animate
 map.on("click", async (e) => {
   try {
-    // If there's an existing route line, confirm replacement
     if (window._routeLine) {
       const ok = await showConfirmModal();
       if (!ok) {
-        // user cancelled; do nothing
         return;
       }
-      // user confirmed: remove existing route & gas markers to prepare for new route
-      try { map.removeLayer(window._routeLine); } catch (err) { /* ignore */ }
+      try { map.removeLayer(window._routeLine); } catch (err) { }
       window._routeLine = null;
       gasMarkers.forEach(m => { try { map.removeLayer(m); } catch { } });
       gasMarkers.length = 0;
@@ -159,10 +117,8 @@ map.on("click", async (e) => {
     const dest = { lat: e.latlng.lat, lng: e.latlng.lng };
     addMarker(dest.lat, dest.lng, `Clicked: ${dest.lat.toFixed(5)}, ${dest.lng.toFixed(5)}`);
 
-    // Build route from driver's current location (driverMarker) to dest
     const fromLatLng = driverMarker.getLatLng();
 
-    // If turbo is enabled, request multiple alternatives and pick the fastest
     let route;
     if (appConfig.GUI_TURBO_MODE) {
       try {
@@ -175,32 +131,24 @@ map.on("click", async (e) => {
       route = await fetchRoute({ lat: fromLatLng.lat, lng: fromLatLng.lng }, dest);
     }
 
-    // record route name/summary
     try {
-      /* @tweakable [use setters instead of assigning to exported module properties (prevents read-only errors)] */
-      import('./simulation.js').then(sim => {
-        sim.setCurrentRouteName(route.legs && route.legs.length ? (route.legs[0].summary || "") : (route.summary || ""));
-        const anyStepIsHighway = (route.legs || []).some(leg => (leg.steps || []).some(s => {
-          const n = (s.name || "").toLowerCase();
-          const r = (s.ref || "").toLowerCase();
-          const motorwayTokens = ["motorway", "高速", "expressway", "highway", "autobahn", "shuto", "route", "i-", "route"];
-          return motorwayTokens.some(t => n.includes(t) || r.includes(t));
-        }));
-        sim.setCurrentRoadType(anyStepIsHighway ? "highway" : "road");
-      });
+      setCurrentRouteName(route.legs && route.legs.length ? (route.legs[0].summary || "") : (route.summary || ""));
+      const anyStepIsHighway = (route.legs || []).some(leg => (leg.steps || []).some(s => {
+        const n = (s.name || "").toLowerCase();
+        const r = (s.ref || "").toLowerCase();
+        const motorwayTokens = ["motorway", "高速", "expressway", "highway", "autobahn", "shuto", "route", "i-", "route"];
+        return motorwayTokens.some(t => n.includes(t) || r.includes(t));
+      }));
+      setCurrentRoadType(anyStepIsHighway ? "highway" : "road");
     } catch (e) {
-      import('./simulation.js').then(sim => {
-        sim.setCurrentRouteName("");
-        sim.setCurrentRoadType("");
-      });
+      setCurrentRouteName("");
+      setCurrentRoadType("");
     }
 
-    // store duration for ETA fallback (seconds)
     window._routeDurationSec = route.duration != null ? route.duration : null;
 
     hideLoading();
 
-    // Draw route polyline
     if (window._routeLine) {
       map.removeLayer(window._routeLine);
     }
@@ -215,29 +163,24 @@ map.on("click", async (e) => {
     try {
       const el = window._routeLine && window._routeLine._path;
       if (el) el.setAttribute("data-route", "true");
-    } catch (e) { }
+    } catch (e) { console.warn("Failed to set route data attribute", e); }
 
-    import('./simulation.js').then(sim => {
-      sim.routeOriginalCoords = coords.slice();
-      sim.routeCoords = coords.slice();
-      sim.placeGasStations(dest);
-      // Start animation using route geometry and steps
-      sim.startAnimation(route.geometry, route.legs.flatMap(leg => leg.steps));
-    });
+    setRouteOriginalCoords(coords.slice());
+    setRouteCoords(coords.slice());
+    placeGasStations(dest);
+    startAnimation(route.geometry, route.legs.flatMap(leg => leg.steps));
 
   } catch (err) {
     hideLoading();
     console.warn("Route error:", err);
   }
 });
+
 function initMap() {
-  map = L.map('map').setView([19.4326, -99.1332], 15);
-
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: ' OpenStreetMap contributors'
-  }).addTo(map);
-
+  const layer = L.layerGroup().addTo(map);
+  setDriversLayerGroup(layer);
   setupLocationTracking();
+  startDriversPolling();
 }
 
 function setupLocationTracking() {
@@ -343,7 +286,6 @@ function loadHistory() {
     const raw = localStorage.getItem('connectionHistory');
     if (!raw) return;
     const parsed = JSON.parse(raw);
-    // migrate older Date objects if any
     connectionHistory = parsed.map(item => ({
       date: new Date(item.date),
       duration: item.duration
@@ -361,7 +303,7 @@ function toggleConnection() {
   isConnected = !isConnected;
 
   if (isConnected) {
-    btn.textContent = 'Disconnect';
+    btn.textContent = appConfig.UI_LABELS.disconnect;
     btn.classList.add('connected');
     startTime = Date.now();
     timerContainer.classList.remove('hidden');
@@ -369,7 +311,7 @@ function toggleConnection() {
     timerInterval = setInterval(updateTimer, 1000);
     startWatchingPosition();
   } else {
-    btn.textContent = 'Connect';
+    btn.textContent = appConfig.UI_LABELS.connect;
     btn.classList.remove('connected');
     timerContainer.classList.add('hidden');
     clearInterval(timerInterval);
@@ -407,29 +349,369 @@ function updateConnectionHistory() {
   });
 }
 
-window.onload = () => {
+async function fetchAndRenderDrivers() {
+  try {
+    const resp = await fetch('http://127.0.0.1:3030/drivers');
+    if (!resp.ok) return;
+    const json = await resp.json();
+    if (!json || !json.drivers) return;
+
+    const currentIds = new Set(json.drivers.map(d => d.id));
+    const existingIds = getDriverIds();
+    existingIds.forEach(id => {
+      if (!currentIds.has(id)) {
+        removeMarker(id);
+      }
+    });
+
+    const layer = getDriversLayerGroup();
+    json.drivers.forEach(d => {
+      const id = d.id;
+      const lat = d.lat;
+      const lon = d.lon;
+      const status = (d.status || '').toLowerCase();
+      const color = status === 'available' ? '#2ecc71' : '#ff375f';
+
+      const existing = APP_STATE.driverMarkers[id];
+      if (!existing) {
+        const icon = L.divIcon({
+          className: 'driver-marker',
+          html: `<div style="width:14px;height:14px;border-radius:50%;background:${color};border:2px solid white;"></div>`,
+          iconSize: [18, 18],
+          iconAnchor: [9, 9]
+        });
+        const m = L.marker([lat, lon], { icon }).bindTooltip(id, { direction: 'top', offset: [0, -10] });
+        if (layer) m.addTo(layer);
+        registerMarker(id, m);
+      } else {
+        existing.setLatLng([lat, lon]);
+        const icon = L.divIcon({
+          className: 'driver-marker',
+          html: `<div style="width:14px;height:14px;border-radius:50%;background:${color};border:2px solid white;"></div>`,
+          iconSize: [18, 18],
+          iconAnchor: [9, 9]
+        });
+        existing.setIcon(icon);
+      }
+    });
+  } catch (e) {
+  }
+}
+
+let driversPollingInterval = null;
+function startDriversPolling() {
+  const settings = loadRuntimeSettingsFromStorage();
+  const ms = settings && settings.pollInterval ? parseInt(settings.pollInterval, 10) : 2000;
+  fetchAndRenderDrivers();
+  driversPollingInterval = setInterval(fetchAndRenderDrivers, ms);
+}
+function stopDriversPolling() {
+  if (driversPollingInterval) {
+    clearInterval(driversPollingInterval);
+    driversPollingInterval = null;
+  }
+}
+
+function loadRuntimeSettings() {
+  const pollIntervalInput = document.getElementById('poll-interval');
+  const simBatchInput = document.getElementById('sim-batch-size');
+  const rustAddrsInput = document.getElementById('rust-addrs');
+  const pollToggleBtn = document.getElementById('poll-toggle');
+
+  const settings = JSON.parse(localStorage.getItem('runtimeSettings') || '{}');
+  pollIntervalInput.value = settings.pollInterval || 2000;
+  simBatchInput.value = settings.simBatchSize || 50;
+  rustAddrsInput.value = settings.rustAddrs || 'http://127.0.0.1:3030';
+  pollToggleBtn.textContent = driversPollingInterval ? 'Stop polling' : 'Start polling';
+
+  if (driversPollingInterval) {
+    clearInterval(driversPollingInterval);
+    driversPollingInterval = setInterval(fetchAndRenderDrivers, parseInt(pollIntervalInput.value, 10));
+  }
+}
+
+function toggleDriversPolling() {
+  const pollBtn = document.getElementById('poll-toggle');
+  const pollIntervalInput = document.getElementById('poll-interval');
+  if (!pollBtn || !pollIntervalInput) return;
+  if (driversPollingInterval) {
+    stopDriversPolling();
+    pollBtn.textContent = appConfig.UI_LABELS.startPolling;
+  } else {
+    const ms = Math.max(500, parseInt(pollIntervalInput.value || '2000', 10));
+    driversPollingInterval = setInterval(fetchAndRenderDrivers, ms);
+    fetchAndRenderDrivers();
+    pollBtn.textContent = appConfig.UI_LABELS.stopPolling;
+  }
+  persistRuntimeSettingsToStorage({
+    pollInterval: parseInt(document.getElementById('poll-interval').value || '2000', 10),
+    simBatchSize: parseInt(document.getElementById('sim-batch-size').value || '50', 10),
+    rustAddrs: (document.getElementById('rust-addrs').value || 'http://127.0.0.1:3030').trim()
+  });
+}
+
+function persistRuntimeSettings() {
+  const pollIntervalInput = document.getElementById('poll-interval');
+  const simBatchInput = document.getElementById('sim-batch-size');
+  const rustAddrsInput = document.getElementById('rust-addrs');
+  const settings = {
+    pollInterval: parseInt(pollIntervalInput.value || '2000', 10),
+    simBatchSize: parseInt(simBatchInput.value || '50', 10),
+    rustAddrs: (rustAddrsInput.value || 'http://127.0.0.1:3030').trim()
+  };
+  localStorage.setItem('runtimeSettings', JSON.stringify(settings));
+  if (driversPollingInterval) {
+    clearInterval(driversPollingInterval);
+    driversPollingInterval = setInterval(fetchAndRenderDrivers, settings.pollInterval);
+  }
+}
+
+function openGoMetrics() {
+  window.open('/metrics', '_blank');
+}
+function openRustMetrics() {
+  const settings = JSON.parse(localStorage.getItem('runtimeSettings') || '{}');
+  const addrs = (settings.rustAddrs || 'http://127.0.0.1:3030').split(',').map(s => s.trim()).filter(Boolean);
+  window.open((addrs[0] || 'http://127.0.0.1:3030') + '/metrics', '_blank');
+}
+
+let simRunning = false;
+let simIntervalHandle = null;
+
+function startSimulatorFromUI() {
+  persistRuntimeSettingsToStorage({
+    pollInterval: parseInt(document.getElementById('poll-interval').value || '2000', 10),
+    simBatchSize: parseInt(document.getElementById('sim-batch-size').value || '50', 10),
+    rustAddrs: (document.getElementById('rust-addrs').value || 'http://127.0.0.1:3030').trim()
+  });
+  const count = parseInt(document.getElementById('sim-count').value || '100', 10);
+  const settings = JSON.parse(localStorage.getItem('runtimeSettings') || '{}');
+  const rustAddrs = settings.rustAddrs || 'http://127.0.0.1:3030';
+  fetch('/generate-drivers?count=' + encodeURIComponent(Math.max(1, count))).then(r => {
+    if (r.ok) {
+      document.getElementById('gear-output').textContent = `Generator started: count=${count}`;
+    } else {
+      document.getElementById('gear-output').textContent = `Generator unavailable (HTTP ${r.status})`;
+    }
+  }).catch(e => {
+    document.getElementById('gear-output').textContent = 'Error contacting generator: ' + e.message;
+  });
+}
+
+function stopSimulatorFromUI() {
+  document.getElementById('gear-output').textContent = 'Stop simulator request sent (if available).';
+}
+
+function toggleGear() {
+  const panel = document.getElementById('gear-panel');
+  if (!panel) return;
+  const isHidden = panel.getAttribute('aria-hidden') === 'true';
+  panel.setAttribute('aria-hidden', isHidden ? 'false' : 'true');
+
+  if (isHidden) {
+    populateDriverSelect();
+    switchGearTab('track');
+    loadRuntimeSettings();
+  }
+}
+
+function switchGearTab(tab) {
+  const title = document.getElementById('gear-title');
+  const tabTrackBtn = document.getElementById('tab-track');
+  const tabAssignBtn = document.getElementById('tab-assign');
+  const tabRuntimeBtn = document.getElementById('tab-runtime');
+  const trackPanel = document.getElementById('gear-tab-track');
+  const assignPanel = document.getElementById('gear-tab-assign');
+  const runtimePanel = document.getElementById('gear-tab-runtime');
+
+  tabTrackBtn.setAttribute('aria-selected', 'false');
+  tabAssignBtn.setAttribute('aria-selected', 'false');
+  tabRuntimeBtn.setAttribute('aria-selected', 'false');
+  trackPanel.classList.add('hidden');
+  assignPanel.classList.add('hidden');
+  runtimePanel.classList.add('hidden');
+  assignPanel.setAttribute('aria-hidden', 'true');
+  runtimePanel.setAttribute('aria-hidden', 'true');
+
+  if (tab === 'assign') {
+    title.textContent = appConfig.UI_LABELS.assignments;
+    tabAssignBtn.setAttribute('aria-selected', 'true');
+    assignPanel.classList.remove('hidden');
+    assignPanel.setAttribute('aria-hidden', 'false');
+  } else if (tab === 'runtime') {
+    title.textContent = appConfig.UI_LABELS.runtime;
+    tabRuntimeBtn.setAttribute('aria-selected', 'true');
+    runtimePanel.classList.remove('hidden');
+    runtimePanel.setAttribute('aria-hidden', 'false');
+  } else {
+    title.textContent = appConfig.UI_LABELS.whatToTrack;
+    tabTrackBtn.setAttribute('aria-selected', 'true');
+    trackPanel.classList.remove('hidden');
+  }
+}
+
+function populateDriverSelect() {
+  const sel = document.getElementById('assign-driver-select');
+  if (!sel) return;
+  sel.innerHTML = '';
+  const ids = getDriverIds();
+  if (ids.length === 0) {
+    const opt = document.createElement('option');
+    opt.value = '';
+    opt.textContent = appConfig.UI_LABELS.noDrivers;
+    sel.appendChild(opt);
+    return;
+  }
+  const blank = document.createElement('option');
+  blank.value = '';
+  blank.textContent = appConfig.UI_LABELS.selectDriver;
+  sel.appendChild(blank);
+  ids.forEach(id => {
+    const opt = document.createElement('option');
+    opt.value = id;
+    opt.textContent = id;
+    sel.appendChild(opt);
+  });
+}
+
+function clearAssignmentForm() {
+  const fields = ['assign-driver-select','assign-type','assign-priority','assign-start','assign-end','assign-notes'];
+  fields.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (el.tagName === 'SELECT') el.selectedIndex = 0;
+    else if (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT') el.value = '';
+  });
+  const out = document.getElementById('gear-output');
+  if (out) out.textContent = '';
+}
+
+function assignToDriver(evt) {
+  if (evt && evt.preventDefault) evt.preventDefault();
+  const sel = document.getElementById('assign-driver-select');
+  const type = document.getElementById('assign-type');
+  const prio = document.getElementById('assign-priority');
+  const start = document.getElementById('assign-start');
+  const end = document.getElementById('assign-end');
+  const notes = document.getElementById('assign-notes');
+  const out = document.getElementById('gear-output');
+  if (!sel || !out) return;
+  const driverId = sel.value;
+  if (!driverId) {
+    out.textContent = appConfig.UI_LABELS.selectDriverToAssign;
+    return;
+  }
+  const payload = {
+    driver_id: driverId,
+    type: type ? type.value : 'pickup',
+    priority: prio ? prio.value : 'normal',
+    start: start && start.value ? start.value : null,
+    end: end && end.value ? end.value : null,
+    notes: notes ? notes.value : null,
+    created_at: new Date().toISOString()
+  };
+
+  out.textContent = JSON.stringify(payload, null, 2);
+
+  try {
+    const m = APP_STATE.driverMarkers[driverId];
+    if (m) {
+      m.openTooltip();
+      setTimeout(() => { try { m.closeTooltip(); } catch(e){} }, 2500);
+    }
+  } catch (e) {}
+}
+
+async function returnTrackedData() {
+  const out = document.getElementById('gear-output');
+  if (!out) return;
+  const form = document.getElementById('track-form');
+  const formData = new FormData(form);
+  const selection = {
+    location: formData.get('trackLocation') === 'on' || formData.has('trackLocation'),
+    speed: formData.get('trackSpeed') === 'on' || formData.has('trackSpeed'),
+    heading: formData.get('trackHeading') === 'on' || formData.has('trackHeading'),
+    status: formData.get('trackStatus') === 'on' || formData.has('trackStatus'),
+  };
+
+  const data = {};
+  try {
+    if (selection.location && marker) {
+      const latlng = marker.getLatLng();
+      data.location = { lat: latlng.lat, lon: latlng.lng };
+    }
+    if (selection.speed || selection.heading) {
+      const pos = await new Promise((res, rej) => {
+        if (!navigator.geolocation) return res(null);
+        navigator.geolocation.getCurrentPosition(p => res(p), () => res(null), {enableHighAccuracy:true, timeout:3000});
+      });
+      if (pos) {
+        if (selection.speed) data.speed_m_s = pos.coords.speed === null ? null : pos.coords.speed;
+        if (selection.heading) data.heading_deg = pos.coords.heading === null ? null : pos.coords.heading;
+      }
+    }
+    if (selection.status) data.connected = !!isConnected;
+    data.timestamp = Date.now();
+  } catch (e) {
+    data.error = String(e);
+  }
+
+  out.textContent = JSON.stringify(data, null, 2);
+  const panel = document.getElementById('gear-panel');
+  if (panel) panel.setAttribute('aria-hidden', 'false');
+}
+
+window.onload = async () => {
   initMap();
   loadHistory();
 
-  // small hook to demo uploading a GPX file if an <input id="gpx-file"> exists
+  let uploadGpxFile = null;
+  try {
+    const mod = await import('./api-client.js');
+    uploadGpxFile = mod.uploadGpxFile;
+  } catch (e) {
+    console.warn('Failed to load api-client dynamically:', e);
+  }
+
   const fileInput = document.getElementById('gpx-file');
+  const resultDiv = document.getElementById('gpx-result');
   if (fileInput) {
     fileInput.addEventListener('change', async (e) => {
       const f = e.target.files[0];
       if (!f) return;
+      resultDiv.textContent = 'Uploading and processing GPX\u2026';
+      if (!uploadGpxFile) {
+        resultDiv.textContent = 'Upload unavailable (client module failed to load)';
+        return;
+      }
       try {
-        const fd = new FormData();
-        fd.append('gpx', f);
-        const res = await fetch('/upload', { method: 'POST', body: fd });
-        const data = await res.json();
-        alert('GPX processed: points=' + (data.points || 0));
+        const data = await uploadGpxFile(f);
+        try {
+          const pretty = JSON.stringify(data, null, 2);
+          resultDiv.textContent = pretty;
+        } catch (err) {
+          resultDiv.textContent = 'Processed (see console)';
+          console.log('GPX response:', data);
+        }
       } catch (err) {
-        alert('Upload failed: ' + err.message);
+        resultDiv.textContent = 'Upload failed: ' + err.message;
       }
     });
   }
 };
 
-// Expose functions used by inline onclick attributes when this file is loaded as a module
 window.toggleProfile = toggleProfile;
 window.toggleConnection = toggleConnection;
+window.toggleGear = toggleGear;
+window.returnTrackedData = returnTrackedData;
+window.switchGearTab = switchGearTab;
+window.populateDriverSelect = populateDriverSelect;
+window.assignToDriver = assignToDriver;
+window.clearAssignmentForm = clearAssignmentForm;
+window.toggleDriversPolling = toggleDriversPolling;
+window.loadRuntimeSettings = loadRuntimeSettings;
+window.persistRuntimeSettings = persistRuntimeSettings;
+window.startSimulatorFromUI = startSimulatorFromUI;
+window.stopSimulatorFromUI = stopSimulatorFromUI;
+window.openGoMetrics = openGoMetrics;
+window.openRustMetrics = openRustMetrics;

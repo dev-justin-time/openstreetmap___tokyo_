@@ -24,7 +24,7 @@ export function removeMarker(id) {
   if (APP_STATE.driverMarkers && APP_STATE.driverMarkers[id]) {
     try {
       APP_STATE.driversLayerGroup.removeLayer(APP_STATE.driverMarkers[id]);
-    } catch (e) {}
+    } catch (e) { console.warn("Failed to remove marker layer", e); }
     delete APP_STATE.driverMarkers[id];
   }
 }

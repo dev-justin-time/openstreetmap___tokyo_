@@ -1,8 +1,9 @@
 // ui.js
 import { appConfig } from "./config.js";
-import { map } from "./map.js";
-import { money, fuelLiters, currentSpeedKmph, vehicleSpeedMps, followCar, routeCoords, routeIndexFloat, routeOriginalCoords, CURRENT_COUNTRY_NAME, CURRENT_ROUTE_NAME, CURRENT_ROAD_TYPE } from "./simulation.js";
-import { distanceToIndexFraction, formatDistanceForDisplay, formatManeuver, getManeuverIconSVG, containsCJK, romanizePlaceNameIfNeeded } from "./utils.js";
+import { map, driverMarker } from "./map.js";
+import { money, fuelLiters, currentSpeedKmph, vehicleSpeedMps, followCar, routeCoords, routeIndexFloat, routeOriginalCoords, CURRENT_COUNTRY_NAME, CURRENT_ROUTE_NAME, CURRENT_ROAD_TYPE, setFollowCar, expandedSteps } from "./simulation.js";
+import { distanceToIndexFraction, formatDistanceForDisplay, formatManeuver, getManeuverIconSVG, containsCJK } from "./utils.js";
+import { romanizePlaceNameIfNeeded } from "./api.js";
 
 // HUD elements
 const hudSpeed = document.getElementById("hud-speed");
@@ -41,11 +42,11 @@ const loadingEl = document.getElementById("loading");
 export function updateHUD() {
   if (appConfig.GUI_IMPERIAL) {
     const mph = (vehicleSpeedMps * 2.236936).toFixed(0);
-    hudSpeed.textContent = `Speed: ${mph} MPH`;
-    hudFuel.textContent = `Fuel: ${(fuelLiters * 0.264172).toFixed(1)} gal`;
+    hudSpeed.textContent = `${appConfig.UI_LABELS.speed}: ${mph} ${appConfig.UI_LABELS.mph}`;
+    hudFuel.textContent = `${appConfig.UI_LABELS.fuel}: ${(fuelLiters * 0.264172).toFixed(1)} ${appConfig.UI_LABELS.gallons}`;
   } else {
-    hudSpeed.textContent = `Speed: ${currentSpeedKmph} KMPH`;
-    hudFuel.textContent = `Fuel: ${fuelLiters.toFixed(1)} L`;
+    hudSpeed.textContent = `${appConfig.UI_LABELS.speed}: ${currentSpeedKmph} ${appConfig.UI_LABELS.kmph}`;
+    hudFuel.textContent = `${appConfig.UI_LABELS.fuel}: ${fuelLiters.toFixed(1)} ${appConfig.UI_LABELS.liters}`;
   }
 
   const hud = document.getElementById("hud");
@@ -66,26 +67,16 @@ export function updateHUD() {
     followBtn.id = "follow-toggle";
     followBtn.type = "button";
     followBtn.title = "Toggle follow car";
-    followBtn.textContent = `Follow: ${followCar ? "on" : "off"}`;
+    followBtn.textContent = `${appConfig.UI_LABELS.follow}: ${followCar ? appConfig.UI_LABELS.on : appConfig.UI_LABELS.off}`;
     followBtn.addEventListener("click", () => {
-      // Toggle follow mode using the provided setter to avoid assigning to read-only module exports
-      import('./simulation.js').then(sim => {
-        const desired = !sim.followCar;
-        if (typeof sim.setFollowCar === "function") {
-          sim.setFollowCar(desired);
-        }
-        const current = (typeof sim.followCar === "boolean") ? sim.followCar : desired;
-        followBtn.textContent = `Follow: ${current ? "on" : "off"}`;
-        // If follow is turned on, instantly pan to current location
-        if (current) {
-          import('./map.js').then(({ driverMarker }) => {
-            const pos = driverMarker.getLatLng();
-            map.panTo(pos);
-          });
-        }
-      }).catch((e) => {
-        console.warn("Failed to toggle follow mode:", e);
-      });
+      const desired = !followCar;
+      setFollowCar(desired);
+      const current = followCar;
+      followBtn.textContent = `${appConfig.UI_LABELS.follow}: ${current ? appConfig.UI_LABELS.on : appConfig.UI_LABELS.off}`;
+      if (current) {
+        const pos = driverMarker.getLatLng();
+        map.panTo(pos);
+      }
     });
     followBtn.style.cssText = `margin-top:6px;padding:6px 8px;border-radius:6px;border:1px solid rgba(0,0,0,0.06);background:white;cursor:pointer;font-weight:600;`;
     hud.appendChild(followBtn);
@@ -94,18 +85,18 @@ export function updateHUD() {
     const hudToggle = document.getElementById("hud-toggle");
     if (hudToggle) {
       // set label to indicate state
-      hudToggle.textContent = appConfig.GUI_INFO_PANEL_VISIBLE ? "Hide" : "Show";
+      hudToggle.textContent = appConfig.GUI_INFO_PANEL_VISIBLE ? appConfig.UI_LABELS.hide : appConfig.UI_LABELS.show;
       hudToggle.setAttribute("aria-pressed", appConfig.GUI_INFO_PANEL_VISIBLE ? "false" : "true");
       hudToggle.addEventListener("click", () => {
         appConfig.GUI_INFO_PANEL_VISIBLE = !appConfig.GUI_INFO_PANEL_VISIBLE;
-        hudToggle.textContent = appConfig.GUI_INFO_PANEL_VISIBLE ? "Hide" : "Show";
+        hudToggle.textContent = appConfig.GUI_INFO_PANEL_VISIBLE ? appConfig.UI_LABELS.hide : appConfig.UI_LABELS.show;
         hudToggle.setAttribute("aria-pressed", appConfig.GUI_INFO_PANEL_VISIBLE ? "false" : "true");
         const hudEl = document.getElementById("hud");
         if (hudEl) hudEl.style.display = appConfig.GUI_INFO_PANEL_VISIBLE ? "" : "none";
       }, { passive: true });
     }
   }
-  hudMoney.textContent = `Money: ${appConfig.currency} ${money.toFixed(2)}`;
+  hudMoney.textContent = `${appConfig.UI_LABELS.money}: ${appConfig.currency} ${money.toFixed(2)}`;
 
   // Route name
   if (!hudRoute) {
@@ -114,7 +105,7 @@ export function updateHUD() {
     hudRoute.style.fontWeight = "700";
     hud.appendChild(hudRoute);
   }
-  hudRoute.textContent = CURRENT_ROUTE_NAME ? `Route: ${CURRENT_ROUTE_NAME}` : `Route: —`;
+  hudRoute.textContent = `${appConfig.UI_LABELS.route}: ${CURRENT_ROUTE_NAME || "—"}`;
 
   // Road/highway indicator
   if (!hudRoad) {
@@ -123,11 +114,11 @@ export function updateHUD() {
     hudRoad.style.fontWeight = "700";
     hud.appendChild(hudRoad);
   }
-  hudRoad.textContent = CURRENT_ROAD_TYPE ? `Type: ${CURRENT_ROAD_TYPE}` : `Type: —`;
+  hudRoad.textContent = `${appConfig.UI_LABELS.type}: ${CURRENT_ROAD_TYPE || "—"}`;
 
   // Country display
   if (hudCountry) { // Pre-existing, just update content and visibility
-    hudCountry.textContent = `Country: ${CURRENT_COUNTRY_NAME}`;
+    hudCountry.textContent = `${appConfig.UI_LABELS.country}: ${CURRENT_COUNTRY_NAME}`;
     hudCountry.style.display = appConfig.GUI_SHOW_COUNTRY ? "" : "none";
   }
 
@@ -145,7 +136,7 @@ export function updateHUD() {
         remainingMeters = distanceToIndexFraction(routeIndexFloat || 0, Math.max(0, routeCoords.length - 1), routeCoords);
       }
     } catch (e) { remainingMeters = 0; }
-    hudDist.textContent = `Remaining: ${formatDistanceForDisplay(remainingMeters, appConfig.GUI_IMPERIAL)}`;
+    hudDist.textContent = `${appConfig.UI_LABELS.remaining}: ${formatDistanceForDisplay(remainingMeters, appConfig.GUI_IMPERIAL)}`;
   } else if (hudDist) {
     hudDist.remove();
     hudDist = null;
@@ -192,9 +183,9 @@ export function updateHUD() {
         if (mins >= 60) {
           const hrs = Math.floor(mins / 60);
           const rem = mins % 60;
-          etaText = rem === 0 ? `${hrs} hr` : `${hrs} hr ${rem} m`;
+          etaText = rem === 0 ? `${hrs} ${appConfig.UI_LABELS.hr}` : `${hrs} ${appConfig.UI_LABELS.hr} ${rem} ${appConfig.UI_LABELS.min}`;
         } else {
-          etaText = `${mins} min`;
+          etaText = `${mins} ${appConfig.UI_LABELS.min}`;
         }
       } else {
         etaText = "—";
@@ -202,7 +193,7 @@ export function updateHUD() {
     } catch (e) {
       etaText = "—";
     }
-    hudEta.textContent = `ETA: ${etaText}`;
+    hudEta.textContent = `${appConfig.UI_LABELS.eta}: ${etaText}`;
   } else if (hudEta) {
     hudEta.remove();
     hudEta = null;
@@ -210,9 +201,8 @@ export function updateHUD() {
 }
 
 // update turn UI based on current fractional index
-export async function updateTurnUI(currentFloatIdx) {
-  // `expandedSteps` needs to be imported dynamically as it's modified by simulation.
-  const { expandedSteps } = await import('./simulation.js');
+export function updateTurnUI(currentFloatIdx) {
+  // `expandedSteps` imported statically from simulation.js
   if (!expandedSteps || expandedSteps.length === 0) {
     if (turnUI) turnUI.setAttribute("aria-hidden", "true");
     if (topTurnUI) topTurnUI.setAttribute("aria-hidden", "true");
@@ -226,8 +216,8 @@ export async function updateTurnUI(currentFloatIdx) {
   const dist = distanceToIndexFraction(currentFloatIdx, next.endIdx, routeCoords);
 
   const formattedDist = (typeof appConfig.TOP_TURN_KM_THRESHOLD === "number" && dist >= appConfig.TOP_TURN_KM_THRESHOLD)
-    ? `${(dist / 1000).toFixed(1)} km`
-    : `${dist} m`;
+    ? `${(dist / 1000).toFixed(1)} ${appConfig.UI_LABELS.km}`
+    : `${dist} ${appConfig.UI_LABELS.m}`;
 
   if (turnUI) turnUI.setAttribute("aria-hidden", "false");
   if (turnTextEl) turnTextEl.textContent = formattedDist; // Distance for bottom UI
@@ -245,7 +235,7 @@ export async function updateTurnUI(currentFloatIdx) {
           try {
             topTurnPlace.textContent = `At: ${short}`;
             topTurnPlace.style.display = "";
-          } catch (e) {}
+          } catch (e) { console.warn("Failed to update topTurnPlace", e); }
         });
       }
       const short = display.length > appConfig.TOP_TURN_PLACE_MAX_CHARS ? display.slice(0, appConfig.TOP_TURN_PLACE_MAX_CHARS - 1) + "…" : display;
