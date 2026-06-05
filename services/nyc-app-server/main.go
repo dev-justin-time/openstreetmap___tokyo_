@@ -446,6 +446,21 @@ func handleNVIDIAProxy(w http.ResponseWriter, r *http.Request) {
 	w.Write(respBody)
 }
 
+// ─── CORS Middleware ───────────────────────────────────────────────────────────
+
+func cors(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-NVIDIA-Key")
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(204)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 func main() {
@@ -455,13 +470,13 @@ func main() {
 	}
 	log.Printf("Loaded %d NYC destinations", server.destDB.Count())
 	go server.startDriverSimulation()
-	http.Handle("/", http.FileServer(http.Dir("../../frontend")))
-	http.Handle("/tiles/", http.StripPrefix("/tiles/", http.FileServer(http.Dir("../plateau-server/plateau_3dtiles"))))
+	http.Handle("/", cors(http.FileServer(http.Dir("../../frontend"))))
+	http.Handle("/tiles/", cors(http.StripPrefix("/tiles/", http.FileServer(http.Dir("../plateau-server/plateau_3dtiles")))))
 	http.HandleFunc("/ws", server.handleWebSocket)
-	http.HandleFunc("/api/assign", server.handleAssignOrder)
-	http.HandleFunc("/api/stats", server.handleNYCStats)
-	http.HandleFunc("/api/drivers", server.handleListDrivers)
-	http.HandleFunc("/api/nvidia/chat", handleNVIDIAProxy)
+	http.HandleFunc("/api/assign", cors(http.HandlerFunc(server.handleAssignOrder)).ServeHTTP)
+	http.HandleFunc("/api/stats", cors(http.HandlerFunc(server.handleNYCStats)).ServeHTTP)
+	http.HandleFunc("/api/drivers", cors(http.HandlerFunc(server.handleListDrivers)).ServeHTTP)
+	http.HandleFunc("/api/nvidia/chat", cors(http.HandlerFunc(handleNVIDIAProxy)).ServeHTTP)
 	log.Println("NYC Driver App starting on http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

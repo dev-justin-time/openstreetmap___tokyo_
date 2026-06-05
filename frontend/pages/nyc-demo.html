@@ -50,7 +50,8 @@ body { color: #e2e2e8; font-family: 'Inter', sans-serif; }
 #statsPanel .status-row { display: flex; align-items: center; gap: 6px; font-size: 11px; margin-top: 8px; }
 #statsPanel .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
 
-#telemetryPanel { position: fixed; top: 68px; left: 16px; z-index: 1000; padding: 10px 14px; border-radius: 12px; max-height: 320px; width: 200px; overflow: hidden; }
+#telemetryPanel { position: fixed; top: 68px; left: 16px; z-index: 1000; padding: 10px 14px; border-radius: 12px; max-height: 320px; width: 200px; overflow: hidden; display: block; }
+#telemetryPanel .title { font-size: 10px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,178,183,0.6); margin-bottom: 8px; }
 #telemetryPanel .title { font-size: 10px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,178,183,0.6); margin-bottom: 8px; }
 #telemetryLog { display: flex; flex-direction: column; gap: 2px; overflow-y: auto; max-height: 260px; padding-right: 4px; }
 #telemetryLog::-webkit-scrollbar { width: 3px; }
@@ -68,7 +69,7 @@ body { color: #e2e2e8; font-family: 'Inter', sans-serif; }
 #driverPopup .actions button:active { transform: scale(0.95); }
 
 /* ─── Game Features ───────────────────────────────────────────────────── */
-#gamePanel { position: fixed; top: 68px; right: 16px; z-index: 999; padding: 0; border-radius: 12px; min-width: 220px; overflow: hidden; display: none; }
+#gamePanel { position: fixed; top: 68px; right: 250px; z-index: 999; padding: 0; border-radius: 12px; min-width: 220px; overflow: hidden; display: none; }
 #gamePanel.show { display: block; }
 #gamePanel .header { padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: space-between; }
 #gamePanel .header .rank { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,178,183,0.5); }
@@ -93,7 +94,7 @@ body { color: #e2e2e8; font-family: 'Inter', sans-serif; }
 #toastContainer { position: fixed; top: 64px; left: 50%; transform: translateX(-50%); z-index: 2000; display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; }
 
 /* NVIDIA API Panel */
-#apiPanel { display: none; position: fixed; top: 52px; right: 8px; width: 290px; z-index: 1100; border-color: rgba(108,195,255,0.3); max-height: calc(100vh - 64px); overflow-y: auto; }
+#apiPanel { display: none; position: fixed; top: 340px; right: 16px; width: 290px; z-index: 1100; border-color: rgba(108,195,255,0.3); max-height: calc(100vh - 400px); overflow-y: auto; border-radius: 12px; }
 #apiPanel .header { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; background: rgba(108,195,255,0.06); border-bottom: 1px solid rgba(108,195,255,0.1); }
 #apiPanel .body { padding: 10px 14px; }
 #apiPanel input[type=range] { -webkit-appearance: none; height: 3px; background: rgba(108,195,255,0.2); border-radius: 2px; outline: none; }
@@ -106,7 +107,7 @@ body { color: #e2e2e8; font-family: 'Inter', sans-serif; }
 @keyframes pulse { 0%,100% { opacity: 0.3; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } }
 
 /* Settings Panel */
-#settingsPanel { display: none; position: fixed; top: 52px; right: 8px; width: 230px; z-index: 1100; max-height: calc(100vh - 64px); overflow-y: auto; }
+#settingsPanel { display: none; position: fixed; top: 340px; right: 250px; width: 230px; z-index: 1100; max-height: calc(100vh - 400px); overflow-y: auto; border-radius: 12px; }
 #settingsPanel .header { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; border-bottom: 1px solid rgba(255,255,255,0.06); }
 #settingsPanel .body { padding: 10px 14px; }
 #settingsPanel .section-title { font-size: 9px; text-transform: uppercase; letter-spacing: 0.12em; color: rgba(226,226,232,0.3); margin-bottom: 6px; }
@@ -307,6 +308,7 @@ body { color: #e2e2e8; font-family: 'Inter', sans-serif; }
       <label class="pnl-toggle"><input type="checkbox" checked data-panel="controlPanel"><span>Controls</span></label>
       <label class="pnl-toggle"><input type="checkbox" data-panel="apiPanel"><span>NVIDIA API</span></label>
     </div>
+    <button id="btnToggleAllPanels" style="width:100%;padding:6px;border:none;border-radius:6px;background:rgba(255,255,255,0.06);color:rgba(226,226,232,0.5);font-size:10px;font-weight:600;letter-spacing:0.05em;cursor:pointer;text-transform:uppercase;margin-bottom:10px">Toggle All Panels</button>
     <div class="section-title">CONNECTION</div>
     <div style="margin-bottom:6px">
       <div style="display:flex;justify-content:space-between;margin-bottom:3px">
@@ -340,8 +342,8 @@ body { color: #e2e2e8; font-family: 'Inter', sans-serif; }
 
 <script>
 // ─── Configuration ──────────────────────────────────────────────────────────
-const WS_URL = 'ws://127.0.0.1:8080/ws';
-const API_BASE = 'http://127.0.0.1:8080';
+const WS_URL = 'ws://localhost:8080/ws';
+const API_BASE = 'http://localhost:8080';
 const NYC_LNG_LAT = [-73.9855, 40.7580];
 const ZOOM = 12;
 const TARGET_FPS = 30;
@@ -918,8 +920,8 @@ function switchMode(demo) {
     info.style.background = 'rgba(74,225,131,0.06)';
   }
   // Reconnect with new URL
-  const newWsUrl = demo ? 'ws://127.0.0.1:8080/ws' : 'ws://127.0.0.1:8081/ws';
-  const newApiUrl = demo ? 'http://127.0.0.1:8080' : 'http://127.0.0.1:8081';
+  const newWsUrl = demo ? 'ws://localhost:8080/ws' : 'ws://localhost:8081/ws';
+  const newApiUrl = demo ? 'http://localhost:8080' : 'http://localhost:8081';
   window.WS_URL = newWsUrl;
   window.API_BASE = newApiUrl;
   if (ws) { ws.close(); ws = null; }
@@ -1012,12 +1014,28 @@ connectWS = function() {
 };
 
 // Patch existing connectWS usage: call our new version
+
+let allPanelsVisible = false;
+document.getElementById('btnToggleAllPanels').addEventListener('click', () => toggleAllPanels());
+function toggleAllPanels() {
+  allPanelsVisible = !allPanelsVisible;
+  const ids = ['gamePanel', 'apiPanel', 'telemetryPanel', 'controlPanel'];
+  for (const id of ids) {
+    document.getElementById(id).classList.toggle('show', allPanelsVisible);
+  }
+  document.querySelectorAll('#settingsPanel .pnl-toggle input').forEach(cb => {
+    cb.checked = allPanelsVisible;
+  });
+  logTelemetry('PANELS', allPanelsVisible ? 'All shown' : 'All hidden');
+}
+
 document.addEventListener('keydown', (e) => {
   if (e.key === 'a' || e.key === 'A') assignRandomOrder();
   if (e.key === 'r' || e.key === 'R') map.flyTo({ center: NYC_LNG_LAT, zoom: ZOOM, duration: 1000 });
   if (e.key === 'g' || e.key === 'G') document.getElementById('gamePanel').classList.toggle('show');
   if (e.key === 'n' || e.key === 'N') document.getElementById('apiPanel').classList.toggle('show');
   if (e.key === 's' || e.key === 'S') document.getElementById('settingsPanel').classList.toggle('show');
+  if (e.key === 't' || e.key === 'T') toggleAllPanels();
 });
 
 // ─── Init ─────────────────────────────────────────────────────────────────

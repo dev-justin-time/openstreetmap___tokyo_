@@ -108,6 +108,7 @@ The Settings panel (`S` key or `gear` icon in header) provides:
 | `G` | Toggle Game HUD panel |
 | `N` | Toggle NVIDIA API panel |
 | `S` | Toggle Settings panel |
+| `T` | Toggle all panels on/off |
 
 ## NVIDIA API Integration
 
