@@ -1,0 +1,187 @@
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Driver App</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app">
+    <div id="map"></div>
+    
+    <div class="status-bar">
+      <div class="profile-icon">
+        <i class="material-icons" onclick="toggleProfile()">account_circle</i>
+      </div>
+
+      <!-- Gear icon to open tracking popup -->
+      <div class="gear-icon" title="Configure tracking">
+        <i class="material-icons" onclick="toggleGear()">settings</i>
+      </div>
+    </div>
+
+    <!-- Enhanced Tracking & Control popup panel (closeable, tabs, runtime controls) -->
+    <div id="gear-panel" class="gear-panel" aria-hidden="true" role="dialog" aria-label="Gear panel">
+      <div class="gear-header">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <h3 id="gear-title">Controles</h3>
+          <nav class="gear-tabs" role="tablist" aria-label="gear tabs">
+            <button id="tab-track" role="tab" aria-selected="true" onclick="switchGearTab('track')">Rastreo</button>
+            <button id="tab-assign" role="tab" aria-selected="false" onclick="switchGearTab('assign')">Asignaciones</button>
+            <button id="tab-runtime" role="tab" aria-selected="false" onclick="switchGearTab('runtime')">Runtime</button>
+          </nav>
+        </div>
+        <i class="material-icons close-icon" onclick="toggleGear()">close</i>
+      </div>
+
+      <div class="gear-body">
+        <!-- TRACKING TAB -->
+        <div id="gear-tab-track" class="gear-tab" role="tabpanel">
+          <form id="track-form">
+            <label><input type="checkbox" name="trackLocation" checked> Ubicación (lat/lon)</label><br>
+            <label><input type="checkbox" name="trackSpeed"> Velocidad</label><br>
+            <label><input type="checkbox" name="trackHeading"> Dirección</label><br>
+            <label><input type="checkbox" name="trackStatus"> Estado (online/offline)</label><br>
+            <small style="color:#666">Pulsa "Devolver datos" para ver la lectura actual según las opciones seleccionadas.</small>
+          </form>
+
+          <div style="margin-top:12px; display:flex; gap:8px;">
+            <button id="return-data-btn" onclick="returnTrackedData()" style="flex:1;">Devolver datos</button>
+            <button onclick="toggleGear()" style="flex:1; background:#eee;">Cerrar</button>
+          </div>
+        </div>
+
+        <!-- ASSIGNMENTS TAB -->
+        <div id="gear-tab-assign" class="gear-tab hidden" role="tabpanel" aria-hidden="true">
+          <div class="assign-grid">
+            <label>Conductor
+              <select id="assign-driver-select">
+                <option value="">Cargando conductores…</option>
+              </select>
+            </label>
+
+            <label>Tipo de asignación
+              <select id="assign-type">
+                <option value="pickup">Recogida</option>
+                <option value="dropoff">Entrega</option>
+                <option value="shift">Turno</option>
+                <option value="custom">Personalizada</option>
+              </select>
+            </label>
+
+            <label>Prioridad
+              <select id="assign-priority">
+                <option value="low">Baja</option>
+                <option value="normal" selected>Normal</option>
+                <option value="high">Alta</option>
+              </select>
+            </label>
+
+            <label>Inicio
+              <input id="assign-start" type="datetime-local" />
+            </label>
+
+            <label>Fin
+              <input id="assign-end" type="datetime-local" />
+            </label>
+
+            <label style="grid-column: 1 / -1;">Notas
+              <textarea id="assign-notes" rows="3" placeholder="Detalles de la tarea…"></textarea>
+            </label>
+          </div>
+
+          <div style="margin-top:12px; display:flex; gap:8px;">
+            <button id="assign-btn" onclick="assignToDriver()" style="flex:1; background:#8b37ff; color:white;">Asignar</button>
+            <button onclick="clearAssignmentForm()" style="flex:1; background:#eee;">Borrar</button>
+          </div>
+        </div>
+
+        <!-- RUNTIME / CONTROLS TAB -->
+        <div id="gear-tab-runtime" class="gear-tab hidden" role="tabpanel" aria-hidden="true">
+          <div style="display:flex; flex-direction:column; gap:8px; font-size:0.95rem;">
+            <label>
+              Estado de polling de conductores
+              <div style="display:flex; gap:8px; margin-top:6px;">
+                <button id="poll-toggle" onclick="toggleDriversPolling()" style="flex:1;">Detener polling</button>
+                <button onclick="fetchAndRenderDrivers()" style="flex:1; background:#eee;">Forzar actualización</button>
+              </div>
+            </label>
+
+            <label>
+              Intervalo polling (ms)
+              <input id="poll-interval" type="number" min="500" step="100" style="margin-top:6px; padding:8px; border-radius:6px;" />
+            </label>
+
+            <label>
+              Batch size de simulador
+              <input id="sim-batch-size" type="number" min="1" step="1" style="margin-top:6px; padding:8px; border-radius:6px;" />
+            </label>
+
+            <label>
+              Dirección base Rust
+              <input id="rust-addrs" type="text" placeholder="http://127.0.0.1:3030, http://tracker-2:3030" style="margin-top:6px; padding:8px; border-radius:6px;" />
+            </label>
+
+            <label>
+              Simulador
+              <div style="display:flex; gap:8px; margin-top:6px;">
+                <input id="sim-count" type="number" min="1" step="1" value="100" style="width:100px; padding:8px; border-radius:6px;" />
+                <button onclick="startSimulatorFromUI()" style="flex:1; background:#8b37ff; color:white;">Iniciar</button>
+                <button onclick="stopSimulatorFromUI()" style="flex:1; background:#eee;">Detener</button>
+              </div>
+            </label>
+
+            <label>
+              Mostrar métricas (abrir /metrics)
+              <div style="display:flex; gap:8px; margin-top:6px;">
+                <button onclick="openGoMetrics()" style="flex:1;">Go /metrics</button>
+                <button onclick="openRustMetrics()" style="flex:1; background:#eee;">Rust /metrics</button>
+              </div>
+            </label>
+
+            <div style="margin-top:6px;">
+              <small style="color:#666">Los ajustes se guardan localmente y afectan el comportamiento del frontend/simulador.</small>
+            </div>
+          </div>
+        </div>
+
+        <div id="gear-output" style="margin-top:12px; font-size:0.9rem; max-height:220px; overflow:auto; background:rgba(0,0,0,0.03); padding:8px; border-radius:6px;"></div>
+      </div>
+    </div>
+
+    <div class="connection-info">
+      <div id="timer-container" class="hidden">
+        <span id="timer-display">00:00</span>
+      </div>
+      <button id="connect-btn" onclick="toggleConnection()">
+        Conectarse
+      </button>
+      <!-- GPX upload control -->
+      <input id="gpx-file" type="file" accept=".gpx" style="display:block; margin-top:0.75rem;">
+      <div id="gpx-result" aria-live="polite" style="margin-top:0.5rem; max-width:320px; background:rgba(255,255,255,0.95); padding:0.5rem; border-radius:8px; font-size:0.9rem;"></div>
+    </div>
+
+    <div id="profile-panel">
+      <div class="profile-header">
+        <h2>Mi Perfil</h2>
+        <i class="material-icons close-icon" onclick="toggleProfile()">close</i>
+      </div>
+      <div class="progress-section">
+        <h3>Progreso hacia Plata</h3>
+        <div class="progress-bar">
+          <div class="progress" style="width: 60%"></div>
+        </div>
+      </div>
+      <div class="connection-history">
+        <h3>Historial de Conexiones</h3>
+        <div id="connection-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
