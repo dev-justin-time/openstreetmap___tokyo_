@@ -8,8 +8,9 @@
 <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet"/>
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { background: #0c0e12; color: #e2e2e8; font-family: 'Inter', sans-serif; overflow: hidden; height: 100vh; }
+html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #0c0e12; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { color: #e2e2e8; font-family: 'Inter', sans-serif; }
 .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
 .glass { background: rgba(17,19,23,0.88); backdrop-filter: blur(18px); border: 1px solid rgba(255,255,255,0.1); }
 .glass-light { background: rgba(26,29,35,0.82); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); }
@@ -17,7 +18,9 @@ body { background: #0c0e12; color: #e2e2e8; font-family: 'Inter', sans-serif; ov
 .nav-dropdown { position: absolute; top: calc(100% + 8px); left: 0; min-width: 200px; z-index: 70; opacity: 0; transform: translateY(-8px) scale(0.95); pointer-events: none; transition: opacity 0.2s ease, transform 0.2s ease; }
 .nav-dropdown.open { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
 
-#map { position: fixed; inset: 0; z-index: 0; }
+#map { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 0; background: linear-gradient(135deg, #0c0e12 0%, #1a1035 30%, #0f1a2e 60%, #0c0e12 100%); }
+#map canvas { display: block; }
+.maplibregl-map { width: 100% !important; height: 100% !important; }
 .maplibregl-ctrl-attrib { display: none !important; }
 .maplibregl-ctrl-top-right { top: 64px !important; }
 .maplibregl-popup-content-wrapper { background: rgba(17,19,23,0.95) !important; backdrop-filter: blur(18px) !important; color: #e2e2e8 !important; border: 1px solid rgba(255,255,255,0.12) !important; border-radius: 12px !important; box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important; }
@@ -437,24 +440,40 @@ function logTelemetry(type, msg) {
 }
 
 // ─── MapLibre Map ─────────────────────────────────────────────────────────
-const map = new maplibregl.Map({
-  container: 'map',
-  style: {
-    version: 8, name: 'NYC Dark',
-    sources: {
-      'carto-dark': {
-        type: 'raster',
-        tiles: ['https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'],
-        tileSize: 256,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>'
-      }
+function initMap() {
+  const m = new maplibregl.Map({
+    container: 'map',
+    style: {
+      version: 8, name: 'NYC Dark',
+      sources: {
+        'carto-dark': {
+          type: 'raster',
+          tiles: ['https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'],
+          tileSize: 256,
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>'
+        },
+        'color-pop': {
+          type: 'raster',
+          tiles: ['https://a.basemaps.cartocdn.com/voyager_labels_under/{z}/{x}/{y}{r}.png'],
+          tileSize: 256,
+          attribution: '&copy; CARTO'
+        }
+      },
+      layers: [
+        { id: 'carto-dark-layer', type: 'raster', source: 'carto-dark', minzoom: 0, maxzoom: 22 },
+        { id: 'color-pop-layer', type: 'raster', source: 'color-pop', minzoom: 0, maxzoom: 22, paint: { 'raster-opacity': 0.15 } }
+      ],
+      glyphs: 'https://fonts.openmaptiles.org/{fontstack}/{range}.pbf'
     },
-    layers: [{ id: 'carto-dark-layer', type: 'raster', source: 'carto-dark', minzoom: 0, maxzoom: 22 }],
-    glyphs: 'https://fonts.openmaptiles.org/{fontstack}/{range}.pbf'
-  },
-  center: NYC_LNG_LAT, zoom: ZOOM, attributionControl: false
-});
-map.addControl(new maplibregl.NavigationControl(), 'top-right');
+    center: NYC_LNG_LAT, zoom: ZOOM, attributionControl: false
+  });
+  m.addControl(new maplibregl.NavigationControl(), 'top-right');
+  if (window.ResizeObserver) {
+    new ResizeObserver(function() { m.resize(); }).observe(document.getElementById('map'));
+  }
+  return m;
+}
+const map = initMap();
 
 // ─── Source & Layers ───────────────────────────────────────────────────────
 map.on('load', () => {
@@ -478,12 +497,21 @@ map.on('load', () => {
     paint: { 'text-color': '#fff', 'text-halo-color': 'rgba(0,0,0,0.6)', 'text-halo-width': 1.5 }
   });
   map.addLayer({
+    id: 'driver-glow', type: 'circle', source: 'drivers',
+    filter: ['!', ['has', 'point_count']],
+    paint: {
+      'circle-radius': 12,
+      'circle-color': ['match', ['get', 'status'], 'available', '#4ae183', 'en_route', '#ffd166', 'delivering', '#6cc3ff', '#9e9e9e'],
+      'circle-opacity': 0.25, 'circle-blur': 1.5
+    }
+  });
+  map.addLayer({
     id: 'driver-unclustered', type: 'circle', source: 'drivers',
     filter: ['!', ['has', 'point_count']],
     paint: {
-      'circle-radius': 6,
+      'circle-radius': 7,
       'circle-color': ['match', ['get', 'status'], 'available', '#4ae183', 'en_route', '#ffd166', 'delivering', '#6cc3ff', '#9e9e9e'],
-      'circle-stroke-width': 2, 'circle-stroke-color': 'rgba(255,255,255,0.3)', 'circle-opacity': 0.9
+      'circle-stroke-width': 2.5, 'circle-stroke-color': 'rgba(255,255,255,0.5)', 'circle-opacity': 1
     }
   });
   mapReady = true;
