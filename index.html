@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>OpenStreetMap — Tokyo</title>
+
+    <!-- Import map for modules -->
+    <script type="importmap">
+      {
+        "imports": {
+          "leaflet": "https://unpkg.com/leaflet@1.9.4/dist/leaflet-src.esm.js"
+        }
+      }
+    </script>
+
+    <!-- Leaflet CSS -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+
+    <!-- Font: Noto Sans (clean, readable) -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- Top turn-by-turn UI -->
+    <div id="top-turn-ui" aria-hidden="true" class="top-turn-ui">
+      <div class="top-turn-content">
+        <div class="top-turn-row">
+          <div id="top-turn-icon" class="top-turn-icon">➜</div>
+          <div class="top-turn-main">
+            <div id="top-turn-title" class="top-turn-title">—</div>
+            <div id="top-turn-place" class="top-turn-place">—</div>
+          </div>
+        </div>
+        <div id="top-turn-dist" class="top-turn-dist">— m</div>
+      </div>
+    </div>
+
+    <div id="map" role="application" aria-label="Map showing Tokyo"></div>
+
+    <!-- HUD: speed + fuel (kept minimal as requested) -->
+    <div id="hud" aria-hidden="false">
+      <div style="display: flex; align-items: center; gap: 8px">
+        <div id="hud-speed">Speed: — KMPH</div>
+        <!-- HUD toggle button -->
+        <button
+          id="hud-toggle"
+          aria-pressed="false"
+          title="Toggle info panel"
+          style="
+            margin-left: auto;
+            padding: 6px 8px;
+            border-radius: 8px;
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            background: #fff;
+            cursor: pointer;
+            font-weight: 700;
+          "
+        >
+          —
+        </button>
+      </div>
+      <div id="hud-fuel">Fuel: — L</div>
+      <!-- New: Country display -->
+      <div id="hud-country">Country: —</div>
+    </div>
+
+    <!-- Loading overlay shown while calculating route -->
+    <div id="loading" aria-hidden="true" role="status" aria-live="polite">
+      <div class="loader">
+        <svg viewBox="0 0 50 50" class="spinner" aria-hidden="true">
+          <circle cx="25" cy="25" r="20" fill="none" stroke-width="4"></circle>
+        </svg>
+        <div class="loading-text">Calculating route...</div>
+      </div>
+    </div>
+
+    <!-- Confirmation modal shown when a route/marker already exists -->
+    <div
+      id="confirm-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-hidden="true"
+      class="confirm-hidden"
+    >
+      <div class="confirm-card" role="document">
+        <div class="confirm-title">Are you sure?</div>
+        <div class="confirm-body">
+          A route already exists. Creating a new one will remove the current
+          route and any progress. Continue?
+        </div>
+        <div class="confirm-actions">
+          <button id="confirm-cancel" type="button">Cancel</button>
+          <button id="confirm-ok" type="button" class="primary">
+            Yes, replace
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="turn-ui" aria-hidden="true" class="turn-ui">
+      <div class="turn-icon">➜</div>
+      <div class="turn-info">
+        <div id="turn-text" class="turn-text">—</div>
+        <div id="turn-dist" class="turn-dist">— m</div>
+      </div>
+    </div>
+
+    <!-- Beta warning banner (added) -->
+    <div
+      id="osm-beta-banner"
+      role="status"
+      aria-live="polite"
+      aria-hidden="false"
+      class="osm-beta-banner"
+    >
+      <div class="osm-beta-inner" id="osm-beta-inner">
+        OpenStreetMap May Turn Gray Due To The High Traffic Of American Using
+        The Website - STILL IN BETA BUGS ARE EXPECTED
+      </div>
+      <button id="osm-beta-close" aria-label="Dismiss beta banner">✕</button>
+    </div>
+
+    <!-- New: Minimizable GUI panel -->
+    <div id="gui" class="gui-collapsed" aria-hidden="false">
+      <button id="gui-toggle" title="Open settings" aria-expanded="false">
+        ⚙︎
+      </button>
+      <div id="gui-panel" aria-hidden="true">
+        <div class="gui-row">
+          <label for="cruise-speed">Max cruise km/h</label>
+          <input
+            id="cruise-speed"
+            type="range"
+            min="10"
+            max="10000"
+            step="10"
+          />
+          <span id="cruise-speed-val"></span>
+        </div>
+        <div class="gui-row">
+          <input id="instant-acc" type="checkbox" />
+          <label for="instant-acc">Instant acceleration</label>
+        </div>
+        <div class="gui-row">
+          <input id="no-speed-limit" type="checkbox" />
+          <label for="no-speed-limit">No speed limit</label>
+        </div>
+        <div class="gui-row">
+          <input id="disable-smart-speed" type="checkbox" />
+          <label for="disable-smart-speed">Disable smart speed detection</label>
+        </div>
+        <div class="gui-row">
+          <input id="infinite-fuel" type="checkbox" />
+          <label for="infinite-fuel">Infinite fuel</label>
+        </div>
+        <div class="gui-row">
+          <input id="imperial-mode" type="checkbox" />
+          <label for="imperial-mode">Imperial mode (mph / gal)</label>
+        </div>
+        <div class="gui-row">
+          <input id="invert-turns" type="checkbox" />
+          <label for="invert-turns">Invert turn directions</label>
+        </div>
+        <div class="gui-row">
+          <input id="incidents-enabled" type="checkbox" />
+          <label for="incidents-enabled">Enable car incidents</label>
+        </div>
+        <div class="gui-row">
+          <label for="turbo-alts">Max alternatives</label>
+          <input id="turbo-alts" type="range" min="1" max="10" step="1" />
+          <span id="turbo-alts-val"></span>
+        </div>
+        <div class="gui-row">
+          <label for="teleport">Teleport to city</label>
+          <input
+            id="teleport"
+            type="text"
+            placeholder="City name (e.g. Seoul, Tokyo)"
+          />
+          <button id="teleport-go" type="button">Go</button>
+        </div>
+        <div class="gui-note">
+          Changes apply immediately. City search uses Nominatim (OpenStreetMap).
+        </div>
+      </div>
+    </div>
+    <div class="app">
+      <div id="map"></div>
+
+      <div class="status-bar">
+        <div class="profile-icon">
+          <i class="material-icons" onclick="toggleProfile()">account_circle</i>
+        </div>
+      </div>
+
+      <div class="connection-info">
+        <div id="timer-container" class="hidden">
+          <span id="timer-display">00:00</span>
+        </div>
+        <button id="connect-btn" onclick="toggleConnection()">
+          Conectarse
+        </button>
+      </div>
+
+      <div id="profile-panel">
+        <div class="profile-header">
+          <h2>Mi Perfil</h2>
+          <i class="material-icons close-icon" onclick="toggleProfile()"
+            >close</i
+          >
+        </div>
+        <div class="progress-section">
+          <h3>Progreso hacia Plata</h3>
+          <div class="progress-bar">
+            <div class="progress" style="width: 60%"></div>
+          </div>
+        </div>
+        <div class="connection-history">
+          <h3>Historial de Conexiones</h3>
+          <div id="connection-list"></div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="frontend/api-client.js"></script>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

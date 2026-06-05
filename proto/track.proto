@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package track;
+
+message Point {
+  double lat = 1;
+  double lon = 2;
+  double ele = 3;
+  int64 time_unix_ms = 4;
+}
+
+message TrackSegment {
+  repeated Point points = 1;
+}
+
+message TrackSummary {
+  int32 points = 1;
+  double distance_m = 2;
+  double elevation_gain_m = 3;
+}

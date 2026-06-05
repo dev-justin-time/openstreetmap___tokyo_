@@ -1,0 +1,22 @@
+{
+  "name": "osm-sim-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=16"
+  },
+  "scripts": {
+    "start": "serve -s . -l 8080",
+    "build": "echo \"No build step (ES modules)\"",
+    "lint": "eslint . --ext .js",
+    "format": "prettier --write ."
+  },
+  "dependencies": {
+    "leaflet": "^1.9.4"
+  },
+  "devDependencies": {
+    "serve": "^14.0.1",
+    "eslint": "^8.0.0",
+    "prettier": "^2.0.0"
+  }
+}
