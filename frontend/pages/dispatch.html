@@ -126,6 +126,22 @@
             transform: translateY(0) scale(1);
             pointer-events: auto;
         }
+        .nav-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            min-width: 200px;
+            z-index: 70;
+            opacity: 0;
+            transform: translateY(-8px) scale(0.95);
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+        .nav-dropdown.open {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
+        }
         .custom-scrollbar::-webkit-scrollbar {
             width: 4px;
         }

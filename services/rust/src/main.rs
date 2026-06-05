@@ -90,7 +90,7 @@ impl rstar::PointDistance for SpatialPoint {
 struct Shard {
     rtree: RTree<SpatialPoint>,
     index_map: HashMap<String, SpatialPoint>,
-    capacity: usize,
+    _capacity: usize,
 }
 
 impl Shard {
@@ -98,7 +98,7 @@ impl Shard {
         Self {
             rtree: RTree::new(),
             index_map: HashMap::with_capacity(capacity),
-            capacity,
+            _capacity: capacity,
         }
     }
 

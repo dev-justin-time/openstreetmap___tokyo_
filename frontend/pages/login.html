@@ -34,12 +34,23 @@
             50% { opacity: 0.4; }
         }
         .scanline {
-            width: 100%;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, #ffb2b7, transparent);
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255, 178, 183, 0.03) 2px, rgba(255, 178, 183, 0.03) 4px);
+        }
+        .nav-dropdown {
             position: absolute;
-            top: 0;
-            animation: scan 4s linear infinite;
+            top: calc(100% + 8px);
+            left: 0;
+            min-width: 200px;
+            z-index: 70;
+            opacity: 0;
+            transform: translateY(-8px) scale(0.95);
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+        .nav-dropdown.open {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
         }
         @keyframes scan {
             0% { top: 0%; opacity: 0; }
@@ -147,13 +158,27 @@
   </head>
 <body class="bg-background text-on-background min-h-screen flex flex-col overflow-hidden">
 <!-- Background Map Texture (Faded/Technical) -->
-<div class="map-bg" data-location="New York City" style="">
+<div class="map-bg" data-location="New York City" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBGldmN1WA5gZ_e-m2_8jF4QLkRb8l6cRjMmlLtLhvL63Ysf4xO6HkAJ2pm1yKsL-Gz2X385npMebVkv31U2x5LFkbuvFnvtmyfYQyUB_NCnZ6V3Ez43aRHdWQvW5qthyvj1LuvbAYbKBhzz9uLziEkThtzNcY0Aiz83aePxwY1HOl4yRVlgfCjKlvxI0G5FYdc2VMrqszj6opYC12pL7rz1zMAfXtD4wAHulKARelkc0COQJjMH1DyBNVe7A9tU7vIYj0LbjHi_ZZY');"></div>
 <img class="w-full h-full object-cover" data-alt="A detailed, technical dark-themed satellite map of a major metropolitan area. The image features glowing transit arteries and intricate street grids in deep charcoal and muted grey tones. The lighting is low-key, evoking a mission control or high-end logistics dashboard aesthetic. The mood is clinical, authoritative, and perpetually in motion, with subtle data overlays suggesting real-time tracking." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBGldmN1WA5gZ_e-m2_8jF4QLkRb8l6cRjMmlLtLhvL63Ysf4xO6HkAJ2pm1yKsL-Gz2X385npMebVkv31U2x5LFkbuvFnvtmyfYQyUB_NCnZ6V3Ez43aRHdWQvW5qthyvj1LuvbAYbKBhzz9uLziEkThtzNcY0Aiz83aePxwY1HOl4yRVlgfCjKlvxI0G5FYdc2VMrqszj6opYC12pL7rz1zMAfXtD4wAHulKARelkc0COQJjMH1DyBNVe7A9tU7vIYj0LbjHi_ZZY"/>
 </div>
 <!-- Top AppBar (From Shared Components Guide) -->
 <header class="fixed top-0 w-full z-50 bg-surface-container-low/85 backdrop-blur-xl border-b border-outline-variant/15 flex justify-between items-center px-container-padding h-14 shadow-sm">
-<div class="flex items-center gap-base">
-<span class="material-symbols-outlined text-primary" data-icon="monitoring">monitoring</span>
+<div class="flex items-center gap-base relative" id="navDropdownWrap">
+<span class="material-symbols-outlined text-primary cursor-pointer" data-icon="monitoring" id="navDropdownBtn">monitoring</span>
+<div class="nav-dropdown glass-panel rounded-xl border border-white/15 shadow-2xl overflow-hidden" id="navDropdown">
+<div class="p-2 space-y-1">
+<a href="onboarding.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]">flight_takeoff</span> Onboarding</a>
+<a href="command_center.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]">dashboard</span> Command Center</a>
+<a href="missioncontroll.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]">explore</span> Mission Control</a>
+<a href="dispatch.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]">send</span> Dispatch</a>
+<a href="runtime.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]">tune</span> Runtime</a>
+<a href="driverprofile.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]">person</span> Driver Profile</a>
+<a href="plans.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]">workspace_premium</span> Plans</a>
+<div class="border-t border-white/10 my-1"></div>
+<a href="login.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface"><span class="material-symbols-outlined text-on-surface-variant text-[18px]">login</span> Login</a>
+</div>
+</div>
+</div>
 <span class="font-hud-display text-hud-display text-primary uppercase tracking-widest">KINETIC_FLEET</span>
 </div>
 <div class="flex items-center gap-gutter">
@@ -257,5 +282,13 @@
                 card.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
             }
         });
+        // Nav dropdown
+        const navBtn = document.getElementById('navDropdownBtn');
+        const navDropdown = document.getElementById('navDropdown');
+        if (navBtn && navDropdown) {
+            navBtn.addEventListener('click', (e) => { e.stopPropagation(); navDropdown.classList.toggle('open'); });
+            document.addEventListener('click', (e) => { if (!navDropdown.contains(e.target) && e.target !== navBtn) navDropdown.classList.remove('open'); });
+            navDropdown.querySelectorAll('a').forEach(a => a.addEventListener('click', () => navDropdown.classList.remove('open')));
+        }
     </script>
 </body></html>

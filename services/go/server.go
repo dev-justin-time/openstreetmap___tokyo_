@@ -393,18 +393,18 @@ func loadDriversFromDisk(path string) {
 	}
 	driversMu.Lock()
 	defer driversMu.Unlock()
-	for _, v := range arr {
+	for i := range arr {
 		dr := &driverRec{
-			id:             v.id,
-			loc:            v.loc,
-			status:         v.status,
-			online:         v.online,
-			lastSeen:       v.lastSeen,
+			id:             arr[i].id,
+			loc:            arr[i].loc,
+			status:         arr[i].status,
+			online:         arr[i].online,
+			lastSeen:       arr[i].lastSeen,
 			eventsChan:     make(chan interface{}, 64),
-			Rating:         v.Rating,
-			AcceptanceRate: v.AcceptanceRate,
-			CompletedJobs:  v.CompletedJobs,
-			Efficiency:     v.Efficiency,
+			Rating:         arr[i].Rating,
+			AcceptanceRate: arr[i].AcceptanceRate,
+			CompletedJobs:  arr[i].CompletedJobs,
+			Efficiency:     arr[i].Efficiency,
 		}
 		drivers[dr.id] = dr
 	}

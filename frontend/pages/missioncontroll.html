@@ -164,6 +164,23 @@
             pointer-events: auto;
         }
 
+        .nav-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            min-width: 200px;
+            z-index: 70;
+            opacity: 0;
+            transform: translateY(-8px) scale(0.95);
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+        .nav-dropdown.open {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
+        }
+
         body {
             min-height: max(884px, 100dvh);
         }
@@ -205,7 +222,22 @@
 <button class="w-8 h-8 rounded-full overflow-hidden border border-white/20 bg-surface-container active:scale-95 transition-transform" id="profileBtn">
 <img alt="Driver Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAIMHd0aPY3PxKy8-3s9CJtPzlNcGeMX2_mzH6pO1UeL99mV3T7rpgZ56bMiDInlKuuHgntKZk3xBmpcxFV16WXHq_MHcZtozZ-FeTrl0fvqGg7rDF1qUXEoEVbP6ks5oAwUtTworrq9x-zQ1DB7FYnpy4HvbNxO0pFWxR3jjXtu3OqTub3-tnqjDRAmQnd1fs_W8VZRgGtuRmd-DcK0rLaEmzwkE1SqCF9cZtzklpD4Da8qiNIvdFW7hlWaITvtcTmD6cE0p6vRkIQ"/>
 </button>
-<h1 class="text-headline-md font-headline-md text-primary tracking-widest uppercase">MISSION CONTROL</h1>
+<div class="relative" id="navDropdownWrap">
+<h1 class="text-headline-md font-headline-md text-primary tracking-widest uppercase cursor-pointer" id="navDropdownBtn">MISSION CONTROL</h1>
+<div class="nav-dropdown glass-panel rounded-xl border border-white/15 shadow-2xl overflow-hidden" id="navDropdown">
+<div class="p-2 space-y-1">
+<a href="onboarding.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]">flight_takeoff</span> Onboarding</a>
+<a href="command_center.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]">dashboard</span> Command Center</a>
+<a href="missioncontroll.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]">explore</span> Mission Control</a>
+<a href="dispatch.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]">send</span> Dispatch</a>
+<a href="runtime.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]">tune</span> Runtime</a>
+<a href="driverprofile.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]">person</span> Driver Profile</a>
+<a href="plans.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]">workspace_premium</span> Plans</a>
+<div class="border-t border-white/10 my-1"></div>
+<a href="login.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface"><span class="material-symbols-outlined text-on-surface-variant text-[18px]">login</span> Login</a>
+</div>
+</div>
+</div>
 </div>
 <button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-bright/20 transition-colors active:scale-95 duration-100 relative" id="settingsGear">
 <span class="material-symbols-outlined text-primary" data-icon="settings">settings</span>
@@ -488,6 +520,15 @@ Logout
         if (confirm('Terminate session?')) {
             window.location.reload();
         }
+    }
+
+    // Nav dropdown
+    const navBtn = document.getElementById('navDropdownBtn');
+    const navDropdown = document.getElementById('navDropdown');
+    if (navBtn && navDropdown) {
+        navBtn.addEventListener('click', (e) => { e.stopPropagation(); navDropdown.classList.toggle('open'); });
+        document.addEventListener('click', (e) => { if (!navDropdown.contains(e.target) && e.target !== navBtn) navDropdown.classList.remove('open'); });
+        navDropdown.querySelectorAll('a').forEach(a => a.addEventListener('click', () => navDropdown.classList.remove('open')));
     }
 
     // Init

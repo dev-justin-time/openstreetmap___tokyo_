@@ -113,6 +113,38 @@
         .active-ring {
             box-shadow: 0 0 0 2px #ff375f;
         }
+        .settings-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            min-width: 220px;
+            z-index: 70;
+            opacity: 0;
+            transform: translateY(-8px) scale(0.95);
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+        .settings-dropdown.open {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
+        }
+        .nav-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            min-width: 200px;
+            z-index: 70;
+            opacity: 0;
+            transform: translateY(-8px) scale(0.95);
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+        .nav-dropdown.open {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
+        }
         body {
             background-color: #111317;
             background-image: radial-gradient(circle at 50% 50%, #1a1c20 0%, #111317 100%);
@@ -128,14 +160,58 @@
 <body class="text-on-surface font-body-md overflow-x-hidden">
 <!-- TopAppBar -->
 <header class="fixed top-0 w-full z-50 bg-surface-container-low/85 dark:bg-surface-container-low/85 backdrop-blur-xl border-b border-outline-variant/15 shadow-sm flex justify-between items-center px-container-padding h-14">
-<div class="flex items-center gap-2">
-<span class="material-symbols-outlined text-primary" data-icon="monitoring">monitoring</span>
+<div class="flex items-center gap-2 relative" id="navDropdownWrap">
+<span class="material-symbols-outlined text-primary cursor-pointer" data-icon="monitoring" id="navDropdownBtn">monitoring</span>
+<div class="nav-dropdown glass-panel rounded-xl border border-white/15 shadow-2xl overflow-hidden" id="navDropdown">
+<div class="p-2 space-y-1">
+<a href="onboarding.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]">flight_takeoff</span> Onboarding</a>
+<a href="command_center.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]">dashboard</span> Command Center</a>
+<a href="missioncontroll.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]">explore</span> Mission Control</a>
+<a href="dispatch.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]">send</span> Dispatch</a>
+<a href="runtime.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]">tune</span> Runtime</a>
+<a href="driverprofile.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]">person</span> Driver Profile</a>
+<a href="plans.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]">workspace_premium</span> Plans</a>
+<div class="border-t border-white/10 my-1"></div>
+<a href="login.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface"><span class="material-symbols-outlined text-on-surface-variant text-[18px]">login</span> Login</a>
+</div>
+</div>
+</div>
 <span class="font-hud-display text-hud-display text-primary uppercase tracking-widest">KINETIC_FLEET</span>
 </div>
 <div class="flex items-center gap-4">
-<button class="text-on-surface-variant hover:text-secondary transition-colors active:scale-95">
-<span class="material-symbols-outlined" data-icon="sensors">sensors</span>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-bright/20 transition-colors active:scale-95 duration-100 relative" id="settingsGear">
+<span class="material-symbols-outlined text-primary">settings</span>
 </button>
+<div class="settings-dropdown glass-panel rounded-xl border border-white/15 shadow-2xl overflow-hidden" id="settingsDropdown">
+<div class="p-3 border-b border-white/10 bg-surface-container-low">
+<p class="text-label-caps font-label-caps text-on-surface-variant tracking-widest text-center">QUICK SETTINGS</p>
+</div>
+<div class="p-2 space-y-1">
+<button class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface" onclick="toggleTheme()">
+<span class="material-symbols-outlined text-primary" id="themeIcon">dark_mode</span>
+<span id="themeLabel">Dark Mode</span>
+</button>
+<div class="px-3 py-2.5 flex items-center justify-between">
+<span class="text-body-sm text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">signal_cellular_alt</span> Status
+</span>
+<span class="flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary" id="dropdownStatusDot"></span>
+<span class="text-label-caps text-secondary" id="dropdownStatusText">LIVE</span>
+</span>
+</div>
+<div class="px-3 py-2 text-body-sm text-on-surface-variant border-t border-white/5 flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">dns</span>
+<input class="flex-1 bg-transparent border-none outline-none text-on-surface text-body-sm font-data-mono" id="dropdownServerInput" type="text" value="127.0.0.1:3030" placeholder="server:port"/>
+</div>
+</div>
+<div class="p-2 border-t border-white/10">
+<button class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-error-container/20 transition-colors text-body-sm text-error" onclick="handleLogout()">
+<span class="material-symbols-outlined">logout</span>
+Logout
+</button>
+</div>
+</div>
 </div>
 </header>
 <!-- Main Content Canvas -->
@@ -284,22 +360,22 @@
 </main>
 <!-- BottomNavBar -->
 <nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-4 pt-2 bg-surface-container-lowest/80 dark:bg-surface-container-lowest/80 backdrop-blur-2xl border-t border-outline-variant/10 shadow-[0px_-8px_24px_rgba(0,0,0,0.5)] z-50 rounded-t-full md:hidden">
-<div class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 transition-all duration-300 active:scale-90">
+<a href="missioncontroll.html" class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 transition-all duration-300 active:scale-90">
 <span class="material-symbols-outlined" data-icon="explore">explore</span>
 <span class="font-label-caps text-label-caps uppercase">Mission</span>
-</div>
-<div class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 transition-all duration-300 active:scale-90">
+</a>
+<a href="../pages/runtime.html" class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 transition-all duration-300 active:scale-90">
 <span class="material-symbols-outlined" data-icon="analytics">analytics</span>
 <span class="font-label-caps text-label-caps uppercase">Telemetry</span>
-</div>
-<div class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 transition-all duration-300 active:scale-90">
+</a>
+<a href="../pages/command_center.html" class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 transition-all duration-300 active:scale-90">
 <span class="material-symbols-outlined" data-icon="hub">hub</span>
 <span class="font-label-caps text-label-caps uppercase">Fleet</span>
-</div>
-<div class="flex flex-col items-center justify-center bg-on-secondary-fixed-variant text-secondary rounded-full px-4 py-1 transition-all duration-300 active:scale-90">
+</a>
+<a href="driverprofile.html" class="flex flex-col items-center justify-center bg-on-secondary-fixed-variant text-secondary rounded-full px-4 py-1 transition-all duration-300 active:scale-90">
 <span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
 <span class="font-label-caps text-label-caps uppercase">Profile</span>
-</div>
+</a>
 </nav>
 <script>
         function selectTier(element) {
@@ -324,5 +400,40 @@
                 card.style.transform = `translate(${x}px, ${y}px) ${card.classList.contains('active-ring') ? 'scale(1.05)' : ''}`;
             });
         });
+    </script>
+    <!-- Settings Dropdown JS -->
+    <script>
+        const settingsBtn = document.getElementById('settingsGear');
+        const settingsDropdown = document.getElementById('settingsDropdown');
+        if (settingsBtn && settingsDropdown) {
+            settingsBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                settingsDropdown.classList.toggle('open');
+            });
+            document.addEventListener('click', (e) => {
+                if (!settingsDropdown.contains(e.target) && e.target !== settingsBtn) {
+                    settingsDropdown.classList.remove('open');
+                }
+            });
+        }
+        function toggleTheme() {
+            const html = document.documentElement;
+            const isDark = html.classList.toggle('dark');
+            document.getElementById('themeIcon').textContent = isDark ? 'dark_mode' : 'light_mode';
+            document.getElementById('themeLabel').textContent = isDark ? 'Dark Mode' : 'Light Mode';
+        }
+        function handleLogout() {
+            if (confirm('Terminate session?')) {
+                window.location.reload();
+            }
+        }
+        // Nav dropdown
+        const navBtn = document.getElementById('navDropdownBtn');
+        const navDropdown = document.getElementById('navDropdown');
+        if (navBtn && navDropdown) {
+            navBtn.addEventListener('click', (e) => { e.stopPropagation(); navDropdown.classList.toggle('open'); });
+            document.addEventListener('click', (e) => { if (!navDropdown.contains(e.target) && e.target !== navBtn) navDropdown.classList.remove('open'); });
+            navDropdown.querySelectorAll('a').forEach(a => a.addEventListener('click', () => navDropdown.classList.remove('open')));
+        }
     </script>
 </body></html>
