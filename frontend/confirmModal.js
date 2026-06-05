@@ -20,7 +20,10 @@ export function showConfirmModal() {
       closeConfirm(false);
     };
     if (appConfig.CONFIRM_AUTO_CANCEL_SEC > 0) {
-      _confirmTimer = setTimeout(() => closeConfirm(false), appConfig.CONFIRM_AUTO_CANCEL_SEC * 1000);
+      _confirmTimer = setTimeout(
+        () => closeConfirm(false),
+        appConfig.CONFIRM_AUTO_CANCEL_SEC * 1000
+      );
     }
   });
 }
@@ -38,4 +41,3 @@ export function closeConfirm(result) {
     _confirmResolve = null;
   }
 }
-

@@ -1,1277 +1,3332 @@
 <!DOCTYPE html>
-<html class="dark" lang="en"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>NYC Fleet Demo | KINETIC_FLEET</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet"/>
-<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-<style>
-html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #0c0e12; }
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body { color: #e2e2e8; font-family: 'Inter', sans-serif; }
-.material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
-.glass { background: rgba(17,19,23,0.88); backdrop-filter: blur(18px); border: 1px solid rgba(255,255,255,0.1); }
-.glass-light { background: rgba(26,29,35,0.82); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); }
+<html class="dark" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>NYC Fleet Demo | KINETIC_FLEET</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css"
+      rel="stylesheet"
+    />
+    <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #0c0e12;
+      }
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        color: #e2e2e8;
+        font-family: "Inter", sans-serif;
+      }
+      .material-symbols-outlined {
+        font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+        vertical-align: middle;
+      }
+      .glass {
+        background: rgba(17, 19, 23, 0.88);
+        backdrop-filter: blur(18px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .glass-light {
+        background: rgba(26, 29, 35, 0.82);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
 
-.nav-dropdown { position: absolute; top: calc(100% + 8px); left: 0; min-width: 200px; z-index: 70; opacity: 0; transform: translateY(-8px) scale(0.95); pointer-events: none; transition: opacity 0.2s ease, transform 0.2s ease; }
-.nav-dropdown.open { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+      .nav-dropdown {
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 0;
+        min-width: 200px;
+        z-index: 70;
+        opacity: 0;
+        transform: translateY(-8px) scale(0.95);
+        pointer-events: none;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+      }
+      .nav-dropdown.open {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        pointer-events: auto;
+      }
 
-#map { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 0; background: linear-gradient(135deg, #0c0e12 0%, #1a1035 30%, #0f1a2e 60%, #0c0e12 100%); }
-#map canvas { display: block; }
-.maplibregl-map { width: 100% !important; height: 100% !important; }
-.maplibregl-ctrl-attrib { display: none !important; }
-.maplibregl-ctrl-top-right { top: 64px !important; }
-.maplibregl-popup-content-wrapper { background: rgba(17,19,23,0.95) !important; backdrop-filter: blur(18px) !important; color: #e2e2e8 !important; border: 1px solid rgba(255,255,255,0.12) !important; border-radius: 12px !important; box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important; }
-.maplibregl-popup-tip { border-top-color: rgba(17,19,23,0.95) !important; }
-.maplibregl-popup-close-button { color: #e5bdbe !important; font-size: 18px !important; padding: 4px 8px !important; }
+      #map {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 0;
+        background: linear-gradient(
+          135deg,
+          #0c0e12 0%,
+          #1a1035 30%,
+          #0f1a2e 60%,
+          #0c0e12 100%
+        );
+      }
+      #map canvas {
+        display: block;
+      }
+      .maplibregl-map {
+        width: 100% !important;
+        height: 100% !important;
+      }
+      .maplibregl-ctrl-attrib {
+        display: none !important;
+      }
+      .maplibregl-ctrl-top-right {
+        top: 64px !important;
+      }
+      .maplibregl-popup-content-wrapper {
+        background: rgba(17, 19, 23, 0.95) !important;
+        backdrop-filter: blur(18px) !important;
+        color: #e2e2e8 !important;
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        border-radius: 12px !important;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+      }
+      .maplibregl-popup-tip {
+        border-top-color: rgba(17, 19, 23, 0.95) !important;
+      }
+      .maplibregl-popup-close-button {
+        color: #e5bdbe !important;
+        font-size: 18px !important;
+        padding: 4px 8px !important;
+      }
 
-#header { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
-#header .brand { display: flex; align-items: center; gap: 10px; }
-#header .brand h1 { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700; color: #ffb2b7; letter-spacing: 0.15em; text-transform: uppercase; }
+      #header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 16px;
+      }
+      #header .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      #header .brand h1 {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 16px;
+        font-weight: 700;
+        color: #ffb2b7;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+      }
 
-#controlPanel { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 1000; padding: 12px 20px; border-radius: 14px; display: none; align-items: center; gap: 16px; flex-wrap: wrap; justify-content: center; }
-#controlPanel.show { display: flex; }
-#controlPanel .stat { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-family: 'JetBrains Mono', monospace; }
-#controlPanel .stat .num { font-size: 18px; font-weight: 700; }
-#controlPanel button { padding: 8px 18px; border: none; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0.05em; cursor: pointer; text-transform: uppercase; transition: all 0.15s; display: flex; align-items: center; gap: 6px; }
-#controlPanel button:active { transform: scale(0.96); }
-#controlPanel button.primary { background: #ff375f; color: #fff; }
-#controlPanel button.primary:hover { background: #ff506c; }
-#controlPanel button.secondary { background: rgba(255,255,255,0.08); color: #e2e2e8; }
-#controlPanel button.secondary:hover { background: rgba(255,255,255,0.14); }
+      #controlPanel {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1000;
+        padding: 12px 20px;
+        border-radius: 14px;
+        display: none;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      #controlPanel.show {
+        display: flex;
+      }
+      #controlPanel .stat {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-family: "JetBrains Mono", monospace;
+      }
+      #controlPanel .stat .num {
+        font-size: 18px;
+        font-weight: 700;
+      }
+      #controlPanel button {
+        padding: 8px 18px;
+        border: none;
+        border-radius: 8px;
+        font-family: "Inter", sans-serif;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        cursor: pointer;
+        text-transform: uppercase;
+        transition: all 0.15s;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      #controlPanel button:active {
+        transform: scale(0.96);
+      }
+      #controlPanel button.primary {
+        background: #ff375f;
+        color: #fff;
+      }
+      #controlPanel button.primary:hover {
+        background: #ff506c;
+      }
+      #controlPanel button.secondary {
+        background: rgba(255, 255, 255, 0.08);
+        color: #e2e2e8;
+      }
+      #controlPanel button.secondary:hover {
+        background: rgba(255, 255, 255, 0.14);
+      }
 
-/* Right Sidebar — flex column, panels stack without overlap */
-#rightSidebar { position: fixed; top: 68px; right: 16px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; max-height: calc(100vh - 84px); overflow-y: auto; }
-#rightSidebar::-webkit-scrollbar { width: 3px; }
-#rightSidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+      /* Right Sidebar — flex column, panels stack without overlap */
+      #rightSidebar {
+        position: fixed;
+        top: 68px;
+        right: 16px;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-height: calc(100vh - 84px);
+        overflow-y: auto;
+      }
+      #rightSidebar::-webkit-scrollbar {
+        width: 3px;
+      }
+      #rightSidebar::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 2px;
+      }
 
-#statsPanel { position: relative; right: auto; top: auto; z-index: auto; padding: 14px 16px; border-radius: 12px; min-width: 220px; }
-#statsPanel .title { font-size: 10px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,178,183,0.6); margin-bottom: 10px; }
-#statsPanel .row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 12px; }
-#statsPanel .row .label { color: rgba(226,226,232,0.6); }
-#statsPanel .row .val { font-family: 'JetBrains Mono', monospace; font-weight: 600; }
-#statsPanel .divider { height: 1px; background: rgba(255,255,255,0.06); margin: 6px 0; }
-#statsPanel .status-row { display: flex; align-items: center; gap: 6px; font-size: 11px; margin-top: 8px; }
-#statsPanel .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+      #statsPanel {
+        position: relative;
+        right: auto;
+        top: auto;
+        z-index: auto;
+        padding: 14px 16px;
+        border-radius: 12px;
+        min-width: 220px;
+      }
+      #statsPanel .title {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: rgba(255, 178, 183, 0.6);
+        margin-bottom: 10px;
+      }
+      #statsPanel .row {
+        display: flex;
+        justify-content: space-between;
+        padding: 4px 0;
+        font-size: 12px;
+      }
+      #statsPanel .row .label {
+        color: rgba(226, 226, 232, 0.6);
+      }
+      #statsPanel .row .val {
+        font-family: "JetBrains Mono", monospace;
+        font-weight: 600;
+      }
+      #statsPanel .divider {
+        height: 1px;
+        background: rgba(255, 255, 255, 0.06);
+        margin: 6px 0;
+      }
+      #statsPanel .status-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        margin-top: 8px;
+      }
+      #statsPanel .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        display: inline-block;
+      }
 
-#telemetryPanel { position: fixed; top: 68px; left: 16px; z-index: 1000; padding: 10px 14px; border-radius: 12px; max-height: 320px; width: 200px; overflow: hidden; display: none; }
-#telemetryPanel.show { display: block; }
-#telemetryPanel .title { font-size: 10px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,178,183,0.6); margin-bottom: 8px; }
-#telemetryPanel .title { font-size: 10px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,178,183,0.6); margin-bottom: 8px; }
-#telemetryLog { display: flex; flex-direction: column; gap: 2px; overflow-y: auto; max-height: 260px; padding-right: 4px; }
-#telemetryLog::-webkit-scrollbar { width: 3px; }
-#telemetryLog::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
-#telemetryLog .entry { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: rgba(226,226,232,0.5); padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.03); white-space: nowrap; }
-#telemetryLog .entry .t { color: rgba(74,225,131,0.5); }
-#telemetryLog .entry .msg { color: rgba(226,226,232,0.7); }
+      #telemetryPanel {
+        position: fixed;
+        top: 68px;
+        left: 16px;
+        z-index: 1000;
+        padding: 10px 14px;
+        border-radius: 12px;
+        max-height: 320px;
+        width: 200px;
+        overflow: hidden;
+        display: none;
+      }
+      #telemetryPanel.show {
+        display: block;
+      }
+      #telemetryPanel .title {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: rgba(255, 178, 183, 0.6);
+        margin-bottom: 8px;
+      }
+      #telemetryPanel .title {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: rgba(255, 178, 183, 0.6);
+        margin-bottom: 8px;
+      }
+      #telemetryLog {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        overflow-y: auto;
+        max-height: 260px;
+        padding-right: 4px;
+      }
+      #telemetryLog::-webkit-scrollbar {
+        width: 3px;
+      }
+      #telemetryLog::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 2px;
+      }
+      #telemetryLog .entry {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 9px;
+        color: rgba(226, 226, 232, 0.5);
+        padding: 2px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        white-space: nowrap;
+      }
+      #telemetryLog .entry .t {
+        color: rgba(74, 225, 131, 0.5);
+      }
+      #telemetryLog .entry .msg {
+        color: rgba(226, 226, 232, 0.7);
+      }
 
-#driverPopup { position: fixed; top: 68px; left: 50%; transform: translateX(-50%); z-index: 1001; padding: 14px 20px; border-radius: 12px; display: none; min-width: 260px; text-align: center; }
-#driverPopup.show { display: block; }
-#driverPopup h3 { font-size: 14px; margin-bottom: 4px; }
-#driverPopup .info { font-size: 11px; color: rgba(226,226,232,0.6); margin-bottom: 10px; }
-#driverPopup .actions { display: flex; gap: 8px; justify-content: center; }
-#driverPopup .actions button { padding: 6px 16px; border: none; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.15s; text-transform: uppercase; letter-spacing: 0.05em; }
-#driverPopup .actions button:active { transform: scale(0.95); }
+      #driverPopup {
+        position: fixed;
+        top: 68px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1001;
+        padding: 14px 20px;
+        border-radius: 12px;
+        display: none;
+        min-width: 260px;
+        text-align: center;
+      }
+      #driverPopup.show {
+        display: block;
+      }
+      #driverPopup h3 {
+        font-size: 14px;
+        margin-bottom: 4px;
+      }
+      #driverPopup .info {
+        font-size: 11px;
+        color: rgba(226, 226, 232, 0.6);
+        margin-bottom: 10px;
+      }
+      #driverPopup .actions {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+      }
+      #driverPopup .actions button {
+        padding: 6px 16px;
+        border: none;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.15s;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      #driverPopup .actions button:active {
+        transform: scale(0.95);
+      }
 
-/* ─── Game Features ───────────────────────────────────────────────────── */
-#gamePanel { display: none; position: relative; border-radius: 12px; min-width: 220px; overflow: hidden; }
-#gamePanel.show { display: block; }
-#gamePanel .header { padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: space-between; }
-#gamePanel .header .rank { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,178,183,0.5); }
-#gamePanel .body { padding: 10px 14px; }
-#gamePanel .score-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-#gamePanel .score-row .label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(226,226,232,0.5); }
-#gamePanel .score-row .value { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 700; }
-#gamePanel .xp-bar-wrap { height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; margin: 6px 0 10px 0; overflow: hidden; }
-#gamePanel .xp-bar { height: 100%; background: linear-gradient(90deg, #ffb2b7, #ff375f); border-radius: 2px; transition: width 0.3s ease; width: 0%; }
-#gamePanel .xp-label { font-size: 9px; color: rgba(226,226,232,0.4); font-family: 'JetBrains Mono', monospace; text-align: right; margin-bottom: 8px; }
-#gamePanel .game-stat { display: flex; justify-content: space-between; padding: 4px 0; font-size: 11px; }
-#gamePanel .game-stat .lbl { color: rgba(226,226,232,0.5); }
-#gamePanel .game-stat .val { font-family: 'JetBrains Mono', monospace; font-weight: 600; }
-#gamePanel .divider { height: 1px; background: rgba(255,255,255,0.06); margin: 6px 0; }
-#gamePanel .achieve-title { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,178,183,0.5); margin: 8px 0 4px 0; }
-.achieve-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 6px; font-size: 10px; background: rgba(255,55,95,0.15); color: #ffb2b7; margin: 2px; white-space: nowrap; }
-.achieve-badge .icon { font-size: 14px; }
-.achieve-badge.locked { opacity: 0.3; background: rgba(255,255,255,0.04); color: rgba(226,226,232,0.4); }
-#gamePanel .achieve-grid { display: flex; flex-wrap: wrap; gap: 2px; }
+      /* ─── Game Features ───────────────────────────────────────────────────── */
+      #gamePanel {
+        display: none;
+        position: relative;
+        border-radius: 12px;
+        min-width: 220px;
+        overflow: hidden;
+      }
+      #gamePanel.show {
+        display: block;
+      }
+      #gamePanel .header {
+        padding: 10px 14px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      #gamePanel .header .rank {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: rgba(255, 178, 183, 0.5);
+      }
+      #gamePanel .body {
+        padding: 10px 14px;
+      }
+      #gamePanel .score-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+      #gamePanel .score-row .label {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: rgba(226, 226, 232, 0.5);
+      }
+      #gamePanel .score-row .value {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 18px;
+        font-weight: 700;
+      }
+      #gamePanel .xp-bar-wrap {
+        height: 4px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 2px;
+        margin: 6px 0 10px 0;
+        overflow: hidden;
+      }
+      #gamePanel .xp-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #ffb2b7, #ff375f);
+        border-radius: 2px;
+        transition: width 0.3s ease;
+        width: 0%;
+      }
+      #gamePanel .xp-label {
+        font-size: 9px;
+        color: rgba(226, 226, 232, 0.4);
+        font-family: "JetBrains Mono", monospace;
+        text-align: right;
+        margin-bottom: 8px;
+      }
+      #gamePanel .game-stat {
+        display: flex;
+        justify-content: space-between;
+        padding: 4px 0;
+        font-size: 11px;
+      }
+      #gamePanel .game-stat .lbl {
+        color: rgba(226, 226, 232, 0.5);
+      }
+      #gamePanel .game-stat .val {
+        font-family: "JetBrains Mono", monospace;
+        font-weight: 600;
+      }
+      #gamePanel .divider {
+        height: 1px;
+        background: rgba(255, 255, 255, 0.06);
+        margin: 6px 0;
+      }
+      #gamePanel .achieve-title {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: rgba(255, 178, 183, 0.5);
+        margin: 8px 0 4px 0;
+      }
+      .achieve-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 8px;
+        border-radius: 6px;
+        font-size: 10px;
+        background: rgba(255, 55, 95, 0.15);
+        color: #ffb2b7;
+        margin: 2px;
+        white-space: nowrap;
+      }
+      .achieve-badge .icon {
+        font-size: 14px;
+      }
+      .achieve-badge.locked {
+        opacity: 0.3;
+        background: rgba(255, 255, 255, 0.04);
+        color: rgba(226, 226, 232, 0.4);
+      }
+      #gamePanel .achieve-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2px;
+      }
 
-/* Delivery feed */
-.feed-entry { display: flex; align-items: center; gap: 6px; padding: 3px 0; font-size: 10px; color: rgba(226,226,232,0.6); font-family: 'JetBrains Mono', monospace; animation: feedIn 0.25s ease; border-bottom: 1px solid rgba(255,255,255,0.03); }
-.feed-entry .icon { font-size: 12px; }
-.feed-entry .time { color: rgba(226,226,232,0.25); margin-right: auto; font-size: 9px; }
-@keyframes feedIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: translateX(0); } }
+      /* Delivery feed */
+      .feed-entry {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 3px 0;
+        font-size: 10px;
+        color: rgba(226, 226, 232, 0.6);
+        font-family: "JetBrains Mono", monospace;
+        animation: feedIn 0.25s ease;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+      }
+      .feed-entry .icon {
+        font-size: 12px;
+      }
+      .feed-entry .time {
+        color: rgba(226, 226, 232, 0.25);
+        margin-right: auto;
+        font-size: 9px;
+      }
+      @keyframes feedIn {
+        from {
+          opacity: 0;
+          transform: translateX(-8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
 
-/* Driver leaderboard */
-.lb-item { display: flex; align-items: center; gap: 6px; padding: 3px 6px; border-radius: 4px; font-size: 10px; font-family: 'JetBrains Mono', monospace; margin-bottom: 2px; background: rgba(255,255,255,0.03); }
-.lb-item .rank { width: 14px; text-align: center; font-weight: 700; }
-.lb-item .rank.gold { color: #ffd166; }
-.lb-item .rank.silver { color: #c0c0c0; }
-.lb-item .rank.bronze { color: #cd7f32; }
-.lb-item .name { flex: 1; color: rgba(226,226,232,0.6); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.lb-item .dels { color: #ffb2b7; font-weight: 600; }
+      /* Driver leaderboard */
+      .lb-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 3px 6px;
+        border-radius: 4px;
+        font-size: 10px;
+        font-family: "JetBrains Mono", monospace;
+        margin-bottom: 2px;
+        background: rgba(255, 255, 255, 0.03);
+      }
+      .lb-item .rank {
+        width: 14px;
+        text-align: center;
+        font-weight: 700;
+      }
+      .lb-item .rank.gold {
+        color: #ffd166;
+      }
+      .lb-item .rank.silver {
+        color: #c0c0c0;
+      }
+      .lb-item .rank.bronze {
+        color: #cd7f32;
+      }
+      .lb-item .name {
+        flex: 1;
+        color: rgba(226, 226, 232, 0.6);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .lb-item .dels {
+        color: #ffb2b7;
+        font-weight: 600;
+      }
 
-/* Missions */
-.mission { display: flex; align-items: center; gap: 6px; padding: 5px 8px; border-radius: 6px; font-size: 10px; margin-bottom: 3px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); }
-.mission .icon { font-size: 14px; }
-.mission .info { flex: 1; }
-.mission .title { color: rgba(226,226,232,0.7); font-weight: 600; }
-.mission .desc { color: rgba(226,226,232,0.4); font-size: 9px; }
-.mission .pct { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: #4ae183; }
-.mission.done { opacity: 0.5; border-color: rgba(74,225,131,0.3); }
-.mission.done .pct { color: #4ae183; }
+      /* Missions */
+      .mission {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 8px;
+        border-radius: 6px;
+        font-size: 10px;
+        margin-bottom: 3px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+      }
+      .mission .icon {
+        font-size: 14px;
+      }
+      .mission .info {
+        flex: 1;
+      }
+      .mission .title {
+        color: rgba(226, 226, 232, 0.7);
+        font-weight: 600;
+      }
+      .mission .desc {
+        color: rgba(226, 226, 232, 0.4);
+        font-size: 9px;
+      }
+      .mission .pct {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        font-weight: 700;
+        color: #4ae183;
+      }
+      .mission.done {
+        opacity: 0.5;
+        border-color: rgba(74, 225, 131, 0.3);
+      }
+      .mission.done .pct {
+        color: #4ae183;
+      }
 
-/* Confetti */
-.confetti-piece { position: fixed; width: 6px; height: 6px; pointer-events: none; z-index: 9999; animation: confettiFall 1.5s ease forwards; }
-@keyframes confettiFall { 0% { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); } 100% { opacity: 0; transform: translateY(200px) rotate(720deg) scale(0.3); } }
+      /* Confetti */
+      .confetti-piece {
+        position: fixed;
+        width: 6px;
+        height: 6px;
+        pointer-events: none;
+        z-index: 9999;
+        animation: confettiFall 1.5s ease forwards;
+      }
+      @keyframes confettiFall {
+        0% {
+          opacity: 1;
+          transform: translateY(0) rotate(0deg) scale(1);
+        }
+        100% {
+          opacity: 0;
+          transform: translateY(200px) rotate(720deg) scale(0.3);
+        }
+      }
 
-/* Toast notifications */
-#toastContainer { position: fixed; top: 64px; left: 50%; transform: translateX(-50%); z-index: 2000; display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; }
+      /* Toast notifications */
+      #toastContainer {
+        position: fixed;
+        top: 64px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 2000;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        pointer-events: none;
+      }
 
-/* NVIDIA API Panel */
-#apiPanel { display: none; position: relative; width: 290px; border-color: rgba(108,195,255,0.3); max-height: 360px; overflow-y: auto; border-radius: 12px; }
-#apiPanel.show { display: block; }
-#apiPanel .header { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; background: rgba(108,195,255,0.06); border-bottom: 1px solid rgba(108,195,255,0.1); }
-#apiPanel .body { padding: 10px 14px; }
-#apiPanel input[type=range] { -webkit-appearance: none; height: 3px; background: rgba(108,195,255,0.2); border-radius: 2px; outline: none; }
-#apiPanel input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: #6cc3ff; border-radius: 50%; cursor: pointer; }
-#apiPanel select:hover, #apiPanel input:hover, #apiPanel textarea:hover { border-color: rgba(108,195,255,0.25); }
-#apiPanel select:focus, #apiPanel input:focus, #apiPanel textarea:focus { border-color: rgba(108,195,255,0.4); }
-#apiPanel button#btnAPISend:hover { background: #5bb5f0; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(108,195,255,0.3); }
-#apiPanel button#btnAPISend:active { transform: translateY(0); }
+      /* NVIDIA API Panel */
+      #apiPanel {
+        display: none;
+        position: relative;
+        width: 290px;
+        border-color: rgba(108, 195, 255, 0.3);
+        max-height: 360px;
+        overflow-y: auto;
+        border-radius: 12px;
+      }
+      #apiPanel.show {
+        display: block;
+      }
+      #apiPanel .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 14px;
+        background: rgba(108, 195, 255, 0.06);
+        border-bottom: 1px solid rgba(108, 195, 255, 0.1);
+      }
+      #apiPanel .body {
+        padding: 10px 14px;
+      }
+      #apiPanel input[type="range"] {
+        -webkit-appearance: none;
+        height: 3px;
+        background: rgba(108, 195, 255, 0.2);
+        border-radius: 2px;
+        outline: none;
+      }
+      #apiPanel input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 12px;
+        height: 12px;
+        background: #6cc3ff;
+        border-radius: 50%;
+        cursor: pointer;
+      }
+      #apiPanel select:hover,
+      #apiPanel input:hover,
+      #apiPanel textarea:hover {
+        border-color: rgba(108, 195, 255, 0.25);
+      }
+      #apiPanel select:focus,
+      #apiPanel input:focus,
+      #apiPanel textarea:focus {
+        border-color: rgba(108, 195, 255, 0.4);
+      }
+      #apiPanel button#btnAPISend:hover {
+        background: #5bb5f0;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(108, 195, 255, 0.3);
+      }
+      #apiPanel button#btnAPISend:active {
+        transform: translateY(0);
+      }
 
-@keyframes pulse { 0%,100% { opacity: 0.3; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 0.3;
+          transform: scale(0.8);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(1.2);
+        }
+      }
 
-/* Settings Panel */
-#settingsPanel { display: none; position: relative; width: 230px; max-height: 360px; overflow-y: auto; border-radius: 12px; }
-#settingsPanel.show { display: block; }
-#settingsPanel .header { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; border-bottom: 1px solid rgba(255,255,255,0.06); }
-#settingsPanel .body { padding: 10px 14px; }
-#settingsPanel .section-title { font-size: 9px; text-transform: uppercase; letter-spacing: 0.12em; color: rgba(226,226,232,0.3); margin-bottom: 6px; }
-#settingsPanel .mode-btn { transition: all 0.15s; }
-#settingsPanel .mode-btn:hover { background: rgba(255,178,183,0.15) !important; color: #ffb2b7 !important; }
-.pnl-toggle { display: flex; align-items: center; gap: 6px; padding: 4px 0; font-size: 11px; color: rgba(226,226,232,0.6); cursor: pointer; }
-.pnl-toggle input[type=checkbox] { accent-color: #ffb2b7; width: 14px; height: 14px; cursor: pointer; }
-.pnl-toggle:hover { color: #e2e2e8; }
-.toast { padding: 10px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; animation: toastIn 0.3s ease, toastOut 0.3s ease 3.7s forwards; display: flex; align-items: center; gap: 8px; pointer-events: auto; max-width: 360px; text-align: center; }
-.toast.achieve { background: linear-gradient(135deg, rgba(255,55,95,0.25), rgba(255,178,183,0.15)); border: 1px solid rgba(255,55,95,0.3); color: #ffb2b7; }
-.toast.levelup { background: linear-gradient(135deg, rgba(255,209,102,0.2), rgba(255,178,183,0.15)); border: 1px solid rgba(255,209,102,0.3); color: #ffd166; }
-.toast.combo { background: linear-gradient(135deg, rgba(74,225,131,0.2), rgba(108,195,255,0.15)); border: 1px solid rgba(74,225,131,0.3); color: #4ae183; }
-.toast .icon { font-size: 20px; }
-@keyframes toastIn { from { opacity: 0; transform: translateY(-12px) scale(0.9); } to { opacity: 1; transform: translateY(0) scale(1); } }
-@keyframes toastOut { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(-12px) scale(0.9); } }
+      /* Settings Panel */
+      #settingsPanel {
+        display: none;
+        position: relative;
+        width: 230px;
+        max-height: 360px;
+        overflow-y: auto;
+        border-radius: 12px;
+      }
+      #settingsPanel.show {
+        display: block;
+      }
+      #settingsPanel .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 14px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      }
+      #settingsPanel .body {
+        padding: 10px 14px;
+      }
+      #settingsPanel .section-title {
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: rgba(226, 226, 232, 0.3);
+        margin-bottom: 6px;
+      }
+      #settingsPanel .mode-btn {
+        transition: all 0.15s;
+      }
+      #settingsPanel .mode-btn:hover {
+        background: rgba(255, 178, 183, 0.15) !important;
+        color: #ffb2b7 !important;
+      }
+      .pnl-toggle {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 0;
+        font-size: 11px;
+        color: rgba(226, 226, 232, 0.6);
+        cursor: pointer;
+      }
+      .pnl-toggle input[type="checkbox"] {
+        accent-color: #ffb2b7;
+        width: 14px;
+        height: 14px;
+        cursor: pointer;
+      }
+      .pnl-toggle:hover {
+        color: #e2e2e8;
+      }
+      .toast {
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 600;
+        animation: toastIn 0.3s ease, toastOut 0.3s ease 3.7s forwards;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        pointer-events: auto;
+        max-width: 360px;
+        text-align: center;
+      }
+      .toast.achieve {
+        background: linear-gradient(
+          135deg,
+          rgba(255, 55, 95, 0.25),
+          rgba(255, 178, 183, 0.15)
+        );
+        border: 1px solid rgba(255, 55, 95, 0.3);
+        color: #ffb2b7;
+      }
+      .toast.levelup {
+        background: linear-gradient(
+          135deg,
+          rgba(255, 209, 102, 0.2),
+          rgba(255, 178, 183, 0.15)
+        );
+        border: 1px solid rgba(255, 209, 102, 0.3);
+        color: #ffd166;
+      }
+      .toast.combo {
+        background: linear-gradient(
+          135deg,
+          rgba(74, 225, 131, 0.2),
+          rgba(108, 195, 255, 0.15)
+        );
+        border: 1px solid rgba(74, 225, 131, 0.3);
+        color: #4ae183;
+      }
+      .toast .icon {
+        font-size: 20px;
+      }
+      @keyframes toastIn {
+        from {
+          opacity: 0;
+          transform: translateY(-12px) scale(0.9);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+      @keyframes toastOut {
+        from {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+        to {
+          opacity: 0;
+          transform: translateY(-12px) scale(0.9);
+        }
+      }
 
-/* XP Float */
-.xp-float { position: fixed; font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: #ffb2b7; pointer-events: none; z-index: 3000; animation: xpFloat 1.2s ease forwards; }
-@keyframes xpFloat { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-40px) scale(1.3); } }
+      /* XP Float */
+      .xp-float {
+        position: fixed;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 14px;
+        font-weight: 700;
+        color: #ffb2b7;
+        pointer-events: none;
+        z-index: 3000;
+        animation: xpFloat 1.2s ease forwards;
+      }
+      @keyframes xpFloat {
+        0% {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+        100% {
+          opacity: 0;
+          transform: translateY(-40px) scale(1.3);
+        }
+      }
 
-@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-#driverPopup.show { animation: fadeIn 0.2s ease; }
-.maplibregl-popup { z-index: 1002; }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      #driverPopup.show {
+        animation: fadeIn 0.2s ease;
+      }
+      .maplibregl-popup {
+        z-index: 1002;
+      }
 
-@media (max-width: 640px) {
-  #telemetryPanel, #telemetryPanel.show { display: none; }
-  #statsPanel { right: 8px; min-width: 120px; }
-  #controlPanel { bottom: 12px; padding: 10px 14px; gap: 8px; }
-  #controlPanel .stat .num { font-size: 14px; }
-  #gamePanel { right: 8px; min-width: 180px; }
-}
-</style>
-</head>
-<body>
+      @media (max-width: 640px) {
+        #telemetryPanel,
+        #telemetryPanel.show {
+          display: none;
+        }
+        #statsPanel {
+          right: 8px;
+          min-width: 120px;
+        }
+        #controlPanel {
+          bottom: 12px;
+          padding: 10px 14px;
+          gap: 8px;
+        }
+        #controlPanel .stat .num {
+          font-size: 14px;
+        }
+        #gamePanel {
+          right: 8px;
+          min-width: 180px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
 
-<div id="map"></div>
-
-<!-- Header -->
-<header id="header" class="glass">
-  <div class="brand" style="position:relative" id="navDropdownWrap">
-    <span class="material-symbols-outlined" style="color:#ffb2b7;cursor:pointer" id="navDropdownBtn">monitoring</span>
-    <div class="nav-dropdown glass" style="border-radius:12px;overflow:hidden" id="navDropdown">
-      <div style="padding:4px 0">
-        <a href="onboarding.html" style="display:flex;align-items:center;gap:8px;padding:8px 14px;text-decoration:none;color:#e2e2e8;font-size:13px;transition:background 0.15s"><span class="material-symbols-outlined" style="font-size:18px;color:#ffb2b7">flight_takeoff</span> Onboarding</a>
-        <a href="command_center.html" style="display:flex;align-items:center;gap:8px;padding:8px 14px;text-decoration:none;color:#e2e2e8;font-size:13px;transition:background 0.15s"><span class="material-symbols-outlined" style="font-size:18px;color:#ffb2b7">dashboard</span> Command Center</a>
-        <a href="missioncontroll.html" style="display:flex;align-items:center;gap:8px;padding:8px 14px;text-decoration:none;color:#e2e2e8;font-size:13px;transition:background 0.15s"><span class="material-symbols-outlined" style="font-size:18px;color:#ffb2b7">explore</span> Mission Control</a>
-        <a href="dispatch.html" style="display:flex;align-items:center;gap:8px;padding:8px 14px;text-decoration:none;color:#e2e2e8;font-size:13px;transition:background 0.15s"><span class="material-symbols-outlined" style="font-size:18px;color:#ffb2b7">send</span> Dispatch</a>
-        <a href="runtime.html" style="display:flex;align-items:center;gap:8px;padding:8px 14px;text-decoration:none;color:#e2e2e8;font-size:13px;transition:background 0.15s"><span class="material-symbols-outlined" style="font-size:18px;color:#ffb2b7">tune</span> Runtime</a>
-        <a href="driverprofile.html" style="display:flex;align-items:center;gap:8px;padding:8px 14px;text-decoration:none;color:#e2e2e8;font-size:13px;transition:background 0.15s"><span class="material-symbols-outlined" style="font-size:18px;color:#ffb2b7">person</span> Driver Profile</a>
-        <a href="plans.html" style="display:flex;align-items:center;gap:8px;padding:8px 14px;text-decoration:none;color:#e2e2e8;font-size:13px;transition:background 0.15s"><span class="material-symbols-outlined" style="font-size:18px;color:#ffb2b7">workspace_premium</span> Plans</a>
-        <a href="nyc-demo.html" style="display:flex;align-items:center;gap:8px;padding:8px 14px;text-decoration:none;color:#e2e2e8;font-size:13px;transition:background 0.15s"><span class="material-symbols-outlined" style="font-size:18px;color:#ffb2b7">map</span> NYC Demo</a>
-        <div style="height:1px;background:rgba(255,255,255,0.08);margin:4px 0"></div>
-        <a href="login.html" style="display:flex;align-items:center;gap:8px;padding:8px 14px;text-decoration:none;color:rgba(226,226,232,0.5);font-size:13px;transition:background 0.15s"><span class="material-symbols-outlined" style="font-size:18px;color:rgba(226,226,232,0.5)">login</span> Login</a>
+    <!-- Header -->
+    <header id="header" class="glass">
+      <div class="brand" style="position: relative" id="navDropdownWrap">
+        <span
+          class="material-symbols-outlined"
+          style="color: #ffb2b7; cursor: pointer"
+          id="navDropdownBtn"
+          >monitoring</span
+        >
+        <div
+          class="nav-dropdown glass"
+          style="border-radius: 12px; overflow: hidden"
+          id="navDropdown"
+        >
+          <div style="padding: 4px 0">
+            <a
+              href="onboarding.html"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 8px 14px;
+                text-decoration: none;
+                color: #e2e2e8;
+                font-size: 13px;
+                transition: background 0.15s;
+              "
+              ><span
+                class="material-symbols-outlined"
+                style="font-size: 18px; color: #ffb2b7"
+                >flight_takeoff</span
+              >
+              Onboarding</a
+            >
+            <a
+              href="command_center.html"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 8px 14px;
+                text-decoration: none;
+                color: #e2e2e8;
+                font-size: 13px;
+                transition: background 0.15s;
+              "
+              ><span
+                class="material-symbols-outlined"
+                style="font-size: 18px; color: #ffb2b7"
+                >dashboard</span
+              >
+              Command Center</a
+            >
+            <a
+              href="missioncontroll.html"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 8px 14px;
+                text-decoration: none;
+                color: #e2e2e8;
+                font-size: 13px;
+                transition: background 0.15s;
+              "
+              ><span
+                class="material-symbols-outlined"
+                style="font-size: 18px; color: #ffb2b7"
+                >explore</span
+              >
+              Mission Control</a
+            >
+            <a
+              href="dispatch.html"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 8px 14px;
+                text-decoration: none;
+                color: #e2e2e8;
+                font-size: 13px;
+                transition: background 0.15s;
+              "
+              ><span
+                class="material-symbols-outlined"
+                style="font-size: 18px; color: #ffb2b7"
+                >send</span
+              >
+              Dispatch</a
+            >
+            <a
+              href="runtime.html"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 8px 14px;
+                text-decoration: none;
+                color: #e2e2e8;
+                font-size: 13px;
+                transition: background 0.15s;
+              "
+              ><span
+                class="material-symbols-outlined"
+                style="font-size: 18px; color: #ffb2b7"
+                >tune</span
+              >
+              Runtime</a
+            >
+            <a
+              href="driverprofile.html"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 8px 14px;
+                text-decoration: none;
+                color: #e2e2e8;
+                font-size: 13px;
+                transition: background 0.15s;
+              "
+              ><span
+                class="material-symbols-outlined"
+                style="font-size: 18px; color: #ffb2b7"
+                >person</span
+              >
+              Driver Profile</a
+            >
+            <a
+              href="plans.html"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 8px 14px;
+                text-decoration: none;
+                color: #e2e2e8;
+                font-size: 13px;
+                transition: background 0.15s;
+              "
+              ><span
+                class="material-symbols-outlined"
+                style="font-size: 18px; color: #ffb2b7"
+                >workspace_premium</span
+              >
+              Plans</a
+            >
+            <a
+              href="nyc-demo.html"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 8px 14px;
+                text-decoration: none;
+                color: #e2e2e8;
+                font-size: 13px;
+                transition: background 0.15s;
+              "
+              ><span
+                class="material-symbols-outlined"
+                style="font-size: 18px; color: #ffb2b7"
+                >map</span
+              >
+              NYC Demo</a
+            >
+            <div
+              style="
+                height: 1px;
+                background: rgba(255, 255, 255, 0.08);
+                margin: 4px 0;
+              "
+            ></div>
+            <a
+              href="login.html"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 8px 14px;
+                text-decoration: none;
+                color: rgba(226, 226, 232, 0.5);
+                font-size: 13px;
+                transition: background 0.15s;
+              "
+              ><span
+                class="material-symbols-outlined"
+                style="font-size: 18px; color: rgba(226, 226, 232, 0.5)"
+                >login</span
+              >
+              Login</a
+            >
+          </div>
+        </div>
+        <h1>KINETIC_FLEET</h1>
+        <span
+          style="
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: rgba(255, 178, 183, 0.5);
+            letter-spacing: 0.1em;
+            margin-left: 4px;
+          "
+          >NYC DEMO</span
+        >
       </div>
-    </div>
-    <h1>KINETIC_FLEET</h1>
-    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:rgba(255,178,183,0.5);letter-spacing:0.1em;margin-left:4px">NYC DEMO</span>
-  </div>
-  <div style="display:flex;align-items:center;gap:8px">
-    <span class="material-symbols-outlined" style="color:#ffd166;cursor:pointer;font-size:20px" id="btnGameToggle" title="Game Panel">stadia_controller</span>
-    <span class="material-symbols-outlined" style="color:#6cc3ff;cursor:pointer;font-size:20px" id="btnAPIToggle" title="NVIDIA API (N)">terminal</span>
-    <span class="material-symbols-outlined" style="color:rgba(226,226,232,0.5);cursor:pointer;font-size:20px" id="btnSettingsToggle" title="Settings (S)">settings</span>
-    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;display:flex;align-items:center;gap:4px" id="connStatus">
-      <span class="dot" style="background:#4ae183" id="statusDot"></span>
-      <span style="color:#4ae183" id="statusText">CONNECTED</span>
-    </span>
-  </div>
-</header>
-
-<!-- Right Sidebar (flex column, no overlap) -->
-<div id="rightSidebar">
-
-<!-- Stats Panel -->
-<div id="statsPanel" class="glass-light">
-  <div class="title">FLEET STATUS</div>
-  <div class="row"><span class="label">Total</span><span class="val" id="statTotal" style="color:#ffb2b7">0</span></div>
-  <div class="row"><span class="label">Available</span><span class="val" style="color:#4ae183" id="statAvail">0</span></div>
-  <div class="row"><span class="label">En Route</span><span class="val" style="color:#ffd166" id="statEnRoute">0</span></div>
-  <div class="row"><span class="label">Delivering</span><span class="val" style="color:#6cc3ff" id="statDelivering">0</span></div>
-  <div class="divider"></div>
-  <div class="row"><span class="label">Orders</span><span class="val" style="color:#ffb2b7" id="statOrders">0</span></div>
-  <div class="status-row"><span class="dot" style="background:#4ae183" id="wsDot"></span><span id="wsStatus" style="color:rgba(226,226,232,0.6)">WebSocket LIVE</span></div>
-</div>
-
-<!-- Game Panel -->
-<div id="gamePanel" class="glass-light">
-  <div class="header">
-    <span style="display:flex;align-items:center;gap:6px"><span class="material-symbols-outlined" style="font-size:16px;color:#ffd166">stadia_controller</span> <span style="font-size:12px;font-weight:600;color:#ffd166">GAME HUD</span></span>
-    <span class="rank" id="gameLevelTitle">DISPATCH CADET</span>
-  </div>
-  <div class="body">
-    <div class="score-row">
-      <span class="label">Score</span>
-      <span class="value" id="gameScore" style="color:#ffb2b7">0</span>
-    </div>
-    <div class="score-row">
-      <span class="label">Level</span>
-      <span class="value" id="gameLevel" style="color:#ffd166;font-size:14px">1</span>
-    </div>
-    <div class="xp-bar-wrap">
-      <div class="xp-bar" id="xpBar"></div>
-    </div>
-    <div class="xp-label">
-      <span id="xpCurrent">0</span> / <span id="xpNext">100</span> XP
-    </div>
-    <div class="game-stat"><span class="lbl">Streak</span><span class="val" id="gameStreak" style="color:#4ae183">0</span></div>
-    <div class="game-stat"><span class="lbl">Best Streak</span><span class="val" id="gameMaxStreak" style="color:#4ae183">0</span></div>
-    <div class="game-stat"><span class="lbl">Combo</span><span class="val" id="gameCombo" style="color:#ffd166">1.0x</span></div>
-    <div class="divider"></div>
-    <div class="game-stat"><span class="lbl">Orders</span><span class="val" id="gameOrders" style="color:#ffb2b7">0</span></div>
-    <div class="game-stat"><span class="lbl">Drivers Used</span><span class="val" id="gameDriversUsed" style="color:#6cc3ff">0</span></div>
-    <div class="divider"></div>
-    <div class="achieve-title">Achievements</div>
-    <div class="achieve-grid" id="achieveGrid"></div>
-    <div class="divider"></div>
-    <div class="achieve-title">Delivery Feed</div>
-    <div id="deliveryFeed" style="max-height:100px;overflow-y:auto;margin-bottom:4px;scrollbar-width:thin"></div>
-    <div class="divider"></div>
-    <div class="achieve-title">Driver Leaderboard</div>
-    <div id="driverLeaderboard" style="margin-bottom:4px"></div>
-    <div class="divider"></div>
-    <div class="achieve-title">Missions</div>
-    <div id="missionsContainer"></div>
-  </div>
-</div>
-
-<!-- NVIDIA API Panel -->
-<div id="apiPanel" class="glass-light">
-  <div class="header">
-    <span style="display:flex;align-items:center;gap:6px"><span class="material-symbols-outlined" style="font-size:16px;color:#6cc3ff">terminal</span> <span style="font-size:12px;font-weight:600;color:#6cc3ff">NVIDIA API</span></span>
-    <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(108,195,255,0.5)" id="apiModelLabel">nemotron-3-nano</span>
-  </div>
-  <div class="body">
-    <div style="margin-bottom:8px">
-      <div style="display:flex;justify-content:space-between;margin-bottom:3px">
-        <span style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:rgba(226,226,232,0.4)">API Key</span>
-        <span class="material-symbols-outlined" id="apiKeyToggle" style="font-size:14px;cursor:pointer;color:rgba(226,226,232,0.3);font-variation-settings:'FILL' 1">visibility_off</span>
+      <div style="display: flex; align-items: center; gap: 8px">
+        <span
+          class="material-symbols-outlined"
+          style="color: #ffd166; cursor: pointer; font-size: 20px"
+          id="btnGameToggle"
+          title="Game Panel"
+          >stadia_controller</span
+        >
+        <span
+          class="material-symbols-outlined"
+          style="color: #6cc3ff; cursor: pointer; font-size: 20px"
+          id="btnAPIToggle"
+          title="NVIDIA API (N)"
+          >terminal</span
+        >
+        <span
+          class="material-symbols-outlined"
+          style="
+            color: rgba(226, 226, 232, 0.5);
+            cursor: pointer;
+            font-size: 20px;
+          "
+          id="btnSettingsToggle"
+          title="Settings (S)"
+          >settings</span
+        >
+        <span
+          style="
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+          "
+          id="connStatus"
+        >
+          <span class="dot" style="background: #4ae183" id="statusDot"></span>
+          <span style="color: #4ae183" id="statusText">CONNECTED</span>
+        </span>
       </div>
-      <input type="password" id="apiKeyInput" placeholder="nvapi-..." style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);background:rgba(0,0,0,0.3);color:#e2e2e8;font-family:'JetBrains Mono',monospace;font-size:11px;outline:none">
-    </div>
-    <div style="margin-bottom:8px">
-      <span style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:rgba(226,226,232,0.4)">Model</span>
-      <select id="apiModelSelect" style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);background:rgba(0,0,0,0.3);color:#e2e2e8;font-family:'Inter',sans-serif;font-size:11px;outline:none;margin-top:3px">
-        <option value="nvidia/nemotron-3-nano-omni-30b-a3b-reasoning">Nemotron-3 Nano OMNI (reasoning)</option>
-        <option value="nvidia/nemotron-3-nano-30b-a3b">Nemotron-3 Nano 30B</option>
-        <option value="nvidia/nemotron-3-super-120b-a12b">Nemotron-3 Super 120B</option>
-        <option value="meta/llama-3.3-70b-instruct">Llama 3.3 70B</option>
-        <option value="mistralai/mistral-nemotron">Mistral Nemotron</option>
-        <option value="deepseek-ai/deepseek-v4-flash">DeepSeek V4 Flash</option>
-      </select>
-    </div>
-    <div style="margin-bottom:8px">
-      <span style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:rgba(226,226,232,0.4)">Prompt</span>
-      <textarea id="apiPromptInput" rows="3" placeholder="Ask the model..." style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);background:rgba(0,0,0,0.3);color:#e2e2e8;font-family:'Inter',sans-serif;font-size:11px;outline:none;resize:vertical;margin-top:3px"></textarea>
-    </div>
-    <div style="display:flex;gap:8px;margin-bottom:8px">
-      <div style="flex:1">
-        <span style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:rgba(226,226,232,0.4)">Temp</span>
-        <input type="range" id="apiTemp" min="0" max="2" step="0.1" value="0.6" style="width:100%;margin-top:3px">
+    </header>
+
+    <!-- Right Sidebar (flex column, no overlap) -->
+    <div id="rightSidebar">
+      <!-- Stats Panel -->
+      <div id="statsPanel" class="glass-light">
+        <div class="title">FLEET STATUS</div>
+        <div class="row">
+          <span class="label">Total</span
+          ><span class="val" id="statTotal" style="color: #ffb2b7">0</span>
+        </div>
+        <div class="row">
+          <span class="label">Available</span
+          ><span class="val" style="color: #4ae183" id="statAvail">0</span>
+        </div>
+        <div class="row">
+          <span class="label">En Route</span
+          ><span class="val" style="color: #ffd166" id="statEnRoute">0</span>
+        </div>
+        <div class="row">
+          <span class="label">Delivering</span
+          ><span class="val" style="color: #6cc3ff" id="statDelivering">0</span>
+        </div>
+        <div class="divider"></div>
+        <div class="row">
+          <span class="label">Orders</span
+          ><span class="val" style="color: #ffb2b7" id="statOrders">0</span>
+        </div>
+        <div class="status-row">
+          <span class="dot" style="background: #4ae183" id="wsDot"></span
+          ><span id="wsStatus" style="color: rgba(226, 226, 232, 0.6)"
+            >WebSocket LIVE</span
+          >
+        </div>
       </div>
-      <div style="flex:1;text-align:right">
-        <span style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:rgba(226,226,232,0.4)">Max Tokens</span>
-        <input type="number" id="apiMaxTokens" value="2048" min="64" max="65536" style="width:100%;padding:4px 6px;border-radius:4px;border:1px solid rgba(255,255,255,0.08);background:rgba(0,0,0,0.3);color:#e2e2e8;font-family:'JetBrains Mono',monospace;font-size:11px;outline:none;margin-top:3px">
+
+      <!-- Game Panel -->
+      <div id="gamePanel" class="glass-light">
+        <div class="header">
+          <span style="display: flex; align-items: center; gap: 6px"
+            ><span
+              class="material-symbols-outlined"
+              style="font-size: 16px; color: #ffd166"
+              >stadia_controller</span
+            >
+            <span style="font-size: 12px; font-weight: 600; color: #ffd166"
+              >GAME HUD</span
+            ></span
+          >
+          <span class="rank" id="gameLevelTitle">DISPATCH CADET</span>
+        </div>
+        <div class="body">
+          <div class="score-row">
+            <span class="label">Score</span>
+            <span class="value" id="gameScore" style="color: #ffb2b7">0</span>
+          </div>
+          <div class="score-row">
+            <span class="label">Level</span>
+            <span
+              class="value"
+              id="gameLevel"
+              style="color: #ffd166; font-size: 14px"
+              >1</span
+            >
+          </div>
+          <div class="xp-bar-wrap">
+            <div class="xp-bar" id="xpBar"></div>
+          </div>
+          <div class="xp-label">
+            <span id="xpCurrent">0</span> / <span id="xpNext">100</span> XP
+          </div>
+          <div class="game-stat">
+            <span class="lbl">Streak</span
+            ><span class="val" id="gameStreak" style="color: #4ae183">0</span>
+          </div>
+          <div class="game-stat">
+            <span class="lbl">Best Streak</span
+            ><span class="val" id="gameMaxStreak" style="color: #4ae183"
+              >0</span
+            >
+          </div>
+          <div class="game-stat">
+            <span class="lbl">Combo</span
+            ><span class="val" id="gameCombo" style="color: #ffd166">1.0x</span>
+          </div>
+          <div class="divider"></div>
+          <div class="game-stat">
+            <span class="lbl">Orders</span
+            ><span class="val" id="gameOrders" style="color: #ffb2b7">0</span>
+          </div>
+          <div class="game-stat">
+            <span class="lbl">Drivers Used</span
+            ><span class="val" id="gameDriversUsed" style="color: #6cc3ff"
+              >0</span
+            >
+          </div>
+          <div class="divider"></div>
+          <div class="achieve-title">Achievements</div>
+          <div class="achieve-grid" id="achieveGrid"></div>
+          <div class="divider"></div>
+          <div class="achieve-title">Delivery Feed</div>
+          <div
+            id="deliveryFeed"
+            style="
+              max-height: 100px;
+              overflow-y: auto;
+              margin-bottom: 4px;
+              scrollbar-width: thin;
+            "
+          ></div>
+          <div class="divider"></div>
+          <div class="achieve-title">Driver Leaderboard</div>
+          <div id="driverLeaderboard" style="margin-bottom: 4px"></div>
+          <div class="divider"></div>
+          <div class="achieve-title">Missions</div>
+          <div id="missionsContainer"></div>
+        </div>
       </div>
-    </div>
-    <button id="btnAPISend" style="width:100%;padding:8px;border:none;border-radius:6px;background:#6cc3ff;color:#0c0e12;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s">Send</button>
-    <div id="apiLoading" style="display:none;text-align:center;padding:12px;font-size:11px;color:rgba(108,195,255,0.6)">
-      <span style="display:inline-block;width:6px;height:6px;background:#6cc3ff;border-radius:50%;animation:pulse 1s ease infinite;margin:0 2px"></span>
-      <span style="display:inline-block;width:6px;height:6px;background:#6cc3ff;border-radius:50%;animation:pulse 1s ease 0.2s infinite;margin:0 2px"></span>
-      <span style="display:inline-block;width:6px;height:6px;background:#6cc3ff;border-radius:50%;animation:pulse 1s ease 0.4s infinite;margin:0 2px"></span>
-      <span style="margin-left:6px">Processing...</span>
-    </div>
-    <div id="apiResponse" style="display:none;margin-top:8px">
-      <div id="apiReasoning" style="padding:8px;border-radius:6px;background:rgba(255,209,102,0.06);border:1px solid rgba(255,209,102,0.15);margin-bottom:6px;font-size:10px;color:#ffd166;font-family:'JetBrains Mono',monospace;line-height:1.4;max-height:120px;overflow-y:auto;white-space:pre-wrap"></div>
-      <div id="apiContent" style="padding:8px;border-radius:6px;background:rgba(108,195,255,0.04);border:1px solid rgba(108,195,255,0.1);font-size:11px;color:#e2e2e8;line-height:1.4;max-height:200px;overflow-y:auto;white-space:pre-wrap"></div>
-    </div>
-    <div id="apiError" style="display:none;margin-top:6px;padding:6px 10px;border-radius:4px;background:rgba(255,55,95,0.1);border:1px solid rgba(255,55,95,0.2);font-size:10px;color:#ff375f;font-family:'JetBrains Mono',monospace"></div>
-  </div>
-</div>
 
-<!-- Telemetry Panel -->
-<div id="telemetryPanel" class="glass-light show">
-  <div class="title">TELEMETRY STREAM</div>
-  <div id="telemetryLog"></div>
-</div>
-
-<!-- Toast Container -->
-<div id="toastContainer"></div>
-
-<!-- Driver Popup -->
-<div id="driverPopup" class="glass-light"></div>
-
-<!-- Settings Panel -->
-<div id="settingsPanel" class="glass-light">
-  <div class="header">
-    <span style="display:flex;align-items:center;gap:6px"><span class="material-symbols-outlined" style="font-size:16px;color:rgba(226,226,232,0.5)">settings</span> <span style="font-size:12px;font-weight:600;color:rgba(226,226,232,0.7)">SETTINGS</span></span>
-  </div>
-  <div class="body">
-    <div class="section-title">MODE</div>
-    <div style="display:flex;gap:4px;margin-bottom:10px">
-      <button id="modeDemo" class="mode-btn active" style="flex:1;padding:6px;border:none;border-radius:6px;background:#ffb2b7;color:#0c0e12;font-size:10px;font-weight:700;letter-spacing:0.05em;cursor:pointer;text-transform:uppercase">Demo</button>
-      <button id="modeLive" class="mode-btn" style="flex:1;padding:6px;border:none;border-radius:6px;background:rgba(255,255,255,0.06);color:rgba(226,226,232,0.4);font-size:10px;font-weight:700;letter-spacing:0.05em;cursor:pointer;text-transform:uppercase">Live</button>
-    </div>
-    <div id="modeInfo" style="margin-bottom:10px;padding:6px 8px;border-radius:4px;font-size:9px;line-height:1.4;color:rgba(226,226,232,0.5);background:rgba(255,178,183,0.06);border:1px solid rgba(255,178,183,0.1)">nyc-app-server 1000-driver simulation on :8080</div>
-    <div class="section-title">PANELS</div>
-    <div style="margin-bottom:10px">
-      <label class="pnl-toggle"><input type="checkbox" checked data-panel="statsPanel"><span>Fleet Status</span></label>
-      <label class="pnl-toggle"><input type="checkbox" checked data-panel="telemetryPanel"><span>Telemetry</span></label>
-      <label class="pnl-toggle"><input type="checkbox" checked data-panel="gamePanel"><span>Game HUD</span></label>
-      <label class="pnl-toggle"><input type="checkbox" checked data-panel="controlPanel"><span>Controls</span></label>
-      <label class="pnl-toggle"><input type="checkbox" data-panel="apiPanel"><span>NVIDIA API</span></label>
-    </div>
-    <button id="btnToggleAllPanels" style="width:100%;padding:6px;border:none;border-radius:6px;background:rgba(255,255,255,0.06);color:rgba(226,226,232,0.5);font-size:10px;font-weight:600;letter-spacing:0.05em;cursor:pointer;text-transform:uppercase;margin-bottom:10px">Toggle All Panels</button>
-    <div class="section-title">VISUALIZATION</div>
-    <div style="margin-bottom:10px">
-      <label class="pnl-toggle"><input type="checkbox" checked id="visRoutes"><span>Routes</span></label>
-      <label class="pnl-toggle"><input type="checkbox" checked id="visTrails"><span>Trails</span></label>
-    </div>
-    <div class="section-title">CONNECTION</div>
-    <div style="margin-bottom:6px">
-      <div style="display:flex;justify-content:space-between;margin-bottom:3px">
-        <span style="font-size:10px;color:rgba(226,226,232,0.5)">WebSocket</span>
-        <span id="settingsWSStatus" style="font-size:10px;font-family:'JetBrains Mono',monospace;color:#4ae183">LIVE</span>
+      <!-- NVIDIA API Panel -->
+      <div id="apiPanel" class="glass-light">
+        <div class="header">
+          <span style="display: flex; align-items: center; gap: 6px"
+            ><span
+              class="material-symbols-outlined"
+              style="font-size: 16px; color: #6cc3ff"
+              >terminal</span
+            >
+            <span style="font-size: 12px; font-weight: 600; color: #6cc3ff"
+              >NVIDIA API</span
+            ></span
+          >
+          <span
+            style="
+              font-family: 'JetBrains Mono', monospace;
+              font-size: 10px;
+              color: rgba(108, 195, 255, 0.5);
+            "
+            id="apiModelLabel"
+            >nemotron-3-nano</span
+          >
+        </div>
+        <div class="body">
+          <div style="margin-bottom: 8px">
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 3px;
+              "
+            >
+              <span
+                style="
+                  font-size: 9px;
+                  text-transform: uppercase;
+                  letter-spacing: 0.1em;
+                  color: rgba(226, 226, 232, 0.4);
+                "
+                >API Key</span
+              >
+              <span
+                class="material-symbols-outlined"
+                id="apiKeyToggle"
+                style="
+                  font-size: 14px;
+                  cursor: pointer;
+                  color: rgba(226, 226, 232, 0.3);
+                  font-variation-settings: 'FILL' 1;
+                "
+                >visibility_off</span
+              >
+            </div>
+            <input
+              type="password"
+              id="apiKeyInput"
+              placeholder="nvapi-..."
+              style="
+                width: 100%;
+                padding: 6px 10px;
+                border-radius: 6px;
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                background: rgba(0, 0, 0, 0.3);
+                color: #e2e2e8;
+                font-family: 'JetBrains Mono', monospace;
+                font-size: 11px;
+                outline: none;
+              "
+            />
+          </div>
+          <div style="margin-bottom: 8px">
+            <span
+              style="
+                font-size: 9px;
+                text-transform: uppercase;
+                letter-spacing: 0.1em;
+                color: rgba(226, 226, 232, 0.4);
+              "
+              >Model</span
+            >
+            <select
+              id="apiModelSelect"
+              style="
+                width: 100%;
+                padding: 6px 10px;
+                border-radius: 6px;
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                background: rgba(0, 0, 0, 0.3);
+                color: #e2e2e8;
+                font-family: 'Inter', sans-serif;
+                font-size: 11px;
+                outline: none;
+                margin-top: 3px;
+              "
+            >
+              <option value="nvidia/nemotron-3-nano-omni-30b-a3b-reasoning">
+                Nemotron-3 Nano OMNI (reasoning)
+              </option>
+              <option value="nvidia/nemotron-3-nano-30b-a3b">
+                Nemotron-3 Nano 30B
+              </option>
+              <option value="nvidia/nemotron-3-super-120b-a12b">
+                Nemotron-3 Super 120B
+              </option>
+              <option value="meta/llama-3.3-70b-instruct">Llama 3.3 70B</option>
+              <option value="mistralai/mistral-nemotron">
+                Mistral Nemotron
+              </option>
+              <option value="deepseek-ai/deepseek-v4-flash">
+                DeepSeek V4 Flash
+              </option>
+            </select>
+          </div>
+          <div style="margin-bottom: 8px">
+            <span
+              style="
+                font-size: 9px;
+                text-transform: uppercase;
+                letter-spacing: 0.1em;
+                color: rgba(226, 226, 232, 0.4);
+              "
+              >Prompt</span
+            >
+            <textarea
+              id="apiPromptInput"
+              rows="3"
+              placeholder="Ask the model..."
+              style="
+                width: 100%;
+                padding: 6px 10px;
+                border-radius: 6px;
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                background: rgba(0, 0, 0, 0.3);
+                color: #e2e2e8;
+                font-family: 'Inter', sans-serif;
+                font-size: 11px;
+                outline: none;
+                resize: vertical;
+                margin-top: 3px;
+              "
+            ></textarea>
+          </div>
+          <div style="display: flex; gap: 8px; margin-bottom: 8px">
+            <div style="flex: 1">
+              <span
+                style="
+                  font-size: 9px;
+                  text-transform: uppercase;
+                  letter-spacing: 0.1em;
+                  color: rgba(226, 226, 232, 0.4);
+                "
+                >Temp</span
+              >
+              <input
+                type="range"
+                id="apiTemp"
+                min="0"
+                max="2"
+                step="0.1"
+                value="0.6"
+                style="width: 100%; margin-top: 3px"
+              />
+            </div>
+            <div style="flex: 1; text-align: right">
+              <span
+                style="
+                  font-size: 9px;
+                  text-transform: uppercase;
+                  letter-spacing: 0.1em;
+                  color: rgba(226, 226, 232, 0.4);
+                "
+                >Max Tokens</span
+              >
+              <input
+                type="number"
+                id="apiMaxTokens"
+                value="2048"
+                min="64"
+                max="65536"
+                style="
+                  width: 100%;
+                  padding: 4px 6px;
+                  border-radius: 4px;
+                  border: 1px solid rgba(255, 255, 255, 0.08);
+                  background: rgba(0, 0, 0, 0.3);
+                  color: #e2e2e8;
+                  font-family: 'JetBrains Mono', monospace;
+                  font-size: 11px;
+                  outline: none;
+                  margin-top: 3px;
+                "
+              />
+            </div>
+          </div>
+          <button
+            id="btnAPISend"
+            style="
+              width: 100%;
+              padding: 8px;
+              border: none;
+              border-radius: 6px;
+              background: #6cc3ff;
+              color: #0c0e12;
+              font-size: 11px;
+              font-weight: 700;
+              text-transform: uppercase;
+              letter-spacing: 0.05em;
+              cursor: pointer;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 6px;
+              transition: all 0.15s;
+            "
+          >
+            Send
+          </button>
+          <div
+            id="apiLoading"
+            style="
+              display: none;
+              text-align: center;
+              padding: 12px;
+              font-size: 11px;
+              color: rgba(108, 195, 255, 0.6);
+            "
+          >
+            <span
+              style="
+                display: inline-block;
+                width: 6px;
+                height: 6px;
+                background: #6cc3ff;
+                border-radius: 50%;
+                animation: pulse 1s ease infinite;
+                margin: 0 2px;
+              "
+            ></span>
+            <span
+              style="
+                display: inline-block;
+                width: 6px;
+                height: 6px;
+                background: #6cc3ff;
+                border-radius: 50%;
+                animation: pulse 1s ease 0.2s infinite;
+                margin: 0 2px;
+              "
+            ></span>
+            <span
+              style="
+                display: inline-block;
+                width: 6px;
+                height: 6px;
+                background: #6cc3ff;
+                border-radius: 50%;
+                animation: pulse 1s ease 0.4s infinite;
+                margin: 0 2px;
+              "
+            ></span>
+            <span style="margin-left: 6px">Processing...</span>
+          </div>
+          <div id="apiResponse" style="display: none; margin-top: 8px">
+            <div
+              id="apiReasoning"
+              style="
+                padding: 8px;
+                border-radius: 6px;
+                background: rgba(255, 209, 102, 0.06);
+                border: 1px solid rgba(255, 209, 102, 0.15);
+                margin-bottom: 6px;
+                font-size: 10px;
+                color: #ffd166;
+                font-family: 'JetBrains Mono', monospace;
+                line-height: 1.4;
+                max-height: 120px;
+                overflow-y: auto;
+                white-space: pre-wrap;
+              "
+            ></div>
+            <div
+              id="apiContent"
+              style="
+                padding: 8px;
+                border-radius: 6px;
+                background: rgba(108, 195, 255, 0.04);
+                border: 1px solid rgba(108, 195, 255, 0.1);
+                font-size: 11px;
+                color: #e2e2e8;
+                line-height: 1.4;
+                max-height: 200px;
+                overflow-y: auto;
+                white-space: pre-wrap;
+              "
+            ></div>
+          </div>
+          <div
+            id="apiError"
+            style="
+              display: none;
+              margin-top: 6px;
+              padding: 6px 10px;
+              border-radius: 4px;
+              background: rgba(255, 55, 95, 0.1);
+              border: 1px solid rgba(255, 55, 95, 0.2);
+              font-size: 10px;
+              color: #ff375f;
+              font-family: 'JetBrains Mono', monospace;
+            "
+          ></div>
+        </div>
       </div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:3px">
-        <span style="font-size:10px;color:rgba(226,226,232,0.5)">Drivers</span>
-        <span id="settingsDriverCount" style="font-size:10px;font-family:'JetBrains Mono',monospace;color:#e2e2e8">0</span>
+
+      <!-- Telemetry Panel -->
+      <div id="telemetryPanel" class="glass-light show">
+        <div class="title">TELEMETRY STREAM</div>
+        <div id="telemetryLog"></div>
       </div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:3px">
-        <span style="font-size:10px;color:rgba(226,226,232,0.5)">Orders</span>
-        <span id="settingsOrderCount" style="font-size:10px;font-family:'JetBrains Mono',monospace;color:#e2e2e8">0</span>
+
+      <!-- Toast Container -->
+      <div id="toastContainer"></div>
+
+      <!-- Driver Popup -->
+      <div id="driverPopup" class="glass-light"></div>
+
+      <!-- Settings Panel -->
+      <div id="settingsPanel" class="glass-light">
+        <div class="header">
+          <span style="display: flex; align-items: center; gap: 6px"
+            ><span
+              class="material-symbols-outlined"
+              style="font-size: 16px; color: rgba(226, 226, 232, 0.5)"
+              >settings</span
+            >
+            <span
+              style="
+                font-size: 12px;
+                font-weight: 600;
+                color: rgba(226, 226, 232, 0.7);
+              "
+              >SETTINGS</span
+            ></span
+          >
+        </div>
+        <div class="body">
+          <div class="section-title">MODE</div>
+          <div style="display: flex; gap: 4px; margin-bottom: 10px">
+            <button
+              id="modeDemo"
+              class="mode-btn active"
+              style="
+                flex: 1;
+                padding: 6px;
+                border: none;
+                border-radius: 6px;
+                background: #ffb2b7;
+                color: #0c0e12;
+                font-size: 10px;
+                font-weight: 700;
+                letter-spacing: 0.05em;
+                cursor: pointer;
+                text-transform: uppercase;
+              "
+            >
+              Demo
+            </button>
+            <button
+              id="modeLive"
+              class="mode-btn"
+              style="
+                flex: 1;
+                padding: 6px;
+                border: none;
+                border-radius: 6px;
+                background: rgba(255, 255, 255, 0.06);
+                color: rgba(226, 226, 232, 0.4);
+                font-size: 10px;
+                font-weight: 700;
+                letter-spacing: 0.05em;
+                cursor: pointer;
+                text-transform: uppercase;
+              "
+            >
+              Live
+            </button>
+          </div>
+          <div
+            id="modeInfo"
+            style="
+              margin-bottom: 10px;
+              padding: 6px 8px;
+              border-radius: 4px;
+              font-size: 9px;
+              line-height: 1.4;
+              color: rgba(226, 226, 232, 0.5);
+              background: rgba(255, 178, 183, 0.06);
+              border: 1px solid rgba(255, 178, 183, 0.1);
+            "
+          >
+            nyc-app-server 1000-driver simulation on :8080
+          </div>
+          <div class="section-title">PANELS</div>
+          <div style="margin-bottom: 10px">
+            <label class="pnl-toggle"
+              ><input type="checkbox" checked data-panel="statsPanel" /><span
+                >Fleet Status</span
+              ></label
+            >
+            <label class="pnl-toggle"
+              ><input
+                type="checkbox"
+                checked
+                data-panel="telemetryPanel"
+              /><span>Telemetry</span></label
+            >
+            <label class="pnl-toggle"
+              ><input type="checkbox" checked data-panel="gamePanel" /><span
+                >Game HUD</span
+              ></label
+            >
+            <label class="pnl-toggle"
+              ><input type="checkbox" checked data-panel="controlPanel" /><span
+                >Controls</span
+              ></label
+            >
+            <label class="pnl-toggle"
+              ><input type="checkbox" data-panel="apiPanel" /><span
+                >NVIDIA API</span
+              ></label
+            >
+          </div>
+          <button
+            id="btnToggleAllPanels"
+            style="
+              width: 100%;
+              padding: 6px;
+              border: none;
+              border-radius: 6px;
+              background: rgba(255, 255, 255, 0.06);
+              color: rgba(226, 226, 232, 0.5);
+              font-size: 10px;
+              font-weight: 600;
+              letter-spacing: 0.05em;
+              cursor: pointer;
+              text-transform: uppercase;
+              margin-bottom: 10px;
+            "
+          >
+            Toggle All Panels
+          </button>
+          <div class="section-title">VISUALIZATION</div>
+          <div style="margin-bottom: 10px">
+            <label class="pnl-toggle"
+              ><input type="checkbox" checked id="visRoutes" /><span
+                >Routes</span
+              ></label
+            >
+            <label class="pnl-toggle"
+              ><input type="checkbox" checked id="visTrails" /><span
+                >Trails</span
+              ></label
+            >
+          </div>
+          <div class="section-title">CONNECTION</div>
+          <div style="margin-bottom: 6px">
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 3px;
+              "
+            >
+              <span style="font-size: 10px; color: rgba(226, 226, 232, 0.5)"
+                >WebSocket</span
+              >
+              <span
+                id="settingsWSStatus"
+                style="
+                  font-size: 10px;
+                  font-family: 'JetBrains Mono', monospace;
+                  color: #4ae183;
+                "
+                >LIVE</span
+              >
+            </div>
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 3px;
+              "
+            >
+              <span style="font-size: 10px; color: rgba(226, 226, 232, 0.5)"
+                >Drivers</span
+              >
+              <span
+                id="settingsDriverCount"
+                style="
+                  font-size: 10px;
+                  font-family: 'JetBrains Mono', monospace;
+                  color: #e2e2e8;
+                "
+                >0</span
+              >
+            </div>
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 3px;
+              "
+            >
+              <span style="font-size: 10px; color: rgba(226, 226, 232, 0.5)"
+                >Orders</span
+              >
+              <span
+                id="settingsOrderCount"
+                style="
+                  font-size: 10px;
+                  font-family: 'JetBrains Mono', monospace;
+                  color: #e2e2e8;
+                "
+                >0</span
+              >
+            </div>
+            <div style="display: flex; justify-content: space-between">
+              <span style="font-size: 10px; color: rgba(226, 226, 232, 0.5)"
+                >Map</span
+              >
+              <span
+                id="settingsMapStatus"
+                style="
+                  font-size: 10px;
+                  font-family: 'JetBrains Mono', monospace;
+                  color: #ffd166;
+                "
+                >LOADING</span
+              >
+            </div>
+          </div>
+        </div>
       </div>
-      <div style="display:flex;justify-content:space-between">
-        <span style="font-size:10px;color:rgba(226,226,232,0.5)">Map</span>
-        <span id="settingsMapStatus" style="font-size:10px;font-family:'JetBrains Mono',monospace;color:#ffd166">LOADING</span>
-      </div>
+      <!-- /settingsPanel -->
     </div>
-  </div>
-</div> <!-- /settingsPanel -->
-</div> <!-- /rightSidebar -->
+    <!-- /rightSidebar -->
 
-<!-- Control Panel -->
-<div id="controlPanel" class="glass show">
-  <div class="stat" style="background:rgba(74,225,131,0.1)"><span class="num" style="color:#4ae183" id="ctrlAvail">0</span><span style="color:rgba(226,226,232,0.5)">available</span></div>
-  <div class="stat" style="background:rgba(255,209,102,0.1)"><span class="num" style="color:#ffd166" id="ctrlEnRoute">0</span><span style="color:rgba(226,226,232,0.5)">en route</span></div>
-  <div class="stat" style="background:rgba(108,195,255,0.1)"><span class="num" style="color:#6cc3ff" id="ctrlDelivering">0</span><span style="color:rgba(226,226,232,0.5)">delivering</span></div>
-  <button class="primary" id="btnAssign"><span class="material-symbols-outlined" style="font-size:16px">send</span> Assign Random Order</button>
-  <button class="primary" id="btnAssign5" style="background:#6cc3ff;font-size:10px"><span class="material-symbols-outlined" style="font-size:14px">local_shipping</span> Assign 5</button>
-  <button class="secondary" id="btnRecenter"><span class="material-symbols-outlined" style="font-size:16px">my_location</span> Recenter</button>
-</div>
+    <!-- Control Panel -->
+    <div id="controlPanel" class="glass show">
+      <div class="stat" style="background: rgba(74, 225, 131, 0.1)">
+        <span class="num" style="color: #4ae183" id="ctrlAvail">0</span
+        ><span style="color: rgba(226, 226, 232, 0.5)">available</span>
+      </div>
+      <div class="stat" style="background: rgba(255, 209, 102, 0.1)">
+        <span class="num" style="color: #ffd166" id="ctrlEnRoute">0</span
+        ><span style="color: rgba(226, 226, 232, 0.5)">en route</span>
+      </div>
+      <div class="stat" style="background: rgba(108, 195, 255, 0.1)">
+        <span class="num" style="color: #6cc3ff" id="ctrlDelivering">0</span
+        ><span style="color: rgba(226, 226, 232, 0.5)">delivering</span>
+      </div>
+      <button class="primary" id="btnAssign">
+        <span class="material-symbols-outlined" style="font-size: 16px"
+          >send</span
+        >
+        Assign Random Order
+      </button>
+      <button
+        class="primary"
+        id="btnAssign5"
+        style="background: #6cc3ff; font-size: 10px"
+      >
+        <span class="material-symbols-outlined" style="font-size: 14px"
+          >local_shipping</span
+        >
+        Assign 5
+      </button>
+      <button class="secondary" id="btnRecenter">
+        <span class="material-symbols-outlined" style="font-size: 16px"
+          >my_location</span
+        >
+        Recenter
+      </button>
+    </div>
 
-<script>
-// ─── Configuration ──────────────────────────────────────────────────────────
-const WS_URL = 'ws://localhost:8080/ws';
-const API_BASE = 'http://localhost:8080';
-const NYC_LNG_LAT = [-73.9855, 40.7580];
-const ZOOM = 12;
-const TARGET_FPS = 30;
-const TRAIL_LENGTH = 80;
+    <script>
+      // ─── Configuration ──────────────────────────────────────────────────────────
+      const WS_URL = "ws://localhost:8080/ws";
+      const API_BASE = "http://localhost:8080";
+      const NYC_LNG_LAT = [-73.9855, 40.758];
+      const ZOOM = 12;
+      const TARGET_FPS = 30;
+      const TRAIL_LENGTH = 80;
 
-// ─── State ───────────────────────────────────────────────────────────────────
-let driverData = {};
-let driverTrails = {};
-let orderCount = 0;
-let ws = null;
-let wsReconnectTimer = null;
-let telemetryEntries = 0;
-let mapReady = false;
-let pendingGeoJSON = null;
+      // ─── State ───────────────────────────────────────────────────────────────────
+      let driverData = {};
+      let driverTrails = {};
+      let orderCount = 0;
+      let ws = null;
+      let wsReconnectTimer = null;
+      let telemetryEntries = 0;
+      let mapReady = false;
+      let pendingGeoJSON = null;
 
-// ─── Game State ──────────────────────────────────────────────────────────────
-const LEVEL_TITLES = [
-  '', 'Dispatch Cadet', 'Fleet Operator', 'Logistics Specialist', 'Route Commander',
-  'Fleet Captain', 'Operations Director', 'Supply Chain General', 'Logistics Magnate',
-  'Fleet Admiral', 'NYC Legend'
-];
-function getLevelTitle(lvl) { return lvl <= 10 ? LEVEL_TITLES[lvl] : 'Fleet God'; }
-function xpForLevel(lvl) { return lvl * 100 + (lvl - 1) * 50; }
+      // ─── Game State ──────────────────────────────────────────────────────────────
+      const LEVEL_TITLES = [
+        "",
+        "Dispatch Cadet",
+        "Fleet Operator",
+        "Logistics Specialist",
+        "Route Commander",
+        "Fleet Captain",
+        "Operations Director",
+        "Supply Chain General",
+        "Logistics Magnate",
+        "Fleet Admiral",
+        "NYC Legend",
+      ];
+      function getLevelTitle(lvl) {
+        return lvl <= 10 ? LEVEL_TITLES[lvl] : "Fleet God";
+      }
+      function xpForLevel(lvl) {
+        return lvl * 100 + (lvl - 1) * 50;
+      }
 
-const ACHIEVEMENT_DEFS = [
-  { id: 'first_dispatch', title: 'First Dispatch', desc: 'Complete your first order', icon: 'send', check: s => s.totalOrders >= 1 },
-  { id: 'delivery_spree', title: 'Delivery Spree', desc: 'Complete 10 orders', icon: 'inventory', check: s => s.totalOrders >= 10 },
-  { id: 'century', title: 'Century', desc: 'Complete 100 orders', icon: 'military_tech', check: s => s.totalOrders >= 100 },
-  { id: 'speed_demon', title: 'Speed Demon', desc: 'Reach 3x combo', icon: 'bolt', check: s => s.combo >= 3 },
-  { id: 'on_fire', title: 'On Fire', desc: 'Reach 5x combo', icon: 'whatshot', check: s => s.combo >= 5 },
-  { id: 'fleet_master', title: 'Fleet Master', desc: 'Reach level 10', icon: 'stars', check: s => s.level >= 10 },
-  { id: 'perfect_streak', title: 'Perfect Streak', desc: 'Reach 20 streak', icon: 'trending_up', check: s => s.streak >= 20 },
-  { id: 'precision', title: 'Precision Dispatch', desc: 'Assign to 50 drivers', icon: 'ads_click', check: s => Object.keys(s.driverDeliveries).length >= 50 },
-  { id: 'nyc_legend', title: 'NYC Legend', desc: 'Complete 500 orders', icon: 'emoji_events', check: s => s.totalOrders >= 500 },
-];
-
-let game = {
-  score: 0,
-  xp: 0,
-  level: 1,
-  streak: 0,
-  maxStreak: 0,
-  combo: 1,
-  lastOrderTime: 0,
-  unlocked: new Set(),
-  driverDeliveries: {},
-  totalOrders: 0
-};
-
-function xpForCurrentLevel() { return xpForLevel(game.level); }
-
-function updateGameUI() {
-  document.getElementById('gameScore').textContent = game.score.toLocaleString();
-  document.getElementById('gameLevel').textContent = game.level;
-  document.getElementById('gameLevelTitle').textContent = getLevelTitle(game.level).toUpperCase();
-  document.getElementById('gameStreak').textContent = game.streak;
-  document.getElementById('gameMaxStreak').textContent = game.maxStreak;
-  document.getElementById('gameCombo').textContent = game.combo.toFixed(1) + 'x';
-  document.getElementById('gameOrders').textContent = game.totalOrders;
-  document.getElementById('gameDriversUsed').textContent = Object.keys(game.driverDeliveries).length;
-  const xpCur = game.xp;
-  const xpMax = xpForCurrentLevel();
-  document.getElementById('xpCurrent').textContent = xpCur;
-  document.getElementById('xpNext').textContent = xpMax;
-  const pct = Math.min(100, (xpCur / xpMax) * 100);
-  document.getElementById('xpBar').style.width = pct + '%';
-  renderAchievements();
-}
-
-function renderAchievements() {
-  const grid = document.getElementById('achieveGrid');
-  grid.innerHTML = '';
-  for (const def of ACHIEVEMENT_DEFS) {
-    const unlocked = game.unlocked.has(def.id);
-    const b = document.createElement('span');
-    b.className = 'achieve-badge' + (unlocked ? '' : ' locked');
-    b.title = def.desc;
-    b.innerHTML = '<span class="icon material-symbols-outlined">' + def.icon + '</span> ' + def.title;
-    grid.appendChild(b);
-  }
-}
-
-function checkAchievements() {
-  for (const def of ACHIEVEMENT_DEFS) {
-    if (!game.unlocked.has(def.id) && def.check(game)) {
-      game.unlocked.add(def.id);
-      showToast(def.icon, def.title + ' — ' + def.desc, 'achieve');
-      logTelemetry('ACHIEVE', def.title);
-    }
-  }
-}
-
-function showToast(icon, msg, type) {
-  const container = document.getElementById('toastContainer');
-  const t = document.createElement('div');
-  t.className = 'toast ' + type;
-  t.innerHTML = '<span class="icon material-symbols-outlined">' + icon + '</span> ' + msg;
-  container.appendChild(t);
-  setTimeout(() => { if (t.parentNode) t.remove(); }, 4200);
-}
-
-function showXPFloat(xpGain) {
-  const el = document.createElement('div');
-  el.className = 'xp-float';
-  el.textContent = '+' + xpGain + ' XP';
-  el.style.left = '50%';
-  el.style.top = '50%';
-  el.style.transform = 'translateX(-50%)';
-  document.body.appendChild(el);
-  setTimeout(() => el.remove(), 1300);
-}
-
-function addXP(amount) {
-  const oldLevel = game.level;
-  game.xp += amount;
-  while (game.xp >= xpForCurrentLevel()) {
-    game.xp -= xpForCurrentLevel();
-    game.level++;
-  }
-  showXPFloat(amount);
-  if (game.level > oldLevel) {
-    showToast('arrow_upward', 'LEVEL UP! You are now ' + getLevelTitle(game.level) + ' (Level ' + game.level + ')', 'levelup');
-  }
-  updateGameUI();
-}
-
-function processGameOrder() {
-  const now = Date.now();
-  if (game.lastOrderTime > 0) {
-    const delta = now - game.lastOrderTime;
-    if (delta < 5000) {
-      game.combo = Math.min(5, game.combo + 0.5);
-      showToast('local_fire_department', 'COMBO x' + game.combo.toFixed(1) + '!', 'combo');
-    } else if (delta >= 10000) {
-      game.combo = 1;
-    }
-  }
-  game.lastOrderTime = now;
-  game.streak++;
-  if (game.streak > game.maxStreak) game.maxStreak = game.streak;
-
-  const scoreGain = Math.round(100 * game.combo);
-  const xpGain = Math.round(20 * game.combo);
-  game.score += scoreGain;
-  game.totalOrders++;
-  addXP(xpGain);
-  checkAchievements();
-  updateGameUI();
-}
-
-// ─── Delivery Feed ──────────────────────────────────────────────────────────
-let prevOrderCounts = {};
-
-function addFeedEntry(icon, msg, color) {
-  const feed = document.getElementById('deliveryFeed');
-  if (!feed) return;
-  const t = document.createElement('div');
-  t.className = 'feed-entry';
-  t.innerHTML = '<span class="icon" style="color:' + (color || 'rgba(226,226,232,0.4)') + '">' + icon + '</span> <span>' + msg + '</span> <span class="time">' + new Date().toLocaleTimeString() + '</span>';
-  feed.prepend(t);
-  while (feed.children.length > 20) feed.removeChild(feed.lastChild);
-}
-
-function checkDeliveryCompletions(drivers) {
-  for (const d of drivers) {
-    const prev = prevOrderCounts[d.id] || 0;
-    const cur = d.order_count || 0;
-    if (cur > prev) {
-      const delta = cur - prev;
-      addFeedEntry('check_circle', d.id + ' delivered ' + delta + ' order' + (delta > 1 ? 's' : ''), '#4ae183');
-      if (!game.driverDeliveries[d.id]) game.driverDeliveries[d.id] = 0;
-      game.driverDeliveries[d.id] += delta;
-      game.totalOrders += delta;
-      const scoreGain = Math.round(50 * delta);
-      const xpGain = Math.round(10 * delta);
-      game.score += scoreGain;
-      addXP(xpGain);
-      checkAchievements();
-      if (game.totalOrders % 50 === 0 && game.totalOrders > 0) celebrate();
-    }
-    prevOrderCounts[d.id] = cur;
-  }
-  updateLeaderboard();
-  updateMissions();
-  updateGameUI();
-}
-
-// ─── Driver Leaderboard ─────────────────────────────────────────────────────
-function updateLeaderboard() {
-  const lb = document.getElementById('driverLeaderboard');
-  if (!lb) return;
-  const sorted = Object.values(driverData).filter(d => d.order_count > 0).sort((a, b) => (b.order_count || 0) - (a.order_count || 0)).slice(0, 5);
-  if (sorted.length === 0) { lb.innerHTML = '<div style="font-size:9px;color:rgba(226,226,232,0.3);padding:4px 0">No deliveries yet</div>'; return; }
-  const medals = [{ cls: 'gold', icon: 'emoji_events' }, { cls: 'silver', icon: 'military_tech' }, { cls: 'bronze', icon: 'stars' }];
-  lb.innerHTML = sorted.map((d, i) => {
-    const m = medals[i];
-    return '<div class="lb-item"><span class="rank' + (m ? ' ' + m.cls : '') + '">' + (m ? '<span class="material-symbols-outlined" style="font-size:12px">' + m.icon + '</span>' : (i + 1)) + '</span><span class="name">' + d.id + '</span><span class="dels">' + d.order_count + '</span></div>';
-  }).join('');
-}
-
-// ─── Missions ───────────────────────────────────────────────────────────────
-const MISSION_DEFS = [
-  { id: 'm_orders', icon: 'local_shipping', title: 'Route Runner', desc: 'Complete deliveries', check: s => s.totalOrders, goal: 30 },
-  { id: 'm_streak', icon: 'trending_up', title: 'On a Roll', desc: 'Reach streak', check: s => s.streak, goal: 10 },
-  { id: 'm_combo', icon: 'whatshot', title: 'Combo King', desc: 'Reach combo', check: s => Math.round(s.combo * 10) / 10, goal: 4 },
-];
-let missions = MISSION_DEFS.map(m => ({ ...m, progress: 0, done: false }));
-
-function updateMissions() {
-  const container = document.getElementById('missionsContainer');
-  if (!container) return;
-  missions.forEach(m => {
-    m.progress = Math.min(m.goal, m.check(game));
-    if (m.progress >= m.goal && !m.done) { m.done = true; addFeedEntry('emoji_events', 'Mission complete: ' + m.title, '#ffd166'); celebrate(); }
-  });
-  container.innerHTML = missions.map(m => {
-    const pct = Math.round((m.progress / m.goal) * 100);
-    return '<div class="mission' + (m.done ? ' done' : '') + '"><span class="icon material-symbols-outlined" style="color:' + (m.done ? '#4ae183' : 'rgba(226,226,232,0.4)') + '">' + m.icon + '</span><div class="info"><div class="title">' + m.title + '</div><div class="desc">' + m.desc + '</div></div><span class="pct">' + pct + '%</span></div>';
-  }).join('');
-}
-
-// ─── Celebration ────────────────────────────────────────────────────────────
-function celebrate() {
-  const colors = ['#ff375f', '#ffd166', '#4ae183', '#6cc3ff', '#ffb2b7'];
-  for (let i = 0; i < 30; i++) {
-    const p = document.createElement('div');
-    p.className = 'confetti-piece';
-    p.style.left = (10 + Math.random() * 80) + '%';
-    p.style.top = (10 + Math.random() * 30) + '%';
-    p.style.background = colors[Math.floor(Math.random() * colors.length)];
-    p.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
-    p.style.width = (3 + Math.random() * 5) + 'px';
-    p.style.height = (3 + Math.random() * 5) + 'px';
-    p.style.animationDuration = (1 + Math.random()) + 's';
-    p.style.animationDelay = (Math.random() * 0.5) + 's';
-    document.body.appendChild(p);
-    setTimeout(() => p.remove(), 2500);
-  }
-}
-
-// ─── GeoJSON Conversion ────────────────────────────────────────────────────
-function driversToGeoJSON(driversArray) {
-  return {
-    type: 'FeatureCollection',
-    features: driversArray.map(d => ({
-      type: 'Feature',
-      geometry: { type: 'Point', coordinates: [d.lng, d.lat] },
-      properties: { id: d.id, status: d.status || 'available', heading: d.heading || 0 }
-    }))
-  };
-}
-
-function updateTrail(id, lat, lng) {
-  if (!driverTrails[id]) driverTrails[id] = [];
-  driverTrails[id].push({ lat, lng });
-  if (driverTrails[id].length > TRAIL_LENGTH) driverTrails[id].shift();
-}
-
-function trailsToGeoJSON() {
-  const features = [];
-  for (const id in driverTrails) {
-    const pts = driverTrails[id];
-    if (pts.length < 2) continue;
-    const d = driverData[id];
-    features.push({
-      type: 'Feature',
-      geometry: { type: 'LineString', coordinates: pts.map(p => [p.lng, p.lat]) },
-      properties: { id, status: d ? d.status : 'available' }
-    });
-  }
-  return { type: 'FeatureCollection', features };
-}
-
-function routesToGeoJSON() {
-  const features = [];
-  for (const id in driverData) {
-    const d = driverData[id];
-    if (d.destination && (d.status === 'en_route' || d.status === 'delivering')) {
-      features.push({
-        type: 'Feature',
-        geometry: { type: 'LineString', coordinates: [[d.lng, d.lat], [d.destination.lng, d.destination.lat]] },
-        properties: { id, status: d.status }
-      });
-    }
-  }
-  return { type: 'FeatureCollection', features };
-}
-
-function updateStats() {
-  const vals = Object.values(driverData);
-  const total = vals.length;
-  const avail = vals.filter(d => d.status === 'available').length;
-  const enRoute = vals.filter(d => d.status === 'en_route').length;
-  const delivering = vals.filter(d => d.status === 'delivering').length;
-  document.getElementById('statTotal').textContent = total;
-  document.getElementById('statAvail').textContent = avail;
-  document.getElementById('statEnRoute').textContent = enRoute;
-  document.getElementById('statDelivering').textContent = delivering;
-  document.getElementById('statOrders').textContent = orderCount;
-  document.getElementById('ctrlAvail').textContent = avail;
-  document.getElementById('ctrlEnRoute').textContent = enRoute;
-  document.getElementById('ctrlDelivering').textContent = delivering;
-  updateConnectionUI();
-}
-
-// ─── ThrottledRAF ──────────────────────────────────────────────────────────
-class ThrottledRAF {
-  constructor(callback, targetFps) {
-    this.callback = callback;
-    this.interval = 1000 / targetFps;
-    this.lastTime = 0;
-    this.isRunning = false;
-    this.pendingData = null;
-  }
-  update(data) {
-    this.pendingData = data;
-    if (!this.isRunning) {
-      this.isRunning = true;
-      this.loop();
-    }
-  }
-  loop() {
-    const now = performance.now();
-    const elapsed = now - this.lastTime;
-    if (elapsed >= this.interval && this.pendingData !== null) {
-      this.callback(this.pendingData);
-      this.pendingData = null;
-      this.lastTime = now - (elapsed % this.interval);
-    }
-    requestAnimationFrame(() => this.loop());
-  }
-  stop() { this.isRunning = false; }
-}
-
-// ─── Telemetry Log ─────────────────────────────────────────────────────────
-function logTelemetry(type, msg) {
-  const el = document.getElementById('telemetryLog');
-  const now = new Date();
-  const ts = now.toISOString().substr(11, 8);
-  const entry = document.createElement('div');
-  entry.className = 'entry';
-  entry.innerHTML = '<span class="t">[' + ts + ']</span> <span style="color:rgba(255,178,183,0.6)">' + type + '</span> <span class="msg">' + msg + '</span>';
-  el.appendChild(entry);
-  telemetryEntries++;
-  if (telemetryEntries > 80) { el.removeChild(el.firstChild); telemetryEntries--; }
-  el.scrollTop = el.scrollHeight;
-}
-
-// ─── MapLibre Map ─────────────────────────────────────────────────────────
-function initMap() {
-  const m = new maplibregl.Map({
-    container: 'map',
-    style: {
-      version: 8, name: 'NYC Dark',
-      sources: {
-        'carto-dark': {
-          type: 'raster',
-          tiles: ['https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'],
-          tileSize: 256,
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>'
+      const ACHIEVEMENT_DEFS = [
+        {
+          id: "first_dispatch",
+          title: "First Dispatch",
+          desc: "Complete your first order",
+          icon: "send",
+          check: (s) => s.totalOrders >= 1,
         },
-        'color-pop': {
-          type: 'raster',
-          tiles: ['https://a.basemaps.cartocdn.com/voyager_labels_under/{z}/{x}/{y}{r}.png'],
-          tileSize: 256,
-          attribution: '&copy; CARTO'
+        {
+          id: "delivery_spree",
+          title: "Delivery Spree",
+          desc: "Complete 10 orders",
+          icon: "inventory",
+          check: (s) => s.totalOrders >= 10,
+        },
+        {
+          id: "century",
+          title: "Century",
+          desc: "Complete 100 orders",
+          icon: "military_tech",
+          check: (s) => s.totalOrders >= 100,
+        },
+        {
+          id: "speed_demon",
+          title: "Speed Demon",
+          desc: "Reach 3x combo",
+          icon: "bolt",
+          check: (s) => s.combo >= 3,
+        },
+        {
+          id: "on_fire",
+          title: "On Fire",
+          desc: "Reach 5x combo",
+          icon: "whatshot",
+          check: (s) => s.combo >= 5,
+        },
+        {
+          id: "fleet_master",
+          title: "Fleet Master",
+          desc: "Reach level 10",
+          icon: "stars",
+          check: (s) => s.level >= 10,
+        },
+        {
+          id: "perfect_streak",
+          title: "Perfect Streak",
+          desc: "Reach 20 streak",
+          icon: "trending_up",
+          check: (s) => s.streak >= 20,
+        },
+        {
+          id: "precision",
+          title: "Precision Dispatch",
+          desc: "Assign to 50 drivers",
+          icon: "ads_click",
+          check: (s) => Object.keys(s.driverDeliveries).length >= 50,
+        },
+        {
+          id: "nyc_legend",
+          title: "NYC Legend",
+          desc: "Complete 500 orders",
+          icon: "emoji_events",
+          check: (s) => s.totalOrders >= 500,
+        },
+      ];
+
+      let game = {
+        score: 0,
+        xp: 0,
+        level: 1,
+        streak: 0,
+        maxStreak: 0,
+        combo: 1,
+        lastOrderTime: 0,
+        unlocked: new Set(),
+        driverDeliveries: {},
+        totalOrders: 0,
+      };
+
+      function xpForCurrentLevel() {
+        return xpForLevel(game.level);
+      }
+
+      function updateGameUI() {
+        document.getElementById("gameScore").textContent =
+          game.score.toLocaleString();
+        document.getElementById("gameLevel").textContent = game.level;
+        document.getElementById("gameLevelTitle").textContent = getLevelTitle(
+          game.level
+        ).toUpperCase();
+        document.getElementById("gameStreak").textContent = game.streak;
+        document.getElementById("gameMaxStreak").textContent = game.maxStreak;
+        document.getElementById("gameCombo").textContent =
+          game.combo.toFixed(1) + "x";
+        document.getElementById("gameOrders").textContent = game.totalOrders;
+        document.getElementById("gameDriversUsed").textContent = Object.keys(
+          game.driverDeliveries
+        ).length;
+        const xpCur = game.xp;
+        const xpMax = xpForCurrentLevel();
+        document.getElementById("xpCurrent").textContent = xpCur;
+        document.getElementById("xpNext").textContent = xpMax;
+        const pct = Math.min(100, (xpCur / xpMax) * 100);
+        document.getElementById("xpBar").style.width = pct + "%";
+        renderAchievements();
+      }
+
+      function renderAchievements() {
+        const grid = document.getElementById("achieveGrid");
+        grid.innerHTML = "";
+        for (const def of ACHIEVEMENT_DEFS) {
+          const unlocked = game.unlocked.has(def.id);
+          const b = document.createElement("span");
+          b.className = "achieve-badge" + (unlocked ? "" : " locked");
+          b.title = def.desc;
+          b.innerHTML =
+            '<span class="icon material-symbols-outlined">' +
+            def.icon +
+            "</span> " +
+            def.title;
+          grid.appendChild(b);
         }
-      },
-      layers: [
-        { id: 'carto-dark-layer', type: 'raster', source: 'carto-dark', minzoom: 0, maxzoom: 22 },
-        { id: 'color-pop-layer', type: 'raster', source: 'color-pop', minzoom: 0, maxzoom: 22, paint: { 'raster-opacity': 0.15 } }
-      ],
-      glyphs: 'https://fonts.openmaptiles.org/{fontstack}/{range}.pbf'
-    },
-    center: NYC_LNG_LAT, zoom: ZOOM, attributionControl: false
-  });
-  m.addControl(new maplibregl.NavigationControl(), 'top-right');
-  if (window.ResizeObserver) {
-    new ResizeObserver(function() { m.resize(); }).observe(document.getElementById('map'));
-  }
-  return m;
-}
-const map = initMap();
-
-// ─── Source & Layers ───────────────────────────────────────────────────────
-map.on('load', () => {
-  map.addSource('drivers', {
-    type: 'geojson', data: { type: 'FeatureCollection', features: [] },
-    promoteId: 'id', cluster: true, clusterMaxZoom: 14, clusterRadius: 50
-  });
-  map.addLayer({
-    id: 'driver-clusters', type: 'circle', source: 'drivers',
-    filter: ['has', 'point_count'],
-    paint: {
-      'circle-color': ['step', ['get', 'point_count'], '#51bbd6', 10, '#f1f075', 50, '#f28cb1'],
-      'circle-radius': ['step', ['get', 'point_count'], 20, 10, 30, 50, 40],
-      'circle-opacity': 0.85, 'circle-stroke-width': 2, 'circle-stroke-color': 'rgba(255,255,255,0.15)'
-    }
-  });
-  map.addLayer({
-    id: 'driver-cluster-count', type: 'symbol', source: 'drivers',
-    filter: ['has', 'point_count'],
-    layout: { 'text-field': '{point_count_abbreviated}', 'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'], 'text-size': 12 },
-    paint: { 'text-color': '#fff', 'text-halo-color': 'rgba(0,0,0,0.6)', 'text-halo-width': 1.5 }
-  });
-  map.addLayer({
-    id: 'driver-glow', type: 'circle', source: 'drivers',
-    filter: ['!', ['has', 'point_count']],
-    paint: {
-      'circle-radius': 12,
-      'circle-color': ['match', ['get', 'status'], 'available', '#4ae183', 'en_route', '#ffd166', 'delivering', '#6cc3ff', '#9e9e9e'],
-      'circle-opacity': 0.25, 'circle-blur': 1.5
-    }
-  });
-  // Neon ping glow — pulses radius & opacity for radar-ping effect
-  map.addLayer({
-    id: 'driver-glow-ping', type: 'circle', source: 'drivers',
-    filter: ['!', ['has', 'point_count']],
-    paint: {
-      'circle-radius': 16,
-      'circle-color': ['match', ['get', 'status'], 'available', '#4ae183', 'en_route', '#ffd166', 'delivering', '#6cc3ff', '#9e9e9e'],
-      'circle-opacity': 0.15, 'circle-blur': 3
-    }
-  });
-  map.addLayer({
-    id: 'driver-unclustered', type: 'circle', source: 'drivers',
-    filter: ['!', ['has', 'point_count']],
-    paint: {
-      'circle-radius': 7,
-      'circle-color': ['match', ['get', 'status'], 'available', '#4ae183', 'en_route', '#ffd166', 'delivering', '#6cc3ff', '#9e9e9e'],
-      'circle-stroke-width': 2.5, 'circle-stroke-color': 'rgba(255,255,255,0.5)', 'circle-opacity': 1
-    }
-  });
-  // Route lines — from en_route/delivering driver to destination
-  map.addSource('routes', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
-  map.addLayer({
-    id: 'route-lines', type: 'line', source: 'routes',
-    paint: {
-      'line-color': ['match', ['get', 'status'], 'en_route', '#ffd166', 'delivering', '#6cc3ff', 'rgba(255,255,255,0.2)'],
-      'line-width': 2, 'line-opacity': 0.5, 'line-dasharray': [2, 3]
-    }
-  });
-  // Trail lines — last N positions per driver, fade out with age
-  map.addSource('trails', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
-  map.addLayer({
-    id: 'trail-lines', type: 'line', source: 'trails',
-    paint: {
-      'line-color': ['match', ['get', 'status'], 'available', '#4ae183', 'en_route', '#ffd166', 'delivering', '#6cc3ff', '#9e9e9e'],
-      'line-width': 1.5, 'line-opacity': 0.25
-    }
-  });
-  mapReady = true;
-  updateConnectionUI();
-  if (pendingGeoJSON !== null) { map.getSource('drivers').setData(pendingGeoJSON); const rs = map.getSource('routes'); if (rs) rs.setData(routesToGeoJSON()); const ts = map.getSource('trails'); if (ts) ts.setData(trailsToGeoJSON()); pendingGeoJSON = null; }
-  map.on('click', 'driver-clusters', (e) => {
-    const f = e.features[0];
-    map.getSource('drivers').getClusterExpansionZoom(f.properties.cluster_id, (err, z) => { if (!err) map.easeTo({ center: f.geometry.coordinates, zoom: z, duration: 500 }); });
-  });
-  map.on('click', 'driver-unclustered', (e) => {
-    const f = e.features[0]; const coords = f.geometry.coordinates.slice(); const props = f.properties;
-    const status = props.status || 'available'; const id = props.id;
-    const cm = { available: '#4ae183', en_route: '#ffd166', delivering: '#6cc3ff' };
-    const c = cm[status] || '#4ae183';
-    const deliveries = game.driverDeliveries[id] || 0;
-    const pending = (d && d.queue && d.queue.length) || 0;
-    new maplibregl.Popup({ closeButton: true, closeOnClick: true, maxWidth: '260px' })
-      .setLngLat(coords)
-      .setHTML(
-        '<div style="font-family:Inter,sans-serif;min-width:160px">' +
-        '<div style="font-weight:600;font-size:13px;margin-bottom:2px;color:#e2e2e8">' + id + '</div>' +
-        '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">' +
-        '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + c + '"></span>' +
-        '<span style="font-size:11px;text-transform:capitalize;color:' + c + '">' + status + '</span>' +
-        '<span style="margin-left:auto;font-size:10px;color:rgba(226,226,232,0.4)">' + (d.order_count || 0) + ' done' + (pending ? ' · ' + pending + ' pend' : '') + '</span></div>' +
-        '<div style="font-size:10px;color:rgba(226,226,232,0.4);font-family:JetBrains Mono,monospace">' +
-        coords[1].toFixed(4) + ', ' + coords[0].toFixed(4) + '</div>' +
-        '<button onclick="assignToDriver(\'' + id + '\',3)" style="margin-top:8px;padding:4px 12px;background:#ff375f;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;width:100%">Assign 3 Orders</button>' +
-        '</div>'
-      ).addTo(map);
-    showDriverPopup(id);
-  });
-  map.on('mouseenter', 'driver-unclustered', () => { map.getCanvas().style.cursor = 'pointer'; });
-  map.on('mouseleave', 'driver-unclustered', () => { map.getCanvas().style.cursor = ''; });
-  map.on('mouseenter', 'driver-clusters', () => { map.getCanvas().style.cursor = 'pointer'; });
-  map.on('mouseleave', 'driver-clusters', () => { map.getCanvas().style.cursor = ''; });
-});
-
-// ─── Map Updater ──────────────────────────────────────────────────────────
-const mapUpdater = new ThrottledRAF((geoJSON) => {
-  if (!mapReady) { pendingGeoJSON = geoJSON; return; }
-  const src = map.getSource('drivers');
-  if (src) src.setData(geoJSON);
-  const rs = map.getSource('routes');
-  if (rs) rs.setData(routesToGeoJSON());
-  const ts = map.getSource('trails');
-  if (ts) ts.setData(trailsToGeoJSON());
-}, TARGET_FPS);
-
-// ─── Neon glow pinger ──────────────────────────────────────────────────────
-let glowTime = 0;
-function pingGlow() {
-  if (!mapReady) { requestAnimationFrame(pingGlow); return; }
-  glowTime += 0.03;
-  const pulse = 0.5 + 0.5 * Math.sin(glowTime);
-  const radius = 14 + 8 * pulse;
-  const opacity = 0.05 + 0.2 * pulse;
-  const layer = map.getLayer('driver-glow-ping');
-  if (layer) {
-    map.setPaintProperty('driver-glow-ping', 'circle-radius', radius);
-    map.setPaintProperty('driver-glow-ping', 'circle-opacity', opacity);
-  }
-  requestAnimationFrame(pingGlow);
-}
-pingGlow();
-
-// ─── API Calls ──────────────────────────────────────────────────────────────
-async function assignToDriver(driverId, count) {
-  count = count || 1;
-  hideDriverPopup();
-  const base = window.API_BASE || API_BASE;
-  try {
-    const body = { driver_id: driverId };
-    if (count > 1) {
-      body.destinations = [];
-      for (let i = 0; i < count; i++) {
-        body.destinations.push({});
       }
-    }
-    const resp = await fetch(base + '/api/assign', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-    if (resp.ok) {
-      orderCount += count;
-      if (!game.driverDeliveries[driverId]) game.driverDeliveries[driverId] = 0;
-      game.driverDeliveries[driverId] += count;
-      processGameOrder();
-      updateStats();
-      logTelemetry('ORDER', count + ' order(s) assigned to ' + driverId);
-      if (driverData[driverId]) {
-        driverData[driverId].status = 'en_route';
-        driverData[driverId].order_count = (driverData[driverId].order_count || 0) + count;
-        mapUpdater.update(driversToGeoJSON(Object.values(driverData)));
+
+      function checkAchievements() {
+        for (const def of ACHIEVEMENT_DEFS) {
+          if (!game.unlocked.has(def.id) && def.check(game)) {
+            game.unlocked.add(def.id);
+            showToast(def.icon, def.title + " — " + def.desc, "achieve");
+            logTelemetry("ACHIEVE", def.title);
+          }
+        }
       }
-    } else {
-      game.streak = 0;
+
+      function showToast(icon, msg, type) {
+        const container = document.getElementById("toastContainer");
+        const t = document.createElement("div");
+        t.className = "toast " + type;
+        t.innerHTML =
+          '<span class="icon material-symbols-outlined">' +
+          icon +
+          "</span> " +
+          msg;
+        container.appendChild(t);
+        setTimeout(() => {
+          if (t.parentNode) t.remove();
+        }, 4200);
+      }
+
+      function showXPFloat(xpGain) {
+        const el = document.createElement("div");
+        el.className = "xp-float";
+        el.textContent = "+" + xpGain + " XP";
+        el.style.left = "50%";
+        el.style.top = "50%";
+        el.style.transform = "translateX(-50%)";
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 1300);
+      }
+
+      function addXP(amount) {
+        const oldLevel = game.level;
+        game.xp += amount;
+        while (game.xp >= xpForCurrentLevel()) {
+          game.xp -= xpForCurrentLevel();
+          game.level++;
+        }
+        showXPFloat(amount);
+        if (game.level > oldLevel) {
+          showToast(
+            "arrow_upward",
+            "LEVEL UP! You are now " +
+              getLevelTitle(game.level) +
+              " (Level " +
+              game.level +
+              ")",
+            "levelup"
+          );
+        }
+        updateGameUI();
+      }
+
+      function processGameOrder() {
+        const now = Date.now();
+        if (game.lastOrderTime > 0) {
+          const delta = now - game.lastOrderTime;
+          if (delta < 5000) {
+            game.combo = Math.min(5, game.combo + 0.5);
+            showToast(
+              "local_fire_department",
+              "COMBO x" + game.combo.toFixed(1) + "!",
+              "combo"
+            );
+          } else if (delta >= 10000) {
+            game.combo = 1;
+          }
+        }
+        game.lastOrderTime = now;
+        game.streak++;
+        if (game.streak > game.maxStreak) game.maxStreak = game.streak;
+
+        const scoreGain = Math.round(100 * game.combo);
+        const xpGain = Math.round(20 * game.combo);
+        game.score += scoreGain;
+        game.totalOrders++;
+        addXP(xpGain);
+        checkAchievements();
+        updateGameUI();
+      }
+
+      // ─── Delivery Feed ──────────────────────────────────────────────────────────
+      let prevOrderCounts = {};
+
+      function addFeedEntry(icon, msg, color) {
+        const feed = document.getElementById("deliveryFeed");
+        if (!feed) return;
+        const t = document.createElement("div");
+        t.className = "feed-entry";
+        t.innerHTML =
+          '<span class="icon" style="color:' +
+          (color || "rgba(226,226,232,0.4)") +
+          '">' +
+          icon +
+          "</span> <span>" +
+          msg +
+          '</span> <span class="time">' +
+          new Date().toLocaleTimeString() +
+          "</span>";
+        feed.prepend(t);
+        while (feed.children.length > 20) feed.removeChild(feed.lastChild);
+      }
+
+      function checkDeliveryCompletions(drivers) {
+        for (const d of drivers) {
+          const prev = prevOrderCounts[d.id] || 0;
+          const cur = d.order_count || 0;
+          if (cur > prev) {
+            const delta = cur - prev;
+            addFeedEntry(
+              "check_circle",
+              d.id + " delivered " + delta + " order" + (delta > 1 ? "s" : ""),
+              "#4ae183"
+            );
+            if (!game.driverDeliveries[d.id]) game.driverDeliveries[d.id] = 0;
+            game.driverDeliveries[d.id] += delta;
+            game.totalOrders += delta;
+            const scoreGain = Math.round(50 * delta);
+            const xpGain = Math.round(10 * delta);
+            game.score += scoreGain;
+            addXP(xpGain);
+            checkAchievements();
+            if (game.totalOrders % 50 === 0 && game.totalOrders > 0)
+              celebrate();
+          }
+          prevOrderCounts[d.id] = cur;
+        }
+        updateLeaderboard();
+        updateMissions();
+        updateGameUI();
+      }
+
+      // ─── Driver Leaderboard ─────────────────────────────────────────────────────
+      function updateLeaderboard() {
+        const lb = document.getElementById("driverLeaderboard");
+        if (!lb) return;
+        const sorted = Object.values(driverData)
+          .filter((d) => d.order_count > 0)
+          .sort((a, b) => (b.order_count || 0) - (a.order_count || 0))
+          .slice(0, 5);
+        if (sorted.length === 0) {
+          lb.innerHTML =
+            '<div style="font-size:9px;color:rgba(226,226,232,0.3);padding:4px 0">No deliveries yet</div>';
+          return;
+        }
+        const medals = [
+          { cls: "gold", icon: "emoji_events" },
+          { cls: "silver", icon: "military_tech" },
+          { cls: "bronze", icon: "stars" },
+        ];
+        lb.innerHTML = sorted
+          .map((d, i) => {
+            const m = medals[i];
+            return (
+              '<div class="lb-item"><span class="rank' +
+              (m ? " " + m.cls : "") +
+              '">' +
+              (m
+                ? '<span class="material-symbols-outlined" style="font-size:12px">' +
+                  m.icon +
+                  "</span>"
+                : i + 1) +
+              '</span><span class="name">' +
+              d.id +
+              '</span><span class="dels">' +
+              d.order_count +
+              "</span></div>"
+            );
+          })
+          .join("");
+      }
+
+      // ─── Missions ───────────────────────────────────────────────────────────────
+      const MISSION_DEFS = [
+        {
+          id: "m_orders",
+          icon: "local_shipping",
+          title: "Route Runner",
+          desc: "Complete deliveries",
+          check: (s) => s.totalOrders,
+          goal: 30,
+        },
+        {
+          id: "m_streak",
+          icon: "trending_up",
+          title: "On a Roll",
+          desc: "Reach streak",
+          check: (s) => s.streak,
+          goal: 10,
+        },
+        {
+          id: "m_combo",
+          icon: "whatshot",
+          title: "Combo King",
+          desc: "Reach combo",
+          check: (s) => Math.round(s.combo * 10) / 10,
+          goal: 4,
+        },
+      ];
+      let missions = MISSION_DEFS.map((m) => ({
+        ...m,
+        progress: 0,
+        done: false,
+      }));
+
+      function updateMissions() {
+        const container = document.getElementById("missionsContainer");
+        if (!container) return;
+        missions.forEach((m) => {
+          m.progress = Math.min(m.goal, m.check(game));
+          if (m.progress >= m.goal && !m.done) {
+            m.done = true;
+            addFeedEntry(
+              "emoji_events",
+              "Mission complete: " + m.title,
+              "#ffd166"
+            );
+            celebrate();
+          }
+        });
+        container.innerHTML = missions
+          .map((m) => {
+            const pct = Math.round((m.progress / m.goal) * 100);
+            return (
+              '<div class="mission' +
+              (m.done ? " done" : "") +
+              '"><span class="icon material-symbols-outlined" style="color:' +
+              (m.done ? "#4ae183" : "rgba(226,226,232,0.4)") +
+              '">' +
+              m.icon +
+              '</span><div class="info"><div class="title">' +
+              m.title +
+              '</div><div class="desc">' +
+              m.desc +
+              '</div></div><span class="pct">' +
+              pct +
+              "%</span></div>"
+            );
+          })
+          .join("");
+      }
+
+      // ─── Celebration ────────────────────────────────────────────────────────────
+      function celebrate() {
+        const colors = ["#ff375f", "#ffd166", "#4ae183", "#6cc3ff", "#ffb2b7"];
+        for (let i = 0; i < 30; i++) {
+          const p = document.createElement("div");
+          p.className = "confetti-piece";
+          p.style.left = 10 + Math.random() * 80 + "%";
+          p.style.top = 10 + Math.random() * 30 + "%";
+          p.style.background =
+            colors[Math.floor(Math.random() * colors.length)];
+          p.style.borderRadius = Math.random() > 0.5 ? "50%" : "2px";
+          p.style.width = 3 + Math.random() * 5 + "px";
+          p.style.height = 3 + Math.random() * 5 + "px";
+          p.style.animationDuration = 1 + Math.random() + "s";
+          p.style.animationDelay = Math.random() * 0.5 + "s";
+          document.body.appendChild(p);
+          setTimeout(() => p.remove(), 2500);
+        }
+      }
+
+      // ─── GeoJSON Conversion ────────────────────────────────────────────────────
+      function driversToGeoJSON(driversArray) {
+        return {
+          type: "FeatureCollection",
+          features: driversArray.map((d) => ({
+            type: "Feature",
+            geometry: { type: "Point", coordinates: [d.lng, d.lat] },
+            properties: {
+              id: d.id,
+              status: d.status || "available",
+              heading: d.heading || 0,
+            },
+          })),
+        };
+      }
+
+      function updateTrail(id, lat, lng) {
+        if (!driverTrails[id]) driverTrails[id] = [];
+        driverTrails[id].push({ lat, lng });
+        if (driverTrails[id].length > TRAIL_LENGTH) driverTrails[id].shift();
+      }
+
+      function trailsToGeoJSON() {
+        const features = [];
+        for (const id in driverTrails) {
+          const pts = driverTrails[id];
+          if (pts.length < 2) continue;
+          const d = driverData[id];
+          features.push({
+            type: "Feature",
+            geometry: {
+              type: "LineString",
+              coordinates: pts.map((p) => [p.lng, p.lat]),
+            },
+            properties: { id, status: d ? d.status : "available" },
+          });
+        }
+        return { type: "FeatureCollection", features };
+      }
+
+      function routesToGeoJSON() {
+        const features = [];
+        for (const id in driverData) {
+          const d = driverData[id];
+          if (
+            d.destination &&
+            (d.status === "en_route" || d.status === "delivering")
+          ) {
+            features.push({
+              type: "Feature",
+              geometry: {
+                type: "LineString",
+                coordinates: [
+                  [d.lng, d.lat],
+                  [d.destination.lng, d.destination.lat],
+                ],
+              },
+              properties: { id, status: d.status },
+            });
+          }
+        }
+        return { type: "FeatureCollection", features };
+      }
+
+      function updateStats() {
+        const vals = Object.values(driverData);
+        const total = vals.length;
+        const avail = vals.filter((d) => d.status === "available").length;
+        const enRoute = vals.filter((d) => d.status === "en_route").length;
+        const delivering = vals.filter((d) => d.status === "delivering").length;
+        document.getElementById("statTotal").textContent = total;
+        document.getElementById("statAvail").textContent = avail;
+        document.getElementById("statEnRoute").textContent = enRoute;
+        document.getElementById("statDelivering").textContent = delivering;
+        document.getElementById("statOrders").textContent = orderCount;
+        document.getElementById("ctrlAvail").textContent = avail;
+        document.getElementById("ctrlEnRoute").textContent = enRoute;
+        document.getElementById("ctrlDelivering").textContent = delivering;
+        updateConnectionUI();
+      }
+
+      // ─── ThrottledRAF ──────────────────────────────────────────────────────────
+      class ThrottledRAF {
+        constructor(callback, targetFps) {
+          this.callback = callback;
+          this.interval = 1000 / targetFps;
+          this.lastTime = 0;
+          this.isRunning = false;
+          this.pendingData = null;
+        }
+        update(data) {
+          this.pendingData = data;
+          if (!this.isRunning) {
+            this.isRunning = true;
+            this.loop();
+          }
+        }
+        loop() {
+          const now = performance.now();
+          const elapsed = now - this.lastTime;
+          if (elapsed >= this.interval && this.pendingData !== null) {
+            this.callback(this.pendingData);
+            this.pendingData = null;
+            this.lastTime = now - (elapsed % this.interval);
+          }
+          requestAnimationFrame(() => this.loop());
+        }
+        stop() {
+          this.isRunning = false;
+        }
+      }
+
+      // ─── Telemetry Log ─────────────────────────────────────────────────────────
+      function logTelemetry(type, msg) {
+        const el = document.getElementById("telemetryLog");
+        const now = new Date();
+        const ts = now.toISOString().substr(11, 8);
+        const entry = document.createElement("div");
+        entry.className = "entry";
+        entry.innerHTML =
+          '<span class="t">[' +
+          ts +
+          ']</span> <span style="color:rgba(255,178,183,0.6)">' +
+          type +
+          '</span> <span class="msg">' +
+          msg +
+          "</span>";
+        el.appendChild(entry);
+        telemetryEntries++;
+        if (telemetryEntries > 80) {
+          el.removeChild(el.firstChild);
+          telemetryEntries--;
+        }
+        el.scrollTop = el.scrollHeight;
+      }
+
+      // ─── MapLibre Map ─────────────────────────────────────────────────────────
+      function initMap() {
+        const m = new maplibregl.Map({
+          container: "map",
+          style: {
+            version: 8,
+            name: "NYC Dark",
+            sources: {
+              "carto-dark": {
+                type: "raster",
+                tiles: [
+                  "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+                ],
+                tileSize: 256,
+                attribution:
+                  '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
+              },
+              "color-pop": {
+                type: "raster",
+                tiles: [
+                  "https://a.basemaps.cartocdn.com/voyager_labels_under/{z}/{x}/{y}{r}.png",
+                ],
+                tileSize: 256,
+                attribution: "&copy; CARTO",
+              },
+            },
+            layers: [
+              {
+                id: "carto-dark-layer",
+                type: "raster",
+                source: "carto-dark",
+                minzoom: 0,
+                maxzoom: 22,
+              },
+              {
+                id: "color-pop-layer",
+                type: "raster",
+                source: "color-pop",
+                minzoom: 0,
+                maxzoom: 22,
+                paint: { "raster-opacity": 0.15 },
+              },
+            ],
+            glyphs: "https://fonts.openmaptiles.org/{fontstack}/{range}.pbf",
+          },
+          center: NYC_LNG_LAT,
+          zoom: ZOOM,
+          attributionControl: false,
+        });
+        m.addControl(new maplibregl.NavigationControl(), "top-right");
+        if (window.ResizeObserver) {
+          new ResizeObserver(function () {
+            m.resize();
+          }).observe(document.getElementById("map"));
+        }
+        return m;
+      }
+      const map = initMap();
+
+      // ─── Source & Layers ───────────────────────────────────────────────────────
+      map.on("load", () => {
+        map.addSource("drivers", {
+          type: "geojson",
+          data: { type: "FeatureCollection", features: [] },
+          promoteId: "id",
+          cluster: true,
+          clusterMaxZoom: 14,
+          clusterRadius: 50,
+        });
+        map.addLayer({
+          id: "driver-clusters",
+          type: "circle",
+          source: "drivers",
+          filter: ["has", "point_count"],
+          paint: {
+            "circle-color": [
+              "step",
+              ["get", "point_count"],
+              "#51bbd6",
+              10,
+              "#f1f075",
+              50,
+              "#f28cb1",
+            ],
+            "circle-radius": [
+              "step",
+              ["get", "point_count"],
+              20,
+              10,
+              30,
+              50,
+              40,
+            ],
+            "circle-opacity": 0.85,
+            "circle-stroke-width": 2,
+            "circle-stroke-color": "rgba(255,255,255,0.15)",
+          },
+        });
+        map.addLayer({
+          id: "driver-cluster-count",
+          type: "symbol",
+          source: "drivers",
+          filter: ["has", "point_count"],
+          layout: {
+            "text-field": "{point_count_abbreviated}",
+            "text-font": ["DIN Offc Pro Medium", "Arial Unicode MS Bold"],
+            "text-size": 12,
+          },
+          paint: {
+            "text-color": "#fff",
+            "text-halo-color": "rgba(0,0,0,0.6)",
+            "text-halo-width": 1.5,
+          },
+        });
+        map.addLayer({
+          id: "driver-glow",
+          type: "circle",
+          source: "drivers",
+          filter: ["!", ["has", "point_count"]],
+          paint: {
+            "circle-radius": 12,
+            "circle-color": [
+              "match",
+              ["get", "status"],
+              "available",
+              "#4ae183",
+              "en_route",
+              "#ffd166",
+              "delivering",
+              "#6cc3ff",
+              "#9e9e9e",
+            ],
+            "circle-opacity": 0.25,
+            "circle-blur": 1.5,
+          },
+        });
+        // Neon ping glow — pulses radius & opacity for radar-ping effect
+        map.addLayer({
+          id: "driver-glow-ping",
+          type: "circle",
+          source: "drivers",
+          filter: ["!", ["has", "point_count"]],
+          paint: {
+            "circle-radius": 16,
+            "circle-color": [
+              "match",
+              ["get", "status"],
+              "available",
+              "#4ae183",
+              "en_route",
+              "#ffd166",
+              "delivering",
+              "#6cc3ff",
+              "#9e9e9e",
+            ],
+            "circle-opacity": 0.15,
+            "circle-blur": 3,
+          },
+        });
+        map.addLayer({
+          id: "driver-unclustered",
+          type: "circle",
+          source: "drivers",
+          filter: ["!", ["has", "point_count"]],
+          paint: {
+            "circle-radius": 7,
+            "circle-color": [
+              "match",
+              ["get", "status"],
+              "available",
+              "#4ae183",
+              "en_route",
+              "#ffd166",
+              "delivering",
+              "#6cc3ff",
+              "#9e9e9e",
+            ],
+            "circle-stroke-width": 2.5,
+            "circle-stroke-color": "rgba(255,255,255,0.5)",
+            "circle-opacity": 1,
+          },
+        });
+        // Route lines — from en_route/delivering driver to destination
+        map.addSource("routes", {
+          type: "geojson",
+          data: { type: "FeatureCollection", features: [] },
+        });
+        map.addLayer({
+          id: "route-lines",
+          type: "line",
+          source: "routes",
+          paint: {
+            "line-color": [
+              "match",
+              ["get", "status"],
+              "en_route",
+              "#ffd166",
+              "delivering",
+              "#6cc3ff",
+              "rgba(255,255,255,0.2)",
+            ],
+            "line-width": 2,
+            "line-opacity": 0.5,
+            "line-dasharray": [2, 3],
+          },
+        });
+        // Trail lines — last N positions per driver, fade out with age
+        map.addSource("trails", {
+          type: "geojson",
+          data: { type: "FeatureCollection", features: [] },
+        });
+        map.addLayer({
+          id: "trail-lines",
+          type: "line",
+          source: "trails",
+          paint: {
+            "line-color": [
+              "match",
+              ["get", "status"],
+              "available",
+              "#4ae183",
+              "en_route",
+              "#ffd166",
+              "delivering",
+              "#6cc3ff",
+              "#9e9e9e",
+            ],
+            "line-width": 1.5,
+            "line-opacity": 0.25,
+          },
+        });
+        mapReady = true;
+        updateConnectionUI();
+        if (pendingGeoJSON !== null) {
+          map.getSource("drivers").setData(pendingGeoJSON);
+          const rs = map.getSource("routes");
+          if (rs) rs.setData(routesToGeoJSON());
+          const ts = map.getSource("trails");
+          if (ts) ts.setData(trailsToGeoJSON());
+          pendingGeoJSON = null;
+        }
+        map.on("click", "driver-clusters", (e) => {
+          const f = e.features[0];
+          map
+            .getSource("drivers")
+            .getClusterExpansionZoom(f.properties.cluster_id, (err, z) => {
+              if (!err)
+                map.easeTo({
+                  center: f.geometry.coordinates,
+                  zoom: z,
+                  duration: 500,
+                });
+            });
+        });
+        map.on("click", "driver-unclustered", (e) => {
+          const f = e.features[0];
+          const coords = f.geometry.coordinates.slice();
+          const props = f.properties;
+          const status = props.status || "available";
+          const id = props.id;
+          const cm = {
+            available: "#4ae183",
+            en_route: "#ffd166",
+            delivering: "#6cc3ff",
+          };
+          const c = cm[status] || "#4ae183";
+          const deliveries = game.driverDeliveries[id] || 0;
+          const pending = (d && d.queue && d.queue.length) || 0;
+          new maplibregl.Popup({
+            closeButton: true,
+            closeOnClick: true,
+            maxWidth: "260px",
+          })
+            .setLngLat(coords)
+            .setHTML(
+              '<div style="font-family:Inter,sans-serif;min-width:160px">' +
+                '<div style="font-weight:600;font-size:13px;margin-bottom:2px;color:#e2e2e8">' +
+                id +
+                "</div>" +
+                '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">' +
+                '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' +
+                c +
+                '"></span>' +
+                '<span style="font-size:11px;text-transform:capitalize;color:' +
+                c +
+                '">' +
+                status +
+                "</span>" +
+                '<span style="margin-left:auto;font-size:10px;color:rgba(226,226,232,0.4)">' +
+                (d.order_count || 0) +
+                " done" +
+                (pending ? " · " + pending + " pend" : "") +
+                "</span></div>" +
+                '<div style="font-size:10px;color:rgba(226,226,232,0.4);font-family:JetBrains Mono,monospace">' +
+                coords[1].toFixed(4) +
+                ", " +
+                coords[0].toFixed(4) +
+                "</div>" +
+                "<button onclick=\"assignToDriver('" +
+                id +
+                '\',3)" style="margin-top:8px;padding:4px 12px;background:#ff375f;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;width:100%">Assign 3 Orders</button>' +
+                "</div>"
+            )
+            .addTo(map);
+          showDriverPopup(id);
+        });
+        map.on("mouseenter", "driver-unclustered", () => {
+          map.getCanvas().style.cursor = "pointer";
+        });
+        map.on("mouseleave", "driver-unclustered", () => {
+          map.getCanvas().style.cursor = "";
+        });
+        map.on("mouseenter", "driver-clusters", () => {
+          map.getCanvas().style.cursor = "pointer";
+        });
+        map.on("mouseleave", "driver-clusters", () => {
+          map.getCanvas().style.cursor = "";
+        });
+      });
+
+      // ─── Map Updater ──────────────────────────────────────────────────────────
+      const mapUpdater = new ThrottledRAF((geoJSON) => {
+        if (!mapReady) {
+          pendingGeoJSON = geoJSON;
+          return;
+        }
+        const src = map.getSource("drivers");
+        if (src) src.setData(geoJSON);
+        const rs = map.getSource("routes");
+        if (rs) rs.setData(routesToGeoJSON());
+        const ts = map.getSource("trails");
+        if (ts) ts.setData(trailsToGeoJSON());
+      }, TARGET_FPS);
+
+      // ─── Neon glow pinger ──────────────────────────────────────────────────────
+      let glowTime = 0;
+      function pingGlow() {
+        if (!mapReady) {
+          requestAnimationFrame(pingGlow);
+          return;
+        }
+        glowTime += 0.03;
+        const pulse = 0.5 + 0.5 * Math.sin(glowTime);
+        const radius = 14 + 8 * pulse;
+        const opacity = 0.05 + 0.2 * pulse;
+        const layer = map.getLayer("driver-glow-ping");
+        if (layer) {
+          map.setPaintProperty("driver-glow-ping", "circle-radius", radius);
+          map.setPaintProperty("driver-glow-ping", "circle-opacity", opacity);
+        }
+        requestAnimationFrame(pingGlow);
+      }
+      pingGlow();
+
+      // ─── API Calls ──────────────────────────────────────────────────────────────
+      async function assignToDriver(driverId, count) {
+        count = count || 1;
+        hideDriverPopup();
+        const base = window.API_BASE || API_BASE;
+        try {
+          const body = { driver_id: driverId };
+          if (count > 1) {
+            body.destinations = [];
+            for (let i = 0; i < count; i++) {
+              body.destinations.push({});
+            }
+          }
+          const resp = await fetch(base + "/api/assign", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+          if (resp.ok) {
+            orderCount += count;
+            if (!game.driverDeliveries[driverId])
+              game.driverDeliveries[driverId] = 0;
+            game.driverDeliveries[driverId] += count;
+            processGameOrder();
+            updateStats();
+            logTelemetry("ORDER", count + " order(s) assigned to " + driverId);
+            if (driverData[driverId]) {
+              driverData[driverId].status = "en_route";
+              driverData[driverId].order_count =
+                (driverData[driverId].order_count || 0) + count;
+              mapUpdater.update(driversToGeoJSON(Object.values(driverData)));
+            }
+          } else {
+            game.streak = 0;
+            updateGameUI();
+            logTelemetry(
+              "FAIL",
+              "Assign failed for " + driverId + ": " + resp.status
+            );
+          }
+        } catch (e) {
+          logTelemetry("ERR", "Assign error: " + e.message);
+        }
+      }
+
+      async function assignRandomOrder() {
+        const avail = Object.values(driverData).filter(
+          (d) => d.status === "available"
+        );
+        if (avail.length === 0) {
+          logTelemetry("INFO", "No available drivers");
+          return;
+        }
+        const count = Math.floor(Math.random() * 3) + 1;
+        const sorted = avail.sort(() => Math.random() - 0.5).slice(0, count);
+        for (const d of sorted) {
+          await assignToDriver(d.id, 1);
+        }
+      }
+
+      async function fetchDrivers() {
+        const base = window.API_BASE || API_BASE;
+        try {
+          const resp = await fetch(base + "/api/drivers");
+          if (!resp.ok) return;
+          const data = await resp.json();
+          if (data.drivers) {
+            for (const d of data.drivers) {
+              driverData[d.id] = {
+                id: d.id,
+                lat: d.lat,
+                lng: d.lng,
+                heading: d.heading || 0,
+                status: d.status || "available",
+                order_count: d.order_count || 0,
+                queue: d.queue || [],
+                destination: d.destination || null,
+              };
+              updateTrail(d.id, d.lat, d.lng);
+            }
+            mapUpdater.update(driversToGeoJSON(Object.values(driverData)));
+            updateStats();
+          }
+        } catch (e) {
+          /* ignore */
+        }
+      }
+
+      // ─── WebSocket ──────────────────────────────────────────────────────────────
+      function connectWS() {
+        if (ws && ws.readyState === WebSocket.OPEN) return;
+        document.getElementById("settingsWSStatus").textContent = "CONNECTING";
+        document.getElementById("settingsWSStatus").style.color = "#ffd166";
+        try {
+          ws = new WebSocket(window.WS_URL || WS_URL);
+        } catch (e) {
+          scheduleReconnect();
+          return;
+        }
+        ws.onopen = () => {
+          document.getElementById("statusDot").style.background = "#4ae183";
+          document.getElementById("statusText").textContent = "CONNECTED";
+          document.getElementById("wsDot").style.background = "#4ae183";
+          document.getElementById("wsStatus").textContent = "WebSocket LIVE";
+          document.getElementById("settingsWSStatus").textContent = "LIVE";
+          document.getElementById("settingsWSStatus").style.color = "#4ae183";
+          logTelemetry("WS", "Connected");
+          fetchDrivers();
+          updateConnectionUI();
+        };
+        ws.onmessage = (e) => {
+          try {
+            const data = JSON.parse(e.data);
+            if (data.type === "init" && data.drivers) {
+              for (const d of data.drivers) {
+                driverData[d.id] = {
+                  id: d.id,
+                  lat: d.lat,
+                  lng: d.lng,
+                  heading: d.heading || 0,
+                  status: d.status || "available",
+                  order_count: d.order_count || 0,
+                  queue: d.queue || [],
+                  destination: d.destination || null,
+                };
+                updateTrail(d.id, d.lat, d.lng);
+                prevOrderCounts[d.id] = d.order_count || 0;
+              }
+              mapUpdater.update(driversToGeoJSON(Object.values(driverData)));
+              updateStats();
+              updateConnectionUI();
+              updateLeaderboard();
+              updateMissions();
+              logTelemetry("INIT", data.drivers.length + " drivers loaded");
+            } else if (data.type === "update" && data.drivers) {
+              for (const d of data.drivers) {
+                driverData[d.id] = {
+                  id: d.id,
+                  lat: d.lat,
+                  lng: d.lng,
+                  heading: d.heading || 0,
+                  status: d.status || "available",
+                  order_count: d.order_count || 0,
+                  queue: d.queue || [],
+                  destination: d.destination || null,
+                };
+                updateTrail(d.id, d.lat, d.lng);
+              }
+              mapUpdater.update(driversToGeoJSON(Object.values(driverData)));
+              updateStats();
+              updateConnectionUI();
+              checkDeliveryCompletions(data.drivers);
+            } else if (data.type === "assignment" && data.driver) {
+              const d = data.driver;
+              if (driverData[d.id]) {
+                driverData[d.id].status = d.status || "en_route";
+                driverData[d.id].order_count = d.order_count || 0;
+                driverData[d.id].queue = d.queue || [];
+                driverData[d.id].destination = d.destination || null;
+                prevOrderCounts[d.id] = d.order_count || 0;
+              }
+              mapUpdater.update(driversToGeoJSON(Object.values(driverData)));
+              logTelemetry("ASSIGN", d.id + " → " + (d.status || "en_route"));
+              updateStats();
+              updateConnectionUI();
+              updateLeaderboard();
+            }
+          } catch (err) {
+            /* ignore */
+          }
+        };
+        ws.onclose = () => {
+          document.getElementById("statusDot").style.background = "#ff375f";
+          document.getElementById("statusText").textContent = "DISCONNECTED";
+          document.getElementById("wsDot").style.background = "#ff375f";
+          document.getElementById("wsStatus").textContent = "WebSocket OFFLINE";
+          document.getElementById("settingsWSStatus").textContent = "OFFLINE";
+          document.getElementById("settingsWSStatus").style.color = "#ff375f";
+          logTelemetry("WS", "Disconnected");
+          scheduleReconnect();
+        };
+        ws.onerror = () => {
+          ws.close();
+        };
+      }
+
+      function scheduleReconnect() {
+        if (wsReconnectTimer) clearTimeout(wsReconnectTimer);
+        wsReconnectTimer = setTimeout(() => {
+          logTelemetry("WS", "Reconnecting...");
+          connectWS();
+        }, 3000);
+      }
+
+      // ─── Driver Popup ─────────────────────────────────────────────────────────
+      function showDriverPopup(id) {
+        const el = document.getElementById("driverPopup");
+        const d = driverData[id] || {};
+        const status = d.status || "unknown";
+        const cm = {
+          available: "#4ae183",
+          en_route: "#ffd166",
+          delivering: "#6cc3ff",
+        };
+        const c = cm[status] || "#4ae183";
+        const deliveries = d.order_count || 0;
+        const pending = (d.queue && d.queue.length) || 0;
+        el.innerHTML =
+          '<h3 style="color:#e2e2e8">' +
+          id +
+          "</h3>" +
+          '<div class="info"><span style="display:inline-flex;align-items:center;gap:4px;color:' +
+          c +
+          '">' +
+          '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:' +
+          c +
+          '"></span> ' +
+          status +
+          '</span> <span style="margin-left:8px;color:rgba(226,226,232,0.4);font-size:10px">' +
+          deliveries +
+          " delivered";
+        if (pending > 0) el.innerHTML += " · " + pending + " pending";
+        el.innerHTML +=
+          "</span></div>" +
+          '<div class="actions">' +
+          "<button onclick=\"assignToDriver('" +
+          id +
+          '\',3)" style="background:#ff375f;color:#fff">Assign 3 Orders</button>' +
+          "<button onclick=\"assignToDriver('" +
+          id +
+          '\',1)" style="background:rgba(255,255,255,0.08);color:#e2e2e8;margin-left:4px">Assign 1</button>' +
+          "<button onclick=\"document.getElementById('driverPopup').classList.remove('show')\" style=\"background:rgba(255,255,255,0.08);color:#e2e2e8;margin-left:4px\">Close</button>" +
+          "</div>";
+        el.classList.add("show");
+      }
+      function hideDriverPopup() {
+        document.getElementById("driverPopup").classList.remove("show");
+      }
+
+      // ─── Nav Dropdown ─────────────────────────────────────────────────────────
+      (function () {
+        const btn = document.getElementById("navDropdownBtn");
+        const dd = document.getElementById("navDropdown");
+        if (btn && dd) {
+          btn.addEventListener("click", function (e) {
+            e.stopPropagation();
+            dd.classList.toggle("open");
+          });
+          document.addEventListener("click", function (e) {
+            if (!dd.contains(e.target) && e.target !== btn)
+              dd.classList.remove("open");
+          });
+          dd.querySelectorAll("a").forEach(function (a) {
+            a.addEventListener("click", function () {
+              dd.classList.remove("open");
+            });
+          });
+        }
+      })();
+
+      // ─── UI Events ───────────────────────────────────────────────────────────
+      document
+        .getElementById("btnAssign")
+        .addEventListener("click", assignRandomOrder);
+      document.getElementById("btnAssign5").addEventListener("click", () => {
+        const avail = Object.values(driverData).filter(
+          (d) => d.status === "available"
+        );
+        for (let i = 0; i < 5 && i < avail.length; i++) {
+          assignToDriver(avail[i].id, 3);
+        }
+      });
+      document.getElementById("btnRecenter").addEventListener("click", () => {
+        map.flyTo({ center: NYC_LNG_LAT, zoom: ZOOM, duration: 1000 });
+      });
+      document.getElementById("btnGameToggle").addEventListener("click", () => {
+        const panel = document.getElementById("gamePanel");
+        panel.classList.toggle("show");
+        if (panel.classList.contains("show"))
+          logTelemetry("GAME", "Game HUD opened");
+      });
+
+      // ─── NVIDIA API Panel ────────────────────────────────────────────────────
+      document.getElementById("btnAPIToggle").addEventListener("click", () => {
+        document.getElementById("apiPanel").classList.toggle("show");
+      });
+      document.getElementById("apiKeyToggle").addEventListener("click", () => {
+        const input = document.getElementById("apiKeyInput");
+        const icon = document.getElementById("apiKeyToggle");
+        if (input.type === "password") {
+          input.type = "text";
+          icon.textContent = "visibility";
+        } else {
+          input.type = "password";
+          icon.textContent = "visibility_off";
+        }
+      });
+      document
+        .getElementById("apiModelSelect")
+        .addEventListener("change", () => {
+          const model = document.getElementById("apiModelSelect").value;
+          const label = model
+            .split("/")
+            .pop()
+            .replace(/-(\d)/g, "-$1")
+            .substring(0, 24);
+          document.getElementById("apiModelLabel").textContent = label;
+        });
+      document
+        .getElementById("btnAPISend")
+        .addEventListener("click", async () => {
+          const key =
+            document.getElementById("apiKeyInput").value.trim() || undefined;
+          const model = document.getElementById("apiModelSelect").value;
+          const prompt = document.getElementById("apiPromptInput").value.trim();
+          const temp = parseFloat(document.getElementById("apiTemp").value);
+          const maxTokens =
+            parseInt(document.getElementById("apiMaxTokens").value) || 2048;
+          if (!prompt) {
+            document.getElementById("apiError").textContent = "Enter a prompt";
+            document.getElementById("apiError").style.display = "block";
+            return;
+          }
+          const isReasoning = model.includes("reasoning");
+          const body = {
+            model,
+            max_tokens: maxTokens,
+            temperature: temp,
+            messages: [{ role: "user", content: prompt }],
+            ...(isReasoning
+              ? {
+                  extra_body: {
+                    chat_template_kwargs: { enable_thinking: true },
+                    reasoning_budget: 16384,
+                  },
+                }
+              : {}),
+          };
+          const headers = { "Content-Type": "application/json" };
+          if (key) headers["X-NVIDIA-Key"] = key;
+          const loading = document.getElementById("apiLoading");
+          const respDiv = document.getElementById("apiResponse");
+          const reasoningDiv = document.getElementById("apiReasoning");
+          const contentDiv = document.getElementById("apiContent");
+          const errorDiv = document.getElementById("apiError");
+          errorDiv.style.display = "none";
+          respDiv.style.display = "none";
+          loading.style.display = "block";
+          try {
+            const resp = await fetch(
+              (window.API_BASE || API_BASE) + "/api/nvidia/chat",
+              {
+                method: "POST",
+                headers,
+                body: JSON.stringify(body),
+              }
+            );
+            const data = await resp.json();
+            loading.style.display = "none";
+            if (!resp.ok) {
+              errorDiv.textContent = data.error || "HTTP " + resp.status;
+              errorDiv.style.display = "block";
+              return;
+            }
+            if (data.error) {
+              errorDiv.textContent = data.error;
+              errorDiv.style.display = "block";
+              return;
+            }
+            const choice = data.choices && data.choices[0];
+            if (!choice) {
+              errorDiv.textContent = "No response from model";
+              errorDiv.style.display = "block";
+              return;
+            }
+            const msg = choice.message || {};
+            if (msg.reasoning_content) {
+              reasoningDiv.textContent = msg.reasoning_content;
+              reasoningDiv.style.display = "block";
+            } else {
+              reasoningDiv.style.display = "none";
+            }
+            contentDiv.textContent = msg.content || "";
+            respDiv.style.display = "block";
+            logTelemetry(
+              "NVIDIA",
+              "Response from " + model.split("/").pop().substring(0, 30)
+            );
+          } catch (e) {
+            loading.style.display = "none";
+            errorDiv.textContent = "Network error: " + e.message;
+            errorDiv.style.display = "block";
+          }
+        });
+
+      // ─── Settings Panel ──────────────────────────────────────────────────────
+      document
+        .getElementById("btnSettingsToggle")
+        .addEventListener("click", () => {
+          document.getElementById("settingsPanel").classList.toggle("show");
+        });
+
+      let isDemoMode = true;
+
+      function switchMode(demo) {
+        isDemoMode = demo;
+        const modeBtn = demo ? "modeDemo" : "modeLive";
+        const otherBtn = demo ? "modeLive" : "modeDemo";
+        document.getElementById(modeBtn).style.background = "#ffb2b7";
+        document.getElementById(modeBtn).style.color = "#0c0e12";
+        document.getElementById(otherBtn).style.background =
+          "rgba(255,255,255,0.06)";
+        document.getElementById(otherBtn).style.color = "rgba(226,226,232,0.4)";
+        const info = document.getElementById("modeInfo");
+        if (demo) {
+          info.textContent = "nyc-app-server 1000-driver simulation on :8080";
+          info.style.borderColor = "rgba(255,178,183,0.1)";
+          info.style.color = "rgba(226,226,232,0.5)";
+          info.style.background = "rgba(255,178,183,0.06)";
+        } else {
+          info.textContent = "gateway + Rust spatial tracker on :8081";
+          info.style.borderColor = "rgba(74,225,131,0.15)";
+          info.style.color = "rgba(74,225,131,0.5)";
+          info.style.background = "rgba(74,225,131,0.06)";
+        }
+        // Reconnect with new URL
+        const newWsUrl = demo
+          ? "ws://localhost:8080/ws"
+          : "ws://localhost:8081/ws";
+        const newApiUrl = demo
+          ? "http://localhost:8080"
+          : "http://localhost:8081";
+        window.WS_URL = newWsUrl;
+        window.API_BASE = newApiUrl;
+        if (ws) {
+          ws.close();
+          ws = null;
+        }
+        logTelemetry(
+          "MODE",
+          "Switched to " + (demo ? "Demo" : "Live") + " mode"
+        );
+        connectWS();
+      }
+
+      document
+        .getElementById("modeDemo")
+        .addEventListener("click", () => switchMode(true));
+      document
+        .getElementById("modeLive")
+        .addEventListener("click", () => switchMode(false));
+
+      document.querySelectorAll(".pnl-toggle input").forEach((cb) => {
+        cb.addEventListener("change", function () {
+          const panel = document.getElementById(this.dataset.panel);
+          if (panel) {
+            if (this.checked) {
+              panel.classList.add("show");
+            } else {
+              panel.classList.remove("show");
+            }
+          }
+        });
+      });
+
+      // ─── Connection State Updates ────────────────────────────────────────────
+      function updateConnectionUI() {
+        try {
+          const vals = Object.values(driverData);
+          const dc = document.getElementById("settingsDriverCount");
+          const oc = document.getElementById("settingsOrderCount");
+          const ms = document.getElementById("settingsMapStatus");
+          if (dc) dc.textContent = vals.length;
+          if (oc) oc.textContent = orderCount;
+          if (ms) {
+            ms.textContent = mapReady ? "READY" : "LOADING";
+            ms.style.color = mapReady ? "#4ae183" : "#ffd166";
+          }
+        } catch (e) {
+          /* UI update best-effort */
+        }
+      }
+
+      // Patch existing connectWS usage: call our new version
+
+      let allPanelsVisible = false;
+      document
+        .getElementById("btnToggleAllPanels")
+        .addEventListener("click", () => toggleAllPanels());
+      function toggleAllPanels() {
+        allPanelsVisible = !allPanelsVisible;
+        const ids = ["gamePanel", "apiPanel", "telemetryPanel", "controlPanel"];
+        for (const id of ids) {
+          document
+            .getElementById(id)
+            .classList.toggle("show", allPanelsVisible);
+        }
+        document
+          .querySelectorAll("#settingsPanel .pnl-toggle input")
+          .forEach((cb) => {
+            cb.checked = allPanelsVisible;
+          });
+        logTelemetry("PANELS", allPanelsVisible ? "All shown" : "All hidden");
+      }
+
+      document
+        .getElementById("visRoutes")
+        .addEventListener("change", function () {
+          const layers = ["route-lines"];
+          for (const l of layers) {
+            const vis = map.getLayer(l);
+            if (vis)
+              map.setLayoutProperty(
+                l,
+                "visibility",
+                this.checked ? "visible" : "none"
+              );
+          }
+        });
+      document
+        .getElementById("visTrails")
+        .addEventListener("change", function () {
+          const layers = ["trail-lines"];
+          for (const l of layers) {
+            const vis = map.getLayer(l);
+            if (vis)
+              map.setLayoutProperty(
+                l,
+                "visibility",
+                this.checked ? "visible" : "none"
+              );
+          }
+        });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "a" || e.key === "A") assignRandomOrder();
+        if (e.key === "5") {
+          const a = Object.values(driverData).filter(
+            (d) => d.status === "available"
+          );
+          for (let i = 0; i < 5 && i < a.length; i++)
+            assignToDriver(a[i].id, 3);
+        }
+        if (e.key === "r" || e.key === "R")
+          map.flyTo({ center: NYC_LNG_LAT, zoom: ZOOM, duration: 1000 });
+        if (e.key === "g" || e.key === "G")
+          document.getElementById("gamePanel").classList.toggle("show");
+        if (e.key === "n" || e.key === "N")
+          document.getElementById("apiPanel").classList.toggle("show");
+        if (e.key === "s" || e.key === "S")
+          document.getElementById("settingsPanel").classList.toggle("show");
+        if (e.key === "t" || e.key === "T") toggleAllPanels();
+      });
+
+      // ─── Init ─────────────────────────────────────────────────────────────────
+      logTelemetry("SYS", "NYC Demo initializing (MapLibre + Game HUD)");
       updateGameUI();
-      logTelemetry('FAIL', 'Assign failed for ' + driverId + ': ' + resp.status);
-    }
-  } catch (e) {
-    logTelemetry('ERR', 'Assign error: ' + e.message);
-  }
-}
-
-async function assignRandomOrder() {
-  const avail = Object.values(driverData).filter(d => d.status === 'available');
-  if (avail.length === 0) { logTelemetry('INFO', 'No available drivers'); return; }
-  const count = Math.floor(Math.random() * 3) + 1;
-  const sorted = avail.sort(() => Math.random() - 0.5).slice(0, count);
-  for (const d of sorted) {
-    await assignToDriver(d.id, 1);
-  }
-}
-
-async function fetchDrivers() {
-  const base = window.API_BASE || API_BASE;
-  try {
-    const resp = await fetch(base + '/api/drivers');
-    if (!resp.ok) return;
-    const data = await resp.json();
-    if (data.drivers) {
-      for (const d of data.drivers) { driverData[d.id] = { id: d.id, lat: d.lat, lng: d.lng, heading: d.heading || 0, status: d.status || 'available', order_count: d.order_count || 0, queue: d.queue || [], destination: d.destination || null }; updateTrail(d.id, d.lat, d.lng); }
-      mapUpdater.update(driversToGeoJSON(Object.values(driverData)));
-      updateStats();
-    }
-  } catch (e) { /* ignore */ }
-}
-
-// ─── WebSocket ──────────────────────────────────────────────────────────────
-function connectWS() {
-  if (ws && ws.readyState === WebSocket.OPEN) return;
-  document.getElementById('settingsWSStatus').textContent = 'CONNECTING';
-  document.getElementById('settingsWSStatus').style.color = '#ffd166';
-  try { ws = new WebSocket(window.WS_URL || WS_URL); } catch (e) { scheduleReconnect(); return; }
-  ws.onopen = () => {
-    document.getElementById('statusDot').style.background = '#4ae183';
-    document.getElementById('statusText').textContent = 'CONNECTED';
-    document.getElementById('wsDot').style.background = '#4ae183';
-    document.getElementById('wsStatus').textContent = 'WebSocket LIVE';
-    document.getElementById('settingsWSStatus').textContent = 'LIVE';
-    document.getElementById('settingsWSStatus').style.color = '#4ae183';
-    logTelemetry('WS', 'Connected');
-    fetchDrivers();
-    updateConnectionUI();
-  };
-  ws.onmessage = (e) => {
-    try {
-      const data = JSON.parse(e.data);
-      if (data.type === 'init' && data.drivers) {
-        for (const d of data.drivers) { driverData[d.id] = { id: d.id, lat: d.lat, lng: d.lng, heading: d.heading || 0, status: d.status || 'available', order_count: d.order_count || 0, queue: d.queue || [], destination: d.destination || null }; updateTrail(d.id, d.lat, d.lng); prevOrderCounts[d.id] = d.order_count || 0; }
-          mapUpdater.update(driversToGeoJSON(Object.values(driverData)));
-          updateStats();
-          updateConnectionUI();
-          updateLeaderboard();
-          updateMissions();
-          logTelemetry('INIT', data.drivers.length + ' drivers loaded');
-        } else if (data.type === 'update' && data.drivers) {
-          for (const d of data.drivers) { driverData[d.id] = { id: d.id, lat: d.lat, lng: d.lng, heading: d.heading || 0, status: d.status || 'available', order_count: d.order_count || 0, queue: d.queue || [], destination: d.destination || null }; updateTrail(d.id, d.lat, d.lng); }
-          mapUpdater.update(driversToGeoJSON(Object.values(driverData)));
-          updateStats();
-          updateConnectionUI();
-          checkDeliveryCompletions(data.drivers);
-        } else if (data.type === 'assignment' && data.driver) {
-          const d = data.driver;
-          if (driverData[d.id]) { driverData[d.id].status = d.status || 'en_route'; driverData[d.id].order_count = d.order_count || 0; driverData[d.id].queue = d.queue || []; driverData[d.id].destination = d.destination || null; prevOrderCounts[d.id] = d.order_count || 0; }
-          mapUpdater.update(driversToGeoJSON(Object.values(driverData)));
-          logTelemetry('ASSIGN', d.id + ' → ' + (d.status || 'en_route'));
-          updateStats();
-          updateConnectionUI();
-          updateLeaderboard();
-        }
-    } catch (err) { /* ignore */ }
-  };
-  ws.onclose = () => {
-    document.getElementById('statusDot').style.background = '#ff375f';
-    document.getElementById('statusText').textContent = 'DISCONNECTED';
-    document.getElementById('wsDot').style.background = '#ff375f';
-    document.getElementById('wsStatus').textContent = 'WebSocket OFFLINE';
-    document.getElementById('settingsWSStatus').textContent = 'OFFLINE';
-    document.getElementById('settingsWSStatus').style.color = '#ff375f';
-    logTelemetry('WS', 'Disconnected');
-    scheduleReconnect();
-  };
-  ws.onerror = () => { ws.close(); };
-}
-
-function scheduleReconnect() {
-  if (wsReconnectTimer) clearTimeout(wsReconnectTimer);
-  wsReconnectTimer = setTimeout(() => { logTelemetry('WS', 'Reconnecting...'); connectWS(); }, 3000);
-}
-
-// ─── Driver Popup ─────────────────────────────────────────────────────────
-function showDriverPopup(id) {
-  const el = document.getElementById('driverPopup');
-  const d = driverData[id] || {};
-  const status = d.status || 'unknown';
-  const cm = { available: '#4ae183', en_route: '#ffd166', delivering: '#6cc3ff' };
-  const c = cm[status] || '#4ae183';
-  const deliveries = d.order_count || 0;
-  const pending = (d.queue && d.queue.length) || 0;
-  el.innerHTML =
-    '<h3 style="color:#e2e2e8">' + id + '</h3>' +
-    '<div class="info"><span style="display:inline-flex;align-items:center;gap:4px;color:' + c + '">' +
-    '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:' + c + '"></span> ' + status +
-    '</span> <span style="margin-left:8px;color:rgba(226,226,232,0.4);font-size:10px">' + deliveries + ' delivered';
-  if (pending > 0) el.innerHTML += ' · ' + pending + ' pending';
-  el.innerHTML += '</span></div>' +
-    '<div class="actions">' +
-    '<button onclick="assignToDriver(\'' + id + '\',3)" style="background:#ff375f;color:#fff">Assign 3 Orders</button>' +
-    '<button onclick="assignToDriver(\'' + id + '\',1)" style="background:rgba(255,255,255,0.08);color:#e2e2e8;margin-left:4px">Assign 1</button>' +
-    '<button onclick="document.getElementById(\'driverPopup\').classList.remove(\'show\')" style="background:rgba(255,255,255,0.08);color:#e2e2e8;margin-left:4px">Close</button>' +
-    '</div>';
-  el.classList.add('show');
-}
-function hideDriverPopup() { document.getElementById('driverPopup').classList.remove('show'); }
-
-// ─── Nav Dropdown ─────────────────────────────────────────────────────────
-(function() {
-  const btn = document.getElementById('navDropdownBtn');
-  const dd = document.getElementById('navDropdown');
-  if (btn && dd) {
-    btn.addEventListener('click', function(e) { e.stopPropagation(); dd.classList.toggle('open'); });
-    document.addEventListener('click', function(e) { if (!dd.contains(e.target) && e.target !== btn) dd.classList.remove('open'); });
-    dd.querySelectorAll('a').forEach(function(a) { a.addEventListener('click', function() { dd.classList.remove('open'); }); });
-  }
-})();
-
-// ─── UI Events ───────────────────────────────────────────────────────────
-document.getElementById('btnAssign').addEventListener('click', assignRandomOrder);
-document.getElementById('btnAssign5').addEventListener('click', () => {
-  const avail = Object.values(driverData).filter(d => d.status === 'available');
-  for (let i = 0; i < 5 && i < avail.length; i++) {
-    assignToDriver(avail[i].id, 3);
-  }
-});
-document.getElementById('btnRecenter').addEventListener('click', () => { map.flyTo({ center: NYC_LNG_LAT, zoom: ZOOM, duration: 1000 }); });
-document.getElementById('btnGameToggle').addEventListener('click', () => {
-  const panel = document.getElementById('gamePanel');
-  panel.classList.toggle('show');
-  if (panel.classList.contains('show')) logTelemetry('GAME', 'Game HUD opened');
-});
-
-// ─── NVIDIA API Panel ────────────────────────────────────────────────────
-document.getElementById('btnAPIToggle').addEventListener('click', () => {
-  document.getElementById('apiPanel').classList.toggle('show');
-});
-document.getElementById('apiKeyToggle').addEventListener('click', () => {
-  const input = document.getElementById('apiKeyInput');
-  const icon = document.getElementById('apiKeyToggle');
-  if (input.type === 'password') {
-    input.type = 'text';
-    icon.textContent = 'visibility';
-  } else {
-    input.type = 'password';
-    icon.textContent = 'visibility_off';
-  }
-});
-document.getElementById('apiModelSelect').addEventListener('change', () => {
-  const model = document.getElementById('apiModelSelect').value;
-  const label = model.split('/').pop().replace(/-(\d)/g, '-$1').substring(0, 24);
-  document.getElementById('apiModelLabel').textContent = label;
-});
-document.getElementById('btnAPISend').addEventListener('click', async () => {
-  const key = document.getElementById('apiKeyInput').value.trim() || undefined;
-  const model = document.getElementById('apiModelSelect').value;
-  const prompt = document.getElementById('apiPromptInput').value.trim();
-  const temp = parseFloat(document.getElementById('apiTemp').value);
-  const maxTokens = parseInt(document.getElementById('apiMaxTokens').value) || 2048;
-  if (!prompt) { document.getElementById('apiError').textContent = 'Enter a prompt'; document.getElementById('apiError').style.display = 'block'; return; }
-  const isReasoning = model.includes('reasoning');
-  const body = {
-    model, max_tokens: maxTokens, temperature: temp,
-    messages: [{ role: 'user', content: prompt }],
-    ...(isReasoning ? { extra_body: { chat_template_kwargs: { enable_thinking: true }, reasoning_budget: 16384 } } : {})
-  };
-  const headers = { 'Content-Type': 'application/json' };
-  if (key) headers['X-NVIDIA-Key'] = key;
-  const loading = document.getElementById('apiLoading');
-  const respDiv = document.getElementById('apiResponse');
-  const reasoningDiv = document.getElementById('apiReasoning');
-  const contentDiv = document.getElementById('apiContent');
-  const errorDiv = document.getElementById('apiError');
-  errorDiv.style.display = 'none';
-  respDiv.style.display = 'none';
-  loading.style.display = 'block';
-  try {
-    const resp = await fetch((window.API_BASE || API_BASE) + '/api/nvidia/chat', {
-      method: 'POST', headers, body: JSON.stringify(body)
-    });
-    const data = await resp.json();
-    loading.style.display = 'none';
-    if (!resp.ok) { errorDiv.textContent = data.error || 'HTTP ' + resp.status; errorDiv.style.display = 'block'; return; }
-    if (data.error) { errorDiv.textContent = data.error; errorDiv.style.display = 'block'; return; }
-    const choice = data.choices && data.choices[0];
-    if (!choice) { errorDiv.textContent = 'No response from model'; errorDiv.style.display = 'block'; return; }
-    const msg = choice.message || {};
-    if (msg.reasoning_content) {
-      reasoningDiv.textContent = msg.reasoning_content;
-      reasoningDiv.style.display = 'block';
-    } else {
-      reasoningDiv.style.display = 'none';
-    }
-    contentDiv.textContent = msg.content || '';
-    respDiv.style.display = 'block';
-    logTelemetry('NVIDIA', 'Response from ' + model.split('/').pop().substring(0, 30));
-  } catch (e) {
-    loading.style.display = 'none';
-    errorDiv.textContent = 'Network error: ' + e.message;
-    errorDiv.style.display = 'block';
-  }
-});
-
-// ─── Settings Panel ──────────────────────────────────────────────────────
-document.getElementById('btnSettingsToggle').addEventListener('click', () => {
-  document.getElementById('settingsPanel').classList.toggle('show');
-});
-
-let isDemoMode = true;
-
-function switchMode(demo) {
-  isDemoMode = demo;
-  const modeBtn = demo ? 'modeDemo' : 'modeLive';
-  const otherBtn = demo ? 'modeLive' : 'modeDemo';
-  document.getElementById(modeBtn).style.background = '#ffb2b7';
-  document.getElementById(modeBtn).style.color = '#0c0e12';
-  document.getElementById(otherBtn).style.background = 'rgba(255,255,255,0.06)';
-  document.getElementById(otherBtn).style.color = 'rgba(226,226,232,0.4)';
-  const info = document.getElementById('modeInfo');
-  if (demo) {
-    info.textContent = 'nyc-app-server 1000-driver simulation on :8080';
-    info.style.borderColor = 'rgba(255,178,183,0.1)';
-    info.style.color = 'rgba(226,226,232,0.5)';
-    info.style.background = 'rgba(255,178,183,0.06)';
-  } else {
-    info.textContent = 'gateway + Rust spatial tracker on :8081';
-    info.style.borderColor = 'rgba(74,225,131,0.15)';
-    info.style.color = 'rgba(74,225,131,0.5)';
-    info.style.background = 'rgba(74,225,131,0.06)';
-  }
-  // Reconnect with new URL
-  const newWsUrl = demo ? 'ws://localhost:8080/ws' : 'ws://localhost:8081/ws';
-  const newApiUrl = demo ? 'http://localhost:8080' : 'http://localhost:8081';
-  window.WS_URL = newWsUrl;
-  window.API_BASE = newApiUrl;
-  if (ws) { ws.close(); ws = null; }
-  logTelemetry('MODE', 'Switched to ' + (demo ? 'Demo' : 'Live') + ' mode');
-  connectWS();
-}
-
-document.getElementById('modeDemo').addEventListener('click', () => switchMode(true));
-document.getElementById('modeLive').addEventListener('click', () => switchMode(false));
-
-document.querySelectorAll('.pnl-toggle input').forEach(cb => {
-  cb.addEventListener('change', function() {
-    const panel = document.getElementById(this.dataset.panel);
-    if (panel) {
-      if (this.checked) { panel.classList.add('show'); } else { panel.classList.remove('show'); }
-    }
-  });
-});
-
-// ─── Connection State Updates ────────────────────────────────────────────
-function updateConnectionUI() {
-  try {
-    const vals = Object.values(driverData);
-    const dc = document.getElementById('settingsDriverCount');
-    const oc = document.getElementById('settingsOrderCount');
-    const ms = document.getElementById('settingsMapStatus');
-    if (dc) dc.textContent = vals.length;
-    if (oc) oc.textContent = orderCount;
-    if (ms) { ms.textContent = mapReady ? 'READY' : 'LOADING'; ms.style.color = mapReady ? '#4ae183' : '#ffd166'; }
-  } catch (e) { /* UI update best-effort */ }
-}
-
-// Patch existing connectWS usage: call our new version
-
-let allPanelsVisible = false;
-document.getElementById('btnToggleAllPanels').addEventListener('click', () => toggleAllPanels());
-function toggleAllPanels() {
-  allPanelsVisible = !allPanelsVisible;
-  const ids = ['gamePanel', 'apiPanel', 'telemetryPanel', 'controlPanel'];
-  for (const id of ids) {
-    document.getElementById(id).classList.toggle('show', allPanelsVisible);
-  }
-  document.querySelectorAll('#settingsPanel .pnl-toggle input').forEach(cb => {
-    cb.checked = allPanelsVisible;
-  });
-  logTelemetry('PANELS', allPanelsVisible ? 'All shown' : 'All hidden');
-}
-
-document.getElementById('visRoutes').addEventListener('change', function() {
-  const layers = ['route-lines'];
-  for (const l of layers) {
-    const vis = map.getLayer(l);
-    if (vis) map.setLayoutProperty(l, 'visibility', this.checked ? 'visible' : 'none');
-  }
-});
-document.getElementById('visTrails').addEventListener('change', function() {
-  const layers = ['trail-lines'];
-  for (const l of layers) {
-    const vis = map.getLayer(l);
-    if (vis) map.setLayoutProperty(l, 'visibility', this.checked ? 'visible' : 'none');
-  }
-});
-
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'a' || e.key === 'A') assignRandomOrder();
-  if (e.key === '5') { const a = Object.values(driverData).filter(d => d.status === 'available'); for (let i = 0; i < 5 && i < a.length; i++) assignToDriver(a[i].id, 3); }
-  if (e.key === 'r' || e.key === 'R') map.flyTo({ center: NYC_LNG_LAT, zoom: ZOOM, duration: 1000 });
-  if (e.key === 'g' || e.key === 'G') document.getElementById('gamePanel').classList.toggle('show');
-  if (e.key === 'n' || e.key === 'N') document.getElementById('apiPanel').classList.toggle('show');
-  if (e.key === 's' || e.key === 'S') document.getElementById('settingsPanel').classList.toggle('show');
-  if (e.key === 't' || e.key === 'T') toggleAllPanels();
-});
-
-// ─── Init ─────────────────────────────────────────────────────────────────
-logTelemetry('SYS', 'NYC Demo initializing (MapLibre + Game HUD)');
-updateGameUI();
-connectWS();
-setInterval(fetchDrivers, 10000);
-setTimeout(() => { if (map) map.flyTo({ center: NYC_LNG_LAT, zoom: ZOOM, duration: 500 }); }, 300);
-</script>
-</body>
+      connectWS();
+      setInterval(fetchDrivers, 10000);
+      setTimeout(() => {
+        if (map) map.flyTo({ center: NYC_LNG_LAT, zoom: ZOOM, duration: 500 });
+      }, 300);
+    </script>
+  </body>
 </html>

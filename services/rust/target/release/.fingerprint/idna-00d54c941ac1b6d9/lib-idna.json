@@ -1,1 +1,24 @@
-{"rustc":1562763049001146449,"features":"[\"alloc\", \"compiled_data\", \"std\"]","declared_features":"[\"alloc\", \"compiled_data\", \"default\", \"std\"]","target":2602963282308965300,"profile":2040997289075261528,"path":13517539675561050951,"deps":[[3666196340704888985,"smallvec",false,15888528200314399140],[5078124415930854154,"utf8_iter",false,3541413297274801354],[14746133296817838026,"idna_adapter",false,8172246379126452894]],"local":[{"CheckDepInfo":{"dep_info":"release\\.fingerprint\\idna-00d54c941ac1b6d9\\dep-lib-idna","checksum":false}}],"rustflags":[],"config":8247474407144887393,"compile_kind":0}
+{
+  "rustc": 1562763049001146449,
+  "features": "[\"alloc\", \"compiled_data\", \"std\"]",
+  "declared_features": "[\"alloc\", \"compiled_data\", \"default\", \"std\"]",
+  "target": 2602963282308965300,
+  "profile": 2040997289075261528,
+  "path": 13517539675561050951,
+  "deps": [
+    [3666196340704888985, "smallvec", false, 15888528200314399140],
+    [5078124415930854154, "utf8_iter", false, 3541413297274801354],
+    [14746133296817838026, "idna_adapter", false, 8172246379126452894]
+  ],
+  "local": [
+    {
+      "CheckDepInfo": {
+        "dep_info": "release\\.fingerprint\\idna-00d54c941ac1b6d9\\dep-lib-idna",
+        "checksum": false
+      }
+    }
+  ],
+  "rustflags": [],
+  "config": 8247474407144887393,
+  "compile_kind": 0
+}

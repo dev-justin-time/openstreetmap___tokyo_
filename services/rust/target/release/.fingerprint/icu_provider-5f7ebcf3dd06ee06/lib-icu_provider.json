@@ -1,1 +1,28 @@
-{"rustc":1562763049001146449,"features":"[\"baked\"]","declared_features":"[\"alloc\", \"baked\", \"deserialize_bincode_1\", \"deserialize_json\", \"deserialize_postcard_1\", \"export\", \"logging\", \"serde\", \"std\", \"sync\", \"zerotrie\"]","target":8134314816311233441,"profile":4219373312221703660,"path":1069005523360024987,"deps":[[2508912448185119253,"icu_locale_core",false,15163451814361876757],[4367327283662589161,"yoke",false,12119394678776401359],[4600868325190463366,"writeable",false,1097398708132443240],[9119616491714376884,"zerovec",false,7499807967189445049],[12042051876675963596,"zerotrie",false,14287837737335217005],[12364360694782969484,"displaydoc",false,10492227691201586498],[12481580349051900383,"zerofrom",false,13817878938766361929]],"local":[{"CheckDepInfo":{"dep_info":"release\\.fingerprint\\icu_provider-5f7ebcf3dd06ee06\\dep-lib-icu_provider","checksum":false}}],"rustflags":[],"config":8247474407144887393,"compile_kind":0}
+{
+  "rustc": 1562763049001146449,
+  "features": "[\"baked\"]",
+  "declared_features": "[\"alloc\", \"baked\", \"deserialize_bincode_1\", \"deserialize_json\", \"deserialize_postcard_1\", \"export\", \"logging\", \"serde\", \"std\", \"sync\", \"zerotrie\"]",
+  "target": 8134314816311233441,
+  "profile": 4219373312221703660,
+  "path": 1069005523360024987,
+  "deps": [
+    [2508912448185119253, "icu_locale_core", false, 15163451814361876757],
+    [4367327283662589161, "yoke", false, 12119394678776401359],
+    [4600868325190463366, "writeable", false, 1097398708132443240],
+    [9119616491714376884, "zerovec", false, 7499807967189445049],
+    [12042051876675963596, "zerotrie", false, 14287837737335217005],
+    [12364360694782969484, "displaydoc", false, 10492227691201586498],
+    [12481580349051900383, "zerofrom", false, 13817878938766361929]
+  ],
+  "local": [
+    {
+      "CheckDepInfo": {
+        "dep_info": "release\\.fingerprint\\icu_provider-5f7ebcf3dd06ee06\\dep-lib-icu_provider",
+        "checksum": false
+      }
+    }
+  ],
+  "rustflags": [],
+  "config": 8247474407144887393,
+  "compile_kind": 0
+}

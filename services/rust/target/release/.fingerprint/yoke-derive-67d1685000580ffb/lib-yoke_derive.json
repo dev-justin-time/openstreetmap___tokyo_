@@ -1,1 +1,25 @@
-{"rustc":1562763049001146449,"features":"[]","declared_features":"[]","target":1654536213780382264,"profile":5963751179823064544,"path":16656699061449626168,"deps":[[4289358735036141001,"proc_macro2",false,8628053513069235541],[4621990586401870511,"synstructure",false,10484234860231800416],[10420560437213941093,"syn",false,6288921471438838470],[13111758008314797071,"quote",false,15873307182750082929]],"local":[{"CheckDepInfo":{"dep_info":"release\\.fingerprint\\yoke-derive-67d1685000580ffb\\dep-lib-yoke_derive","checksum":false}}],"rustflags":[],"config":8247474407144887393,"compile_kind":0}
+{
+  "rustc": 1562763049001146449,
+  "features": "[]",
+  "declared_features": "[]",
+  "target": 1654536213780382264,
+  "profile": 5963751179823064544,
+  "path": 16656699061449626168,
+  "deps": [
+    [4289358735036141001, "proc_macro2", false, 8628053513069235541],
+    [4621990586401870511, "synstructure", false, 10484234860231800416],
+    [10420560437213941093, "syn", false, 6288921471438838470],
+    [13111758008314797071, "quote", false, 15873307182750082929]
+  ],
+  "local": [
+    {
+      "CheckDepInfo": {
+        "dep_info": "release\\.fingerprint\\yoke-derive-67d1685000580ffb\\dep-lib-yoke_derive",
+        "checksum": false
+      }
+    }
+  ],
+  "rustflags": [],
+  "config": 8247474407144887393,
+  "compile_kind": 0
+}

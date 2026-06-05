@@ -1,1 +1,30 @@
-{"rustc":1562763049001146449,"features":"[\"default\", \"libc\", \"process\", \"procfs\", \"protobuf\"]","declared_features":"[\"default\", \"gen\", \"libc\", \"nightly\", \"process\", \"procfs\", \"protobuf\", \"protobuf-codegen-pure\", \"push\", \"reqwest\"]","target":7495833732207366741,"profile":2040997289075261528,"path":18353017627475782129,"deps":[[1345404220202658316,"fnv",false,10307317950778471640],[1878358664874549836,"memchr",false,11497276770848374884],[7098700569944897890,"libc",false,10548759215449655462],[7667230146095136825,"cfg_if",false,14880359887654860099],[8008191657135824715,"thiserror",false,9181156513075385501],[11193964849296622255,"protobuf",false,1072205175689312232],[12459942763388630573,"parking_lot",false,6222294722959740295],[16727320580018311824,"build_script_build",false,11471901897506932820],[17917672826516349275,"lazy_static",false,2435700390904135065]],"local":[{"CheckDepInfo":{"dep_info":"release\\.fingerprint\\prometheus-ca905affcea440c2\\dep-lib-prometheus","checksum":false}}],"rustflags":[],"config":8247474407144887393,"compile_kind":0}
+{
+  "rustc": 1562763049001146449,
+  "features": "[\"default\", \"libc\", \"process\", \"procfs\", \"protobuf\"]",
+  "declared_features": "[\"default\", \"gen\", \"libc\", \"nightly\", \"process\", \"procfs\", \"protobuf\", \"protobuf-codegen-pure\", \"push\", \"reqwest\"]",
+  "target": 7495833732207366741,
+  "profile": 2040997289075261528,
+  "path": 18353017627475782129,
+  "deps": [
+    [1345404220202658316, "fnv", false, 10307317950778471640],
+    [1878358664874549836, "memchr", false, 11497276770848374884],
+    [7098700569944897890, "libc", false, 10548759215449655462],
+    [7667230146095136825, "cfg_if", false, 14880359887654860099],
+    [8008191657135824715, "thiserror", false, 9181156513075385501],
+    [11193964849296622255, "protobuf", false, 1072205175689312232],
+    [12459942763388630573, "parking_lot", false, 6222294722959740295],
+    [16727320580018311824, "build_script_build", false, 11471901897506932820],
+    [17917672826516349275, "lazy_static", false, 2435700390904135065]
+  ],
+  "local": [
+    {
+      "CheckDepInfo": {
+        "dep_info": "release\\.fingerprint\\prometheus-ca905affcea440c2\\dep-lib-prometheus",
+        "checksum": false
+      }
+    }
+  ],
+  "rustflags": [],
+  "config": 8247474407144887393,
+  "compile_kind": 0
+}

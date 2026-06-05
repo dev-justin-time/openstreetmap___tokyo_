@@ -9,7 +9,9 @@ let NOMINATIM_DEBOUNCE_MS = appConfig.OSM_NOMINATIM_DEBOUNCE_MS || 600;
 async function _nominatimDebounce() {
   const now = Date.now();
   if (now - _lastNominatimAt < NOMINATIM_DEBOUNCE_MS) {
-    await new Promise(r => setTimeout(r, NOMINATIM_DEBOUNCE_MS - (now - _lastNominatimAt)));
+    await new Promise((r) =>
+      setTimeout(r, NOMINATIM_DEBOUNCE_MS - (now - _lastNominatimAt))
+    );
   }
   _lastNominatimAt = Date.now();
 }
@@ -44,15 +46,25 @@ export async function fetchGasStations(center, radius = 10000) {
 
 // Utility: fetch multiple route alternatives from OSRM and return the best (fastest) one
 export async function fetchRouteAlternatives(from, to, maxAlternatives = 3) {
-  const url = `${appConfig.OSRM_BASE}${from.lng},${from.lat};${to.lng},${to.lat}?overview=full&geometries=geojson&steps=true&alternatives=${Math.max(1, Math.min(10, maxAlternatives))}`;
+  const url = `${appConfig.OSRM_BASE}${from.lng},${from.lat};${to.lng},${
+    to.lat
+  }?overview=full&geometries=geojson&steps=true&alternatives=${Math.max(
+    1,
+    Math.min(10, maxAlternatives)
+  )}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error("Routing failed (alternatives)");
   const data = await res.json();
-  if (!data.routes || data.routes.length === 0) throw new Error("No route alternatives");
+  if (!data.routes || data.routes.length === 0)
+    throw new Error("No route alternatives");
   let best = data.routes[0];
   for (const r of data.routes) {
-    const scoreR = (r.duration || 1) * (appConfig.TURBO_STRICTNESS) + (r.distance || 0) * (1 - appConfig.TURBO_STRICTNESS);
-    const scoreBest = (best.duration || 1) * (appConfig.TURBO_STRICTNESS) + (best.distance || 0) * (1 - appConfig.TURBO_STRICTNESS);
+    const scoreR =
+      (r.duration || 1) * appConfig.TURBO_STRICTNESS +
+      (r.distance || 0) * (1 - appConfig.TURBO_STRICTNESS);
+    const scoreBest =
+      (best.duration || 1) * appConfig.TURBO_STRICTNESS +
+      (best.distance || 0) * (1 - appConfig.TURBO_STRICTNESS);
     if (scoreR < scoreBest) best = r;
   }
   return best;
@@ -61,7 +73,11 @@ export async function fetchRouteAlternatives(from, to, maxAlternatives = 3) {
 // Search places using Nominatim
 export async function searchPlace(q, limit = 5) {
   await _nominatimDebounce();
-  const url = `${appConfig.OSM_NOMINATIM_BASE}/search?format=jsonv2&q=${encodeURIComponent(q)}&limit=${Number(limit)}&accept-language=en`;
+  const url = `${
+    appConfig.OSM_NOMINATIM_BASE
+  }/search?format=jsonv2&q=${encodeURIComponent(q)}&limit=${Number(
+    limit
+  )}&accept-language=en`;
   const res = await fetch(url, { headers: { "User-Agent": NOMINATIM_UA } });
   if (!res.ok) throw new Error("Nominatim search failed");
   return res.json();
@@ -88,7 +104,8 @@ export async function romanizePlaceNameIfNeeded(name, latlng) {
       const res = await fetch(url, { headers: { "User-Agent": NOMINATIM_UA } });
       if (!res.ok) return name;
       const j = await res.json();
-      const cand = (j && (j.name || j.display_name)) ? (j.name || j.display_name) : name;
+      const cand =
+        j && (j.name || j.display_name) ? j.name || j.display_name : name;
       return cand;
     } else {
       return name;

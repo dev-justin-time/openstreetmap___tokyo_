@@ -14,7 +14,8 @@ export const map = L.map("map", {
 // Add OpenStreetMap tile layer
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 19,
-  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  attribution:
+    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
 }).addTo(map);
 
 // Layer for general markers (e.g., destination)
@@ -28,20 +29,26 @@ export function addMarker(lat, lng, text) {
 
 // Driver marker (yellow highlight as a circle marker)
 export const driverLayer = L.layerGroup().addTo(map);
-export const driverMarker = L.circleMarker([appConfig.TOKYO.lat, appConfig.TOKYO.lng], {
-  radius: 8,
-  color: "#f0c419",
-  weight: 2,
-  fillColor: "#f8e09a",
-  fillOpacity: 1,
-  interactive: false,
-  className: "driver-car driver-glow" // add class for glow styling
-}).addTo(driverLayer);
+export const driverMarker = L.circleMarker(
+  [appConfig.TOKYO.lat, appConfig.TOKYO.lng],
+  {
+    radius: 8,
+    color: "#f0c419",
+    weight: 2,
+    fillColor: "#f8e09a",
+    fillOpacity: 1,
+    interactive: false,
+    className: "driver-car driver-glow", // add class for glow styling
+  }
+).addTo(driverLayer);
 
 // Utility to refresh driver glow CSS variable
 export function refreshDriverGlow() {
   try {
-    document.documentElement.style.setProperty('--driver-glow-size', `${appConfig.GUI_DRIVER_GLOW_SIZE_PX}px`);
+    document.documentElement.style.setProperty(
+      "--driver-glow-size",
+      `${appConfig.GUI_DRIVER_GLOW_SIZE_PX}px`
+    );
   } catch (e) {
     console.warn("Error setting driver glow CSS var:", e);
   }
@@ -64,10 +71,15 @@ export function setupForcedMapRefresh() {
 
         // Force update on all tile layers to re-fetch/redraw tiles
         map.eachLayer((layer) => {
-          if (layer instanceof L.TileLayer && typeof layer._update === "function") {
+          if (
+            layer instanceof L.TileLayer &&
+            typeof layer._update === "function"
+          ) {
             try {
               layer.redraw();
-            } catch (e) { /* ignore per-layer errors */ }
+            } catch (e) {
+              /* ignore per-layer errors */
+            }
           }
         });
       } catch (e) {
@@ -85,20 +97,30 @@ export function setupMapRefresh() {
     invalidateTimer = setTimeout(() => {
       try {
         map.invalidateSize({ reset: false });
-      } catch (e) { /* ignore; defensive */ }
+      } catch (e) {
+        /* ignore; defensive */
+      }
       map.eachLayer((layer) => {
         if (layer && typeof layer.redraw === "function") {
-          try { layer.redraw(); } catch (e) { /* ignore per-layer errors */ }
+          try {
+            layer.redraw();
+          } catch (e) {
+            /* ignore per-layer errors */
+          }
         }
         try {
           if (layer && layer._tiles && typeof layer._update === "function") {
             // Explicitly call _update for tile layers
             layer.redraw();
           }
-        } catch (e) { /* ignore */ }
+        } catch (e) {
+          /* ignore */
+        }
       });
-      if (window._routeLine && typeof window._routeLine.redraw === "function") window._routeLine.redraw();
-      if (driverMarker && typeof driverMarker.redraw === "function") driverMarker.redraw();
+      if (window._routeLine && typeof window._routeLine.redraw === "function")
+        window._routeLine.redraw();
+      if (driverMarker && typeof driverMarker.redraw === "function")
+        driverMarker.redraw();
       invalidateTimer = null;
     }, appConfig.MAP_INVALIDATE_DEBOUNCE_MS);
   }
@@ -107,20 +129,32 @@ export function setupMapRefresh() {
   map.on("moveend", scheduleInvalidate);
   map.on("zoom", () => {
     try {
-      if (window._routeLine && typeof window._routeLine.redraw === "function") window._routeLine.redraw();
-      if (driverMarker && typeof driverMarker.redraw === "function") driverMarker.redraw();
+      if (window._routeLine && typeof window._routeLine.redraw === "function")
+        window._routeLine.redraw();
+      if (driverMarker && typeof driverMarker.redraw === "function")
+        driverMarker.redraw();
       map.eachLayer((layer) => {
         if (layer && typeof layer.redraw === "function") {
-          try { layer.redraw(); } catch (e) { console.warn("Layer redraw failed", e); }
+          try {
+            layer.redraw();
+          } catch (e) {
+            console.warn("Layer redraw failed", e);
+          }
         }
       });
-    } catch (e) { console.warn("Zoom handler error", e); }
+    } catch (e) {
+      console.warn("Zoom handler error", e);
+    }
   });
   map.on("move", () => {
     try {
-      if (window._routeLine && typeof window._routeLine.redraw === "function") window._routeLine.redraw();
-      if (driverMarker && typeof driverMarker.redraw === "function") driverMarker.redraw();
-    } catch (e) { console.warn("Move handler error", e); }
+      if (window._routeLine && typeof window._routeLine.redraw === "function")
+        window._routeLine.redraw();
+      if (driverMarker && typeof driverMarker.redraw === "function")
+        driverMarker.redraw();
+    } catch (e) {
+      console.warn("Move handler error", e);
+    }
   });
   window.addEventListener("resize", scheduleInvalidate, { passive: true });
 }

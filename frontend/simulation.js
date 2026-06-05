@@ -133,14 +133,39 @@ export function computeSegmentSpeedMetersPerSecond(seg) {
     const segLen = seg.distance || 0;
     const name = (seg.name || "").toLowerCase();
     const ref = (seg.ref || "").toLowerCase();
-    const motorwayTokens = ["motorway", "高速", "expressway", "highway", "autobahn", "autoroute", "route", "i-", "shuto", "route"];
-    const hasMotorwayToken = motorwayTokens.some(t => name.includes(t) || ref.includes(t));
-    const detectFast = segKmH >= appConfig.HIGHWAY_DETECT_MIN_KMPH && segLen >= appConfig.HIGHWAY_MIN_SEGMENT_LENGTH_M;
-    if (!appConfig.GUI_DISABLE_SMART_SPEED && (hasMotorwayToken || detectFast)) {
-      const boosted = baseMps * appConfig.HIGHWAY_SPEED_MULTIPLIER * appConfig.GUI_SPEED_REALISM_MULTIPLIER;
+    const motorwayTokens = [
+      "motorway",
+      "高速",
+      "expressway",
+      "highway",
+      "autobahn",
+      "autoroute",
+      "route",
+      "i-",
+      "shuto",
+      "route",
+    ];
+    const hasMotorwayToken = motorwayTokens.some(
+      (t) => name.includes(t) || ref.includes(t)
+    );
+    const detectFast =
+      segKmH >= appConfig.HIGHWAY_DETECT_MIN_KMPH &&
+      segLen >= appConfig.HIGHWAY_MIN_SEGMENT_LENGTH_M;
+    if (
+      !appConfig.GUI_DISABLE_SMART_SPEED &&
+      (hasMotorwayToken || detectFast)
+    ) {
+      const boosted =
+        baseMps *
+        appConfig.HIGHWAY_SPEED_MULTIPLIER *
+        appConfig.GUI_SPEED_REALISM_MULTIPLIER;
       const capMps = (Math.min(getEffectiveCruiseKmph(), 10000) * 1000) / 3600;
-      const minHighwayMps = (Math.max(0, appConfig.GUI_HIGHWAY_MIN_KMPH) * 1000) / 3600;
-      const candidate = Math.min(Math.max(boosted, baseMps, minHighwayMps), capMps);
+      const minHighwayMps =
+        (Math.max(0, appConfig.GUI_HIGHWAY_MIN_KMPH) * 1000) / 3600;
+      const candidate = Math.min(
+        Math.max(boosted, baseMps, minHighwayMps),
+        capMps
+      );
       return candidate;
     }
   } catch (e) {
@@ -154,16 +179,19 @@ export let expandedSteps = []; // each item: { step, startIdx, endIdx }
 
 // Animate driver along route coordinates — improved fractional interpolation and stable movement
 export function startAnimation(geojson, routeSteps) {
-  if (!geojson || !geojson.coordinates || geojson.coordinates.length === 0) return;
+  if (!geojson || !geojson.coordinates || geojson.coordinates.length === 0)
+    return;
   routeGeo = geojson;
-  routeCoords = geojson.coordinates.map(c => [c[1], c[0]]);
+  routeCoords = geojson.coordinates.map((c) => [c[1], c[0]]);
   routeOriginalCoords = routeCoords.slice(); // keep immutable copy for trimming
   routeIndex = 0;
   routeIndexFloat = 0; // fractional position along coords for smooth movement
   vehicleSpeedMps = 0; // actual current vehicle speed (m/s) for realistic accel/decel
   if (animId) cancelAnimationFrame(animId);
 
-  const segmentSpeeds = new Array(Math.max(1, routeCoords.length - 1)).fill((50 * 1000) / 3600);
+  const segmentSpeeds = new Array(Math.max(1, routeCoords.length - 1)).fill(
+    (50 * 1000) / 3600
+  );
   let coordCursor = 0;
   for (const step of routeSteps) {
     const stepLen = step.geometry ? step.geometry.coordinates.length : 0;
@@ -199,20 +227,33 @@ export function startAnimation(geojson, routeSteps) {
     const curr = routeCoords[idx];
     const next = routeCoords[nextIdx];
     const segDist = map.distance(curr, next); // meters
-    const speedLimitMps = (Math.min(getEffectiveCruiseKmph(), 10000) * 1000) / 3600;
-    const baseTarget = Math.min(segmentSpeeds[idx] || ((50 * 1000) / 3600), speedLimitMps);
+    const speedLimitMps =
+      (Math.min(getEffectiveCruiseKmph(), 10000) * 1000) / 3600;
+    const baseTarget = Math.min(
+      segmentSpeeds[idx] || (50 * 1000) / 3600,
+      speedLimitMps
+    );
     let targetSpeedMps = baseTarget;
 
     try {
-      targetSpeedMps = Math.min(targetSpeedMps * appConfig.GUI_SPEED_REALISM_MULTIPLIER, speedLimitMps);
-    } catch (e) { /* fallback if tweakable missing */ }
+      targetSpeedMps = Math.min(
+        targetSpeedMps * appConfig.GUI_SPEED_REALISM_MULTIPLIER,
+        speedLimitMps
+      );
+    } catch (e) {
+      /* fallback if tweakable missing */
+    }
 
     // Curvature-based slow down
     try {
       const lookAhead = 3;
       let curvature = 0;
       const aIdx = Math.max(0, idx - 1);
-      for (let k = aIdx; k <= Math.min(routeCoords.length - 3, idx + lookAhead); k++) {
+      for (
+        let k = aIdx;
+        k <= Math.min(routeCoords.length - 3, idx + lookAhead);
+        k++
+      ) {
         const p1 = routeCoords[k];
         const p2 = routeCoords[k + 1];
         const p3 = routeCoords[k + 2];
@@ -227,26 +268,47 @@ export function startAnimation(geojson, routeSteps) {
         curvature += angle;
       }
       curvature = curvature / (lookAhead + 1);
-      const curvatureFactor = 1 - Math.min(0.7, (curvature * appConfig.GUI_CURVATURE_SENSITIVITY));
+      const curvatureFactor =
+        1 - Math.min(0.7, curvature * appConfig.GUI_CURVATURE_SENSITIVITY);
       targetSpeedMps = targetSpeedMps * Math.max(0.35, curvatureFactor);
-    } catch (e) { /* ignore curvature failures */ }
+    } catch (e) {
+      /* ignore curvature failures */
+    }
 
     // Micro-brake events
     if (!appConfig.GUI_INSTANT_ACCEL) {
       const estimatedKmMoved = (vehicleSpeedMps * dt) / 1000;
-      const microChance = Math.min(1, appConfig.GUI_MICRO_BRAKE_PROB_PER_KM * estimatedKmMoved);
+      const microChance = Math.min(
+        1,
+        appConfig.GUI_MICRO_BRAKE_PROB_PER_KM * estimatedKmMoved
+      );
       if (Math.random() < microChance) {
-        const dur = appConfig.GUI_MICRO_BRAKE_DURATION_SEC.min + Math.random() * (appConfig.GUI_MICRO_BRAKE_DURATION_SEC.max - appConfig.GUI_MICRO_BRAKE_DURATION_SEC.min);
+        const dur =
+          appConfig.GUI_MICRO_BRAKE_DURATION_SEC.min +
+          Math.random() *
+            (appConfig.GUI_MICRO_BRAKE_DURATION_SEC.max -
+              appConfig.GUI_MICRO_BRAKE_DURATION_SEC.min);
         const originalTarget = targetSpeedMps;
-        targetSpeedMps = Math.max(1, targetSpeedMps * (0.3 + Math.random() * 0.5));
-        driverMarker._microBrakeRestoreTime = (performance.now() / 1000) + dur;
+        targetSpeedMps = Math.max(
+          1,
+          targetSpeedMps * (0.3 + Math.random() * 0.5)
+        );
+        driverMarker._microBrakeRestoreTime = performance.now() / 1000 + dur;
         driverMarker._microBrakeTarget = originalTarget;
       } else if (driverMarker._microBrakeRestoreTime) {
         const nowSec = performance.now() / 1000;
-        if (nowSec < driverMarker._microBrakeRestoreTime && driverMarker._microBrakeTarget) {
+        if (
+          nowSec < driverMarker._microBrakeRestoreTime &&
+          driverMarker._microBrakeTarget
+        ) {
           const tleft = driverMarker._microBrakeRestoreTime - nowSec;
-          const blend = Math.min(1, Math.max(0, 1 - (tleft / appConfig.GUI_MICRO_BRAKE_DURATION_SEC.max)));
-          targetSpeedMps = targetSpeedMps * (1 - blend) + driverMarker._microBrakeTarget * blend;
+          const blend = Math.min(
+            1,
+            Math.max(0, 1 - tleft / appConfig.GUI_MICRO_BRAKE_DURATION_SEC.max)
+          );
+          targetSpeedMps =
+            targetSpeedMps * (1 - blend) +
+            driverMarker._microBrakeTarget * blend;
         } else {
           driverMarker._microBrakeRestoreTime = null;
           driverMarker._microBrakeTarget = null;
@@ -256,7 +318,8 @@ export function startAnimation(geojson, routeSteps) {
 
     // Natural speed variation
     if (!appConfig.GUI_INSTANT_ACCEL) {
-      const noise = (Math.random() * 2 - 1) * appConfig.GUI_NATURAL_SPEED_VARIATION;
+      const noise =
+        (Math.random() * 2 - 1) * appConfig.GUI_NATURAL_SPEED_VARIATION;
       targetSpeedMps = Math.max(0.1, targetSpeedMps * (1 + noise));
     }
 
@@ -264,9 +327,15 @@ export function startAnimation(geojson, routeSteps) {
     if (appConfig.GUI_INSTANT_ACCEL) {
       vehicleSpeedMps = targetSpeedMps;
     } else if (vehicleSpeedMps < targetSpeedMps) {
-      vehicleSpeedMps = Math.min(targetSpeedMps, vehicleSpeedMps + appConfig.MAX_ACCEL * dt);
+      vehicleSpeedMps = Math.min(
+        targetSpeedMps,
+        vehicleSpeedMps + appConfig.MAX_ACCEL * dt
+      );
     } else {
-      vehicleSpeedMps = Math.max(targetSpeedMps, vehicleSpeedMps - appConfig.MAX_DECEL * dt);
+      vehicleSpeedMps = Math.max(
+        targetSpeedMps,
+        vehicleSpeedMps - appConfig.MAX_DECEL * dt
+      );
     }
 
     const moveMeters = vehicleSpeedMps * dt;
@@ -274,7 +343,10 @@ export function startAnimation(geojson, routeSteps) {
 
     if (segDist > 0) {
       const fracAdvance = moveMeters / segDist;
-      routeIndexFloat = Math.min(routeCoords.length - 1, routeIndexFloat + fracAdvance);
+      routeIndexFloat = Math.min(
+        routeCoords.length - 1,
+        routeIndexFloat + fracAdvance
+      );
       routeIndex = Math.floor(routeIndexFloat);
     }
 
@@ -298,23 +370,37 @@ export function startAnimation(geojson, routeSteps) {
     driverMarker.setLatLng(currentDriverLatLng);
 
     updateCountryDisplay(currentDriverLatLng);
-    try { updateTurnUI(routeIndexFloat); } catch (e) { /* ignore UI errors */ }
+    try {
+      updateTurnUI(routeIndexFloat);
+    } catch (e) {
+      /* ignore UI errors */
+    }
 
     if (window._routeLine && window._routeLine.getLatLngs) {
       try {
-        const allLatLngs = routeOriginalCoords.map(c => L.latLng(c[0], c[1]));
+        const allLatLngs = routeOriginalCoords.map((c) => L.latLng(c[0], c[1]));
         const trimIndex = Math.min(Math.max(0, baseIdx), allLatLngs.length - 1);
-        const newLatLngs = [L.latLng(lat, lng)].concat(allLatLngs.slice(trimIndex + 1));
+        const newLatLngs = [L.latLng(lat, lng)].concat(
+          allLatLngs.slice(trimIndex + 1)
+        );
         window._routeLine.setLatLngs(newLatLngs);
-      } catch (e) { /* ignore any polyline errors */ }
+      } catch (e) {
+        /* ignore any polyline errors */
+      }
     }
 
     if (!appConfig.GUI_INFINITE_FUEL) {
-      fuelLiters = Math.max(0, fuelLiters - (appConfig.FUEL_CONSUMPTION_BASE * kmMoved / 100));
+      fuelLiters = Math.max(
+        0,
+        fuelLiters - (appConfig.FUEL_CONSUMPTION_BASE * kmMoved) / 100
+      );
     }
 
     if (appConfig.GUI_INCIDENTS_ENABLED && !_crashed && kmMoved > 0) {
-      const chance = Math.min(1, appConfig.INCIDENT_PROBABILITY_PER_KM * kmMoved);
+      const chance = Math.min(
+        1,
+        appConfig.INCIDENT_PROBABILITY_PER_KM * kmMoved
+      );
       if (Math.random() < chance) {
         try {
           handleCrashAt([lat, lng]);
@@ -350,12 +436,16 @@ export function startAnimation(geojson, routeSteps) {
 export function placeCrashMarker(latlng) {
   try {
     if (_crashMarker) {
-      try { map.removeLayer(_crashMarker); } catch (e) { /* ignore */ }
+      try {
+        map.removeLayer(_crashMarker);
+      } catch (e) {
+        /* ignore */
+      }
       _crashMarker = null;
     }
     const icon = L.divIcon({
-      html: '🚨',
-      className: 'crash-emoji',
+      html: "🚨",
+      className: "crash-emoji",
       iconSize: [24, 24],
       iconAnchor: [12, 12],
     });
@@ -386,8 +476,16 @@ export async function handleCrashAt(latlng) {
   if (confirmModalEl) {
     const tEl = confirmModalEl.querySelector(".confirm-title");
     const bEl = confirmModalEl.querySelector(".confirm-body");
-    if (tEl) { prevTitle = tEl.textContent; tEl.textContent = "Car incident"; }
-    if (bEl) { prevBody = bEl.textContent; bEl.textContent = `A collision occurred. Tow cost ${currency} ${towCost.toFixed(2)}. Pay tow and resume?`; }
+    if (tEl) {
+      prevTitle = tEl.textContent;
+      tEl.textContent = "Car incident";
+    }
+    if (bEl) {
+      prevBody = bEl.textContent;
+      bEl.textContent = `A collision occurred. Tow cost ${currency} ${towCost.toFixed(
+        2
+      )}. Pay tow and resume?`;
+    }
   } else {
     console.warn("Confirm modal missing – cannot prompt user to tow.");
     return;
@@ -403,13 +501,20 @@ export async function handleCrashAt(latlng) {
   }
 
   if (ok) {
-    try { if (_crashMarker) map.removeLayer(_crashMarker); } catch (e) { /* ignore */ }
+    try {
+      if (_crashMarker) map.removeLayer(_crashMarker);
+    } catch (e) {
+      /* ignore */
+    }
     _crashMarker = null;
     _crashed = false;
     if (!animId) {
       requestAnimationFrame((t) => {
         if (routeGeo) {
-          startAnimation(routeGeo, expandedSteps.map(e => e.step));
+          startAnimation(
+            routeGeo,
+            expandedSteps.map((e) => e.step)
+          );
         }
       });
     }
@@ -423,7 +528,11 @@ export function updateCountryDisplay(currentLatLng) {
     return;
   }
 
-  if (_lastCountryGeocodeLatLng && map.distance(currentLatLng, _lastCountryGeocodeLatLng) < appConfig.COUNTRY_REVERSE_GEOCODE_MIN_DIST_M) {
+  if (
+    _lastCountryGeocodeLatLng &&
+    map.distance(currentLatLng, _lastCountryGeocodeLatLng) <
+      appConfig.COUNTRY_REVERSE_GEOCODE_MIN_DIST_M
+  ) {
     return;
   }
 
@@ -449,34 +558,41 @@ export function updateCountryDisplay(currentLatLng) {
 
 // Logic for gas stations
 export function placeGasStations(center) {
-  fetchGasStations(center, 10000).then(results => {
-    gasMarkers.forEach(m => { try { map.removeLayer(m); } catch { } });
-    gasMarkers.length = 0;
-    results.forEach((el) => {
-      let lat = el.lat || (el.center && el.center.lat);
-      let lon = el.lon || (el.center && el.center.lon);
-      if (!lat || !lon) return;
-      const icon = L.divIcon({
-        html: "⛽",
-        className: "gas-emoji",
-        iconSize: [20, 20],
-        iconAnchor: [10, 10],
+  fetchGasStations(center, 10000)
+    .then((results) => {
+      gasMarkers.forEach((m) => {
+        try {
+          map.removeLayer(m);
+        } catch {}
       });
-      const m = L.marker([lat, lon], { icon }).addTo(map);
-      m.on("click", () => {
-        const needed = Math.max(0, appConfig.FUEL_TANK_CAPACITY - fuelLiters);
-        if (needed <= 0) return;
-        const affordableLiters = Math.floor((money / fuelPricePerLiter) * 100) / 100;
-        const buy = Math.min(needed, affordableLiters);
-        if (buy <= 0) return;
-        const cost = +(buy * fuelPricePerLiter).toFixed(2);
-        fuelLiters = Math.min(appConfig.FUEL_TANK_CAPACITY, fuelLiters + buy);
-        money = Math.max(0, +(money - cost).toFixed(2));
-        updateHUD();
+      gasMarkers.length = 0;
+      results.forEach((el) => {
+        let lat = el.lat || (el.center && el.center.lat);
+        let lon = el.lon || (el.center && el.center.lon);
+        if (!lat || !lon) return;
+        const icon = L.divIcon({
+          html: "⛽",
+          className: "gas-emoji",
+          iconSize: [20, 20],
+          iconAnchor: [10, 10],
+        });
+        const m = L.marker([lat, lon], { icon }).addTo(map);
+        m.on("click", () => {
+          const needed = Math.max(0, appConfig.FUEL_TANK_CAPACITY - fuelLiters);
+          if (needed <= 0) return;
+          const affordableLiters =
+            Math.floor((money / fuelPricePerLiter) * 100) / 100;
+          const buy = Math.min(needed, affordableLiters);
+          if (buy <= 0) return;
+          const cost = +(buy * fuelPricePerLiter).toFixed(2);
+          fuelLiters = Math.min(appConfig.FUEL_TANK_CAPACITY, fuelLiters + buy);
+          money = Math.max(0, +(money - cost).toFixed(2));
+          updateHUD();
+        });
+        gasMarkers.push(m);
       });
-      gasMarkers.push(m);
+    })
+    .catch((e) => {
+      console.warn("Gas station fetch failed:", e);
     });
-  }).catch(e => {
-    console.warn("Gas station fetch failed:", e);
-  });
 }

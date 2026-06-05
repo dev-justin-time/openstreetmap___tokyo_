@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -58,7 +58,7 @@
             margin-left: auto;
             padding: 6px 8px;
             border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             background: #282a2e;
             cursor: pointer;
             font-weight: 700;
@@ -195,37 +195,197 @@
     </div>
     <div class="app">
       <div class="status-bar">
-        <div class="profile-icon" style="display:flex;align-items:center;gap:12px">
-          <span class="material-symbols-outlined" style="font-size:2rem;color:#ffb2b7;cursor:pointer" onclick="toggleProfile()">account_circle</span>
-          <span style="font-size:0.75rem;letter-spacing:0.05em;text-transform:uppercase;color:#ffb2b7;font-weight:700">MISSION CONTROL</span>
+        <div
+          class="profile-icon"
+          style="display: flex; align-items: center; gap: 12px"
+        >
+          <span
+            class="material-symbols-outlined"
+            style="font-size: 2rem; color: #ffb2b7; cursor: pointer"
+            onclick="toggleProfile()"
+            >account_circle</span
+          >
+          <span
+            style="
+              font-size: 0.75rem;
+              letter-spacing: 0.05em;
+              text-transform: uppercase;
+              color: #ffb2b7;
+              font-weight: 700;
+            "
+            >MISSION CONTROL</span
+          >
         </div>
-        <div style="position:relative" id="settingsContainer">
-          <span class="material-symbols-outlined" id="settingsGear" style="font-size:1.9rem;color:#e2e2e8;cursor:pointer;padding:4px;border-radius:8px;transition:background 0.2s" onmouseenter="this.style.background='rgba(255,255,255,0.05)'" onmouseleave="this.style.background='transparent'">settings</span>
-          <div class="settings-dropdown glass-panel rounded-xl border border-white/15 shadow-2xl overflow-hidden" id="settingsDropdown">
-            <div class="p-3" style="padding:12px;border-bottom:1px solid rgba(255,255,255,0.1);background:#1a1c20">
-              <p style="font-size:0.75rem;letter-spacing:0.05em;font-weight:700;text-transform:uppercase;color:#e5bdbe;text-align:center">QUICK SETTINGS</p>
+        <div style="position: relative" id="settingsContainer">
+          <span
+            class="material-symbols-outlined"
+            id="settingsGear"
+            style="
+              font-size: 1.9rem;
+              color: #e2e2e8;
+              cursor: pointer;
+              padding: 4px;
+              border-radius: 8px;
+              transition: background 0.2s;
+            "
+            onmouseenter="this.style.background='rgba(255,255,255,0.05)'"
+            onmouseleave="this.style.background='transparent'"
+            >settings</span
+          >
+          <div
+            class="settings-dropdown glass-panel rounded-xl border border-white/15 shadow-2xl overflow-hidden"
+            id="settingsDropdown"
+          >
+            <div
+              class="p-3"
+              style="
+                padding: 12px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                background: #1a1c20;
+              "
+            >
+              <p
+                style="
+                  font-size: 0.75rem;
+                  letter-spacing: 0.05em;
+                  font-weight: 700;
+                  text-transform: uppercase;
+                  color: #e5bdbe;
+                  text-align: center;
+                "
+              >
+                QUICK SETTINGS
+              </p>
             </div>
-            <div style="padding:8px">
-              <button style="width:100%;display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;border:none;background:transparent;color:#e2e2e8;font-size:14px;cursor:pointer" onmouseenter="this.style.background='rgba(255,255,255,0.05)'" onmouseleave="this.style.background='transparent'" onclick="toggleTheme()">
-                <span class="material-symbols-outlined" id="themeIcon" style="color:#ffb2b7">dark_mode</span>
+            <div style="padding: 8px">
+              <button
+                style="
+                  width: 100%;
+                  display: flex;
+                  align-items: center;
+                  gap: 12px;
+                  padding: 10px 12px;
+                  border-radius: 8px;
+                  border: none;
+                  background: transparent;
+                  color: #e2e2e8;
+                  font-size: 14px;
+                  cursor: pointer;
+                "
+                onmouseenter="this.style.background='rgba(255,255,255,0.05)'"
+                onmouseleave="this.style.background='transparent'"
+                onclick="toggleTheme()"
+              >
+                <span
+                  class="material-symbols-outlined"
+                  id="themeIcon"
+                  style="color: #ffb2b7"
+                  >dark_mode</span
+                >
                 <span id="themeLabel">Dark Mode</span>
               </button>
-              <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px">
-                <span style="font-size:14px;color:#e5bdbe;display:flex;align-items:center;gap:8px">
-                  <span class="material-symbols-outlined" style="font-size:18px">signal_cellular_alt</span> Status
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                  padding: 10px 12px;
+                "
+              >
+                <span
+                  style="
+                    font-size: 14px;
+                    color: #e5bdbe;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                  "
+                >
+                  <span
+                    class="material-symbols-outlined"
+                    style="font-size: 18px"
+                    >signal_cellular_alt</span
+                  >
+                  Status
                 </span>
-                <span style="display:flex;align-items:center;gap:6px">
-                  <span style="width:6px;height:6px;border-radius:50%;background:#4ae183" id="dropdownStatusDot"></span>
-                  <span style="font-size:0.75rem;letter-spacing:0.05em;font-weight:700;text-transform:uppercase;color:#4ae183" id="dropdownStatusText">LIVE</span>
+                <span style="display: flex; align-items: center; gap: 6px">
+                  <span
+                    style="
+                      width: 6px;
+                      height: 6px;
+                      border-radius: 50%;
+                      background: #4ae183;
+                    "
+                    id="dropdownStatusDot"
+                  ></span>
+                  <span
+                    style="
+                      font-size: 0.75rem;
+                      letter-spacing: 0.05em;
+                      font-weight: 700;
+                      text-transform: uppercase;
+                      color: #4ae183;
+                    "
+                    id="dropdownStatusText"
+                    >LIVE</span
+                  >
                 </span>
               </div>
-              <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;font-size:14px;color:#e5bdbe;border-top:1px solid rgba(255,255,255,0.05)">
-                <span class="material-symbols-outlined" style="font-size:18px">dns</span>
-                <input style="flex:1;background:transparent;border:none;outline:none;color:#e2e2e8;font-size:14px;font-family:'JetBrains Mono',monospace" id="dropdownServerInput" type="text" value="127.0.0.1:3030" placeholder="server:port"/>
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                  padding: 10px 12px;
+                  font-size: 14px;
+                  color: #e5bdbe;
+                  border-top: 1px solid rgba(255, 255, 255, 0.05);
+                "
+              >
+                <span class="material-symbols-outlined" style="font-size: 18px"
+                  >dns</span
+                >
+                <input
+                  style="
+                    flex: 1;
+                    background: transparent;
+                    border: none;
+                    outline: none;
+                    color: #e2e2e8;
+                    font-size: 14px;
+                    font-family: 'JetBrains Mono', monospace;
+                  "
+                  id="dropdownServerInput"
+                  type="text"
+                  value="127.0.0.1:3030"
+                  placeholder="server:port"
+                />
               </div>
             </div>
-            <div style="padding:8px;border-top:1px solid rgba(255,255,255,0.1)">
-              <button style="width:100%;display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;border:none;background:transparent;color:#ffb4ab;font-size:14px;cursor:pointer" onmouseenter="this.style.background='rgba(147,0,10,0.2)'" onmouseleave="this.style.background='transparent'" onclick="handleLogout()">
+            <div
+              style="
+                padding: 8px;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+              "
+            >
+              <button
+                style="
+                  width: 100%;
+                  display: flex;
+                  align-items: center;
+                  gap: 12px;
+                  padding: 10px 12px;
+                  border-radius: 8px;
+                  border: none;
+                  background: transparent;
+                  color: #ffb4ab;
+                  font-size: 14px;
+                  cursor: pointer;
+                "
+                onmouseenter="this.style.background='rgba(147,0,10,0.2)'"
+                onmouseleave="this.style.background='transparent'"
+                onclick="handleLogout()"
+              >
                 <span class="material-symbols-outlined">logout</span>
                 Logout
               </button>
@@ -238,9 +398,7 @@
         <div id="timer-container" class="hidden">
           <span id="timer-display">00:00</span>
         </div>
-        <button id="connect-btn" onclick="toggleConnection()">
-          Connect
-        </button>
+        <button id="connect-btn" onclick="toggleConnection()">Connect</button>
       </div>
 
       <div id="profile-panel">
@@ -265,31 +423,31 @@
     <script type="module" src="frontend/app.js"></script>
     <script>
       // Settings Dropdown
-      document.addEventListener('DOMContentLoaded', () => {
-        const gearBtn = document.getElementById('settingsGear');
-        const dropdown = document.getElementById('settingsDropdown');
+      document.addEventListener("DOMContentLoaded", () => {
+        const gearBtn = document.getElementById("settingsGear");
+        const dropdown = document.getElementById("settingsDropdown");
         if (gearBtn && dropdown) {
-          gearBtn.addEventListener('click', (e) => {
+          gearBtn.addEventListener("click", (e) => {
             e.stopPropagation();
-            dropdown.classList.toggle('open');
+            dropdown.classList.toggle("open");
           });
-          document.addEventListener('click', (e) => {
+          document.addEventListener("click", (e) => {
             if (!dropdown.contains(e.target) && e.target !== gearBtn) {
-              dropdown.classList.remove('open');
+              dropdown.classList.remove("open");
             }
           });
         }
       });
       function toggleTheme() {
         const html = document.documentElement;
-        const isDark = html.classList.toggle('dark');
-        const icon = document.getElementById('themeIcon');
-        const label = document.getElementById('themeLabel');
-        if (icon) icon.textContent = isDark ? 'dark_mode' : 'light_mode';
-        if (label) label.textContent = isDark ? 'Dark Mode' : 'Light Mode';
+        const isDark = html.classList.toggle("dark");
+        const icon = document.getElementById("themeIcon");
+        const label = document.getElementById("themeLabel");
+        if (icon) icon.textContent = isDark ? "dark_mode" : "light_mode";
+        if (label) label.textContent = isDark ? "Dark Mode" : "Light Mode";
       }
       function handleLogout() {
-        if (confirm('Terminate session?')) {
+        if (confirm("Terminate session?")) {
           window.location.reload();
         }
       }

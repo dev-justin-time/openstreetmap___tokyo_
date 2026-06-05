@@ -1,1 +1,26 @@
-{"rustc":1562763049001146449,"features":"[]","declared_features":"[\"vendored\"]","target":11005878871305885301,"profile":2040997289075261528,"path":11897064230342118667,"deps":[[3870702314125662939,"bytes",false,15580626925727924203],[7414427314941361239,"hyper",false,768426854272475768],[9144560277883153344,"native_tls",false,14117487657145313936],[9394460649638301237,"tokio",false,8359985073656421833],[12186126227181294540,"tokio_native_tls",false,17789148910011508146]],"local":[{"CheckDepInfo":{"dep_info":"release\\.fingerprint\\hyper-tls-fcf85f25cee1fdb5\\dep-lib-hyper_tls","checksum":false}}],"rustflags":[],"config":8247474407144887393,"compile_kind":0}
+{
+  "rustc": 1562763049001146449,
+  "features": "[]",
+  "declared_features": "[\"vendored\"]",
+  "target": 11005878871305885301,
+  "profile": 2040997289075261528,
+  "path": 11897064230342118667,
+  "deps": [
+    [3870702314125662939, "bytes", false, 15580626925727924203],
+    [7414427314941361239, "hyper", false, 768426854272475768],
+    [9144560277883153344, "native_tls", false, 14117487657145313936],
+    [9394460649638301237, "tokio", false, 8359985073656421833],
+    [12186126227181294540, "tokio_native_tls", false, 17789148910011508146]
+  ],
+  "local": [
+    {
+      "CheckDepInfo": {
+        "dep_info": "release\\.fingerprint\\hyper-tls-fcf85f25cee1fdb5\\dep-lib-hyper_tls",
+        "checksum": false
+      }
+    }
+  ],
+  "rustflags": [],
+  "config": 8247474407144887393,
+  "compile_kind": 0
+}

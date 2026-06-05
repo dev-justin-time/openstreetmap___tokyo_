@@ -142,12 +142,14 @@ export const appConfig = {
 
   // Confirm Modal
   CONFIRM_TITLE: "Are you sure?",
-  CONFIRM_BODY: "A route already exists. Creating a new one will remove the current route and any progress. Continue?",
+  CONFIRM_BODY:
+    "A route already exists. Creating a new one will remove the current route and any progress. Continue?",
   CONFIRM_AUTO_CANCEL_SEC: 0,
 
   // Beta Banner
   /* @tweakable [Beta banner full text shown to users; editable to tweak wording] */
-  OSM_BETA_BANNER_TEXT: "OpenStreetMap May Turn Gray Due To The High Traffic Of American Using The Website - STILL IN BETA BUGS ARE EXPECTED",
+  OSM_BETA_BANNER_TEXT:
+    "OpenStreetMap May Turn Gray Due To The High Traffic Of American Using The Website - STILL IN BETA BUGS ARE EXPECTED",
   /* @tweakable [Toggle default visibility of the beta banner (true = visible)] */
   OSM_BETA_BANNER_VISIBLE: true,
 };

@@ -19,28 +19,28 @@ Node.js   PLATEAU 3D Tiles server            ✅ npm deps installed
 
 ## Services
 
-| Service | Port | Description |
-|---------|------|-------------|
-| `nyc-app-server` | `:8080` | 1000 simulated NYC drivers, WebSocket `/ws`, REST `/api/assign`, `/api/drivers`, `/api/stats`, `/api/nvidia/chat` |
-| `bin/gateway.exe` | `:8081` | Go API gateway with WebSocket hub, SSE broker, SQLite queue, order dispatch |
-| Rust tracker | `:3030` | In-memory sharded R-tree spatial index, SSE events, `/track`, `/nearby`, `/dispatch` |
-| `plateau-server` | `:8082` | CORS-enabled Node.js server for 3D Tiles (`.b3dm`, `.pnts`); also served via nyc-app-server at `/tiles/` |
+| Service           | Port    | Description                                                                                                       |
+| ----------------- | ------- | ----------------------------------------------------------------------------------------------------------------- |
+| `nyc-app-server`  | `:8080` | 1000 simulated NYC drivers, WebSocket `/ws`, REST `/api/assign`, `/api/drivers`, `/api/stats`, `/api/nvidia/chat` |
+| `bin/gateway.exe` | `:8081` | Go API gateway with WebSocket hub, SSE broker, SQLite queue, order dispatch                                       |
+| Rust tracker      | `:3030` | In-memory sharded R-tree spatial index, SSE events, `/track`, `/nearby`, `/dispatch`                              |
+| `plateau-server`  | `:8082` | CORS-enabled Node.js server for 3D Tiles (`.b3dm`, `.pnts`); also served via nyc-app-server at `/tiles/`          |
 
 ## Frontend Pages
 
 All 9 pages share a dark HUD theme (Inter + JetBrains Mono, glass panels, Material Symbols) with nav dropdown + settings dropdown:
 
-| Page | Purpose |
-|------|---------|
-| `onboarding.html` | Feature landing, 3-layer architecture diagram, competitor comparison |
-| `command_center.html` | Fleet dashboard with sidebar + top nav |
-| `missioncontroll.html` | Mission Control with off-canvas drawer |
-| `dispatch.html` | Dispatch panel with sidebar |
-| `runtime.html` | Runtime settings with sidebar |
-| `driverprofile.html` | Driver profile view |
-| `plans.html` | Subscription tiers |
-| `login.html` | Login / sign-in |
-| `nyc-demo.html` | **NYC Fleet Demo** — MapLibre GL JS, 1000 drivers, game HUD, Settings panel, NVIDIA API |
+| Page                   | Purpose                                                                                 |
+| ---------------------- | --------------------------------------------------------------------------------------- |
+| `onboarding.html`      | Feature landing, 3-layer architecture diagram, competitor comparison                    |
+| `command_center.html`  | Fleet dashboard with sidebar + top nav                                                  |
+| `missioncontroll.html` | Mission Control with off-canvas drawer                                                  |
+| `dispatch.html`        | Dispatch panel with sidebar                                                             |
+| `runtime.html`         | Runtime settings with sidebar                                                           |
+| `driverprofile.html`   | Driver profile view                                                                     |
+| `plans.html`           | Subscription tiers                                                                      |
+| `login.html`           | Login / sign-in                                                                         |
+| `nyc-demo.html`        | **NYC Fleet Demo** — MapLibre GL JS, 1000 drivers, game HUD, Settings panel, NVIDIA API |
 
 ## NYC Demo Features
 
@@ -58,15 +58,15 @@ All 9 pages share a dark HUD theme (Inter + JetBrains Mono, glass panels, Materi
 
 The nyc-demo page tracks and visualizes several loading states:
 
-| State | Indicator | Location |
-|-------|-----------|----------|
-| **Map Loading** | Map tiles loading from CartoDB CDN; `settingsMapStatus` shows `LOADING` → `READY` | Settings panel + telemetry |
-| **WebSocket Connecting** | Header status dot turns yellow, `CONNECTING` text | Header + settings panel |
-| **WebSocket Connected** | Green dot, `CONNECTED` / `LIVE` text | Header + settings + stats panel |
-| **WebSocket Disconnected** | Red dot, `DISCONNECTED` / `OFFLINE` text, auto-reconnect every 3s | Header + settings + stats panel |
-| **Driver Stream Active** | Driver count updates every 500ms via WebSocket | Stats panel + settings |
-| **NVIDIA API Processing** | Pulsing dot animation while waiting for model response | API panel |
-| **Order Assignment In Progress** | REST call to `/api/assign`; failure resets streak to 0 | Implicit via game state |
+| State                            | Indicator                                                                         | Location                        |
+| -------------------------------- | --------------------------------------------------------------------------------- | ------------------------------- |
+| **Map Loading**                  | Map tiles loading from CartoDB CDN; `settingsMapStatus` shows `LOADING` → `READY` | Settings panel + telemetry      |
+| **WebSocket Connecting**         | Header status dot turns yellow, `CONNECTING` text                                 | Header + settings panel         |
+| **WebSocket Connected**          | Green dot, `CONNECTED` / `LIVE` text                                              | Header + settings + stats panel |
+| **WebSocket Disconnected**       | Red dot, `DISCONNECTED` / `OFFLINE` text, auto-reconnect every 3s                 | Header + settings + stats panel |
+| **Driver Stream Active**         | Driver count updates every 500ms via WebSocket                                    | Stats panel + settings          |
+| **NVIDIA API Processing**        | Pulsing dot animation while waiting for model response                            | API panel                       |
+| **Order Assignment In Progress** | REST call to `/api/assign`; failure resets streak to 0                            | Implicit via game state         |
 
 ### Demo Mode vs Live Mode
 
@@ -76,6 +76,7 @@ The Settings panel (`S` key or gear icon) provides a mode toggle:
 - **Live Mode** — Connects to the Go gateway on `:8081`, backed by SQLite queues and the Rust spatial tracker. Expects real driver tracking data.
 
 Mode switching:
+
 1. Closes the current WebSocket connection
 2. Updates `WS_URL` and `API_BASE` to the target port
 3. Reconnects to the new server
@@ -91,24 +92,24 @@ The Settings panel (`S` key or `gear` icon in header) provides:
 
 ## Game System
 
-| Mechanic | Detail |
-|----------|--------|
-| XP/Level | 100 + (level-1)×50 per level, 10 titles (Dispatch Cadet → NYC Legend) |
-| Combo | Assign within 5s to build 1x→5x multiplier; resets after 10s inactivity |
-| Streak | Consecutive successful orders; resets on API failure |
-| Score | 100 × combo multiplier per order |
+| Mechanic     | Detail                                                                                                                                                                                  |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| XP/Level     | 100 + (level-1)×50 per level, 10 titles (Dispatch Cadet → NYC Legend)                                                                                                                   |
+| Combo        | Assign within 5s to build 1x→5x multiplier; resets after 10s inactivity                                                                                                                 |
+| Streak       | Consecutive successful orders; resets on API failure                                                                                                                                    |
+| Score        | 100 × combo multiplier per order                                                                                                                                                        |
 | Achievements | First Dispatch, Delivery Spree (10), Century (100), Speed Demon (3x combo), On Fire (5x), Perfect Streak (20), Precision (50 drivers), Fleet Master (level 10), NYC Legend (500 orders) |
 
 ### Keyboard Shortcuts
 
-| Key | Action |
-|-----|--------|
+| Key | Action                                  |
+| --- | --------------------------------------- |
 | `A` | Assign random order to available driver |
-| `R` | Recenter map on NYC |
-| `G` | Toggle Game HUD panel |
-| `N` | Toggle NVIDIA API panel |
-| `S` | Toggle Settings panel |
-| `T` | Toggle all panels on/off |
+| `R` | Recenter map on NYC                     |
+| `G` | Toggle Game HUD panel                   |
+| `N` | Toggle NVIDIA API panel                 |
+| `S` | Toggle Settings panel                   |
+| `T` | Toggle all panels on/off                |
 
 ## NVIDIA API Integration
 

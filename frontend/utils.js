@@ -14,7 +14,8 @@ export function formatDistanceForDisplay(meters, isImperial) {
     const feet = meters * 3.28084;
     return `${Math.round(feet)} ${appConfig.UI_LABELS.ft}`;
   } else {
-    if (meters >= 1000) return `${(meters / 1000).toFixed(1)} ${appConfig.UI_LABELS.km}`;
+    if (meters >= 1000)
+      return `${(meters / 1000).toFixed(1)} ${appConfig.UI_LABELS.km}`;
     return `${Math.round(meters)} ${appConfig.UI_LABELS.m}`;
   }
 }
@@ -31,7 +32,11 @@ export function formatManeuver(step) {
 }
 
 // compute remaining distance (meters) from current fractional index to the maneuver end index
-export function distanceToIndexFraction(currentFloatIdx, targetIdx, routeCoords) {
+export function distanceToIndexFraction(
+  currentFloatIdx,
+  targetIdx,
+  routeCoords
+) {
   if (!routeCoords || routeCoords.length < 2) return 0;
   let dist = 0;
   const base = Math.floor(currentFloatIdx);
@@ -73,7 +78,7 @@ export function getManeuverIconSVG(modifier, type, size) {
     slight_left: `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19 12H9" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 5L3 12l6 7" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
     slight_right: `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 12h10" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 5l6 7-6 7" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
     sharp_left: `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19 12H8" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 5L3 12l5 7" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
-    sharp_right: `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 12h11" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 5l5 7-5 7" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+    sharp_right: `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 12h11" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 5l5 7-5 7" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
   };
   let key = (modifier || "").toLowerCase().replace(/\s+/g, "_");
 

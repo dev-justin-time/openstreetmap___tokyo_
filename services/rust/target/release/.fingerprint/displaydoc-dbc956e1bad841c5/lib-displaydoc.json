@@ -1,1 +1,24 @@
-{"rustc":1562763049001146449,"features":"[]","declared_features":"[\"default\", \"std\"]","target":12413876779241186693,"profile":1369601567987815722,"path":15894093583470097126,"deps":[[4289358735036141001,"proc_macro2",false,8628053513069235541],[10420560437213941093,"syn",false,6288921471438838470],[13111758008314797071,"quote",false,15873307182750082929]],"local":[{"CheckDepInfo":{"dep_info":"release\\.fingerprint\\displaydoc-dbc956e1bad841c5\\dep-lib-displaydoc","checksum":false}}],"rustflags":[],"config":8247474407144887393,"compile_kind":0}
+{
+  "rustc": 1562763049001146449,
+  "features": "[]",
+  "declared_features": "[\"default\", \"std\"]",
+  "target": 12413876779241186693,
+  "profile": 1369601567987815722,
+  "path": 15894093583470097126,
+  "deps": [
+    [4289358735036141001, "proc_macro2", false, 8628053513069235541],
+    [10420560437213941093, "syn", false, 6288921471438838470],
+    [13111758008314797071, "quote", false, 15873307182750082929]
+  ],
+  "local": [
+    {
+      "CheckDepInfo": {
+        "dep_info": "release\\.fingerprint\\displaydoc-dbc956e1bad841c5\\dep-lib-displaydoc",
+        "checksum": false
+      }
+    }
+  ],
+  "rustflags": [],
+  "config": 8247474407144887393,
+  "compile_kind": 0
+}

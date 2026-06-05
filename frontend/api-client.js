@@ -4,11 +4,11 @@ Usage: call uploadGpxFile(file)
 */
 export async function uploadGpxFile(file) {
   const form = new FormData();
-  form.append('gpx', file);
-  const resp = await fetch('/upload', { method: 'POST', body: form });
+  form.append("gpx", file);
+  const resp = await fetch("/upload", { method: "POST", body: form });
   if (!resp.ok) {
     const text = await resp.text();
-    throw new Error(text || 'Upload failed');
+    throw new Error(text || "Upload failed");
   }
   return resp.json();
 }

@@ -7,8 +7,8 @@ export const APP_STATE = {
   runtimeSettings: {
     pollInterval: 2000,
     simBatchSize: 50,
-    rustAddrs: 'http://127.0.0.1:3030'
-  }
+    rustAddrs: "http://127.0.0.1:3030",
+  },
 };
 
 // helper to get current driver ids
@@ -24,7 +24,9 @@ export function removeMarker(id) {
   if (APP_STATE.driverMarkers && APP_STATE.driverMarkers[id]) {
     try {
       APP_STATE.driversLayerGroup.removeLayer(APP_STATE.driverMarkers[id]);
-    } catch (e) { console.warn("Failed to remove marker layer", e); }
+    } catch (e) {
+      console.warn("Failed to remove marker layer", e);
+    }
     delete APP_STATE.driverMarkers[id];
   }
 }
@@ -40,10 +42,15 @@ export function getDriversLayerGroup() {
 // runtime settings helpers
 export function loadRuntimeSettingsFromStorage() {
   try {
-    const settings = JSON.parse(localStorage.getItem('runtimeSettings') || '{}');
-    APP_STATE.runtimeSettings.pollInterval = settings.pollInterval || APP_STATE.runtimeSettings.pollInterval;
-    APP_STATE.runtimeSettings.simBatchSize = settings.simBatchSize || APP_STATE.runtimeSettings.simBatchSize;
-    APP_STATE.runtimeSettings.rustAddrs = settings.rustAddrs || APP_STATE.runtimeSettings.rustAddrs;
+    const settings = JSON.parse(
+      localStorage.getItem("runtimeSettings") || "{}"
+    );
+    APP_STATE.runtimeSettings.pollInterval =
+      settings.pollInterval || APP_STATE.runtimeSettings.pollInterval;
+    APP_STATE.runtimeSettings.simBatchSize =
+      settings.simBatchSize || APP_STATE.runtimeSettings.simBatchSize;
+    APP_STATE.runtimeSettings.rustAddrs =
+      settings.rustAddrs || APP_STATE.runtimeSettings.rustAddrs;
   } catch (e) {
     // ignore
   }
@@ -52,9 +59,13 @@ export function loadRuntimeSettingsFromStorage() {
 
 export function persistRuntimeSettingsToStorage(settings) {
   try {
-    localStorage.setItem('runtimeSettings', JSON.stringify(settings));
-    APP_STATE.runtimeSettings = Object.assign({}, APP_STATE.runtimeSettings, settings);
+    localStorage.setItem("runtimeSettings", JSON.stringify(settings));
+    APP_STATE.runtimeSettings = Object.assign(
+      {},
+      APP_STATE.runtimeSettings,
+      settings
+    );
   } catch (e) {
-    console.warn('persistRuntimeSettings error', e);
+    console.warn("persistRuntimeSettings error", e);
   }
 }

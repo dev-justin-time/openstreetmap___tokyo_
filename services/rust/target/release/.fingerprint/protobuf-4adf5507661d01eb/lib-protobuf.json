@@ -1,1 +1,22 @@
-{"rustc":1562763049001146449,"features":"[]","declared_features":"[\"bytes\", \"serde\", \"serde_derive\", \"with-bytes\", \"with-serde\"]","target":2253372326636423707,"profile":2040997289075261528,"path":6715167629245270975,"deps":[[11193964849296622255,"build_script_build",false,16258644289443409593]],"local":[{"CheckDepInfo":{"dep_info":"release\\.fingerprint\\protobuf-4adf5507661d01eb\\dep-lib-protobuf","checksum":false}}],"rustflags":[],"config":8247474407144887393,"compile_kind":0}
+{
+  "rustc": 1562763049001146449,
+  "features": "[]",
+  "declared_features": "[\"bytes\", \"serde\", \"serde_derive\", \"with-bytes\", \"with-serde\"]",
+  "target": 2253372326636423707,
+  "profile": 2040997289075261528,
+  "path": 6715167629245270975,
+  "deps": [
+    [11193964849296622255, "build_script_build", false, 16258644289443409593]
+  ],
+  "local": [
+    {
+      "CheckDepInfo": {
+        "dep_info": "release\\.fingerprint\\protobuf-4adf5507661d01eb\\dep-lib-protobuf",
+        "checksum": false
+      }
+    }
+  ],
+  "rustflags": [],
+  "config": 8247474407144887393,
+  "compile_kind": 0
+}

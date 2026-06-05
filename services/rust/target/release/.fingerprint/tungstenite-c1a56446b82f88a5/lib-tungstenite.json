@@ -1,1 +1,32 @@
-{"rustc":1562763049001146449,"features":"[\"data-encoding\", \"handshake\", \"http\", \"httparse\", \"sha1\", \"url\"]","declared_features":"[\"__rustls-tls\", \"data-encoding\", \"default\", \"handshake\", \"http\", \"httparse\", \"native-tls\", \"native-tls-crate\", \"native-tls-vendored\", \"rustls\", \"rustls-native-certs\", \"rustls-pki-types\", \"rustls-tls-native-roots\", \"rustls-tls-webpki-roots\", \"sha1\", \"url\", \"webpki-roots\"]","target":1270341572213479472,"profile":2040997289075261528,"path":9747999287976359300,"deps":[[1528297757488249563,"url",false,4204692112185027264],[3712811570531045576,"byteorder",false,5358736082474405948],[3870702314125662939,"bytes",false,15580626925727924203],[3977849524623815069,"http",false,5977289567109759997],[4359956005902820838,"utf8",false,15219040135944902011],[4952115107791248386,"data_encoding",false,14577660946536257542],[6163892036024256188,"httparse",false,14725515178935120017],[8008191657135824715,"thiserror",false,9181156513075385501],[8460377374586444205,"rand",false,10031224434389435553],[10554110433548904600,"log",false,14077776838508363469],[10724389056617919257,"sha1",false,6904437680510010635]],"local":[{"CheckDepInfo":{"dep_info":"release\\.fingerprint\\tungstenite-c1a56446b82f88a5\\dep-lib-tungstenite","checksum":false}}],"rustflags":[],"config":8247474407144887393,"compile_kind":0}
+{
+  "rustc": 1562763049001146449,
+  "features": "[\"data-encoding\", \"handshake\", \"http\", \"httparse\", \"sha1\", \"url\"]",
+  "declared_features": "[\"__rustls-tls\", \"data-encoding\", \"default\", \"handshake\", \"http\", \"httparse\", \"native-tls\", \"native-tls-crate\", \"native-tls-vendored\", \"rustls\", \"rustls-native-certs\", \"rustls-pki-types\", \"rustls-tls-native-roots\", \"rustls-tls-webpki-roots\", \"sha1\", \"url\", \"webpki-roots\"]",
+  "target": 1270341572213479472,
+  "profile": 2040997289075261528,
+  "path": 9747999287976359300,
+  "deps": [
+    [1528297757488249563, "url", false, 4204692112185027264],
+    [3712811570531045576, "byteorder", false, 5358736082474405948],
+    [3870702314125662939, "bytes", false, 15580626925727924203],
+    [3977849524623815069, "http", false, 5977289567109759997],
+    [4359956005902820838, "utf8", false, 15219040135944902011],
+    [4952115107791248386, "data_encoding", false, 14577660946536257542],
+    [6163892036024256188, "httparse", false, 14725515178935120017],
+    [8008191657135824715, "thiserror", false, 9181156513075385501],
+    [8460377374586444205, "rand", false, 10031224434389435553],
+    [10554110433548904600, "log", false, 14077776838508363469],
+    [10724389056617919257, "sha1", false, 6904437680510010635]
+  ],
+  "local": [
+    {
+      "CheckDepInfo": {
+        "dep_info": "release\\.fingerprint\\tungstenite-c1a56446b82f88a5\\dep-lib-tungstenite",
+        "checksum": false
+      }
+    }
+  ],
+  "rustflags": [],
+  "config": 8247474407144887393,
+  "compile_kind": 0
+}

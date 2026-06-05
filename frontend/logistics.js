@@ -9,7 +9,8 @@ let sseReconnectDelay = 1000;
 
 export function startSSE() {
   if (sseSource) return;
-  const rustAddr = localStorage.getItem("rust-addrs") || "http://127.0.0.1:3030";
+  const rustAddr =
+    localStorage.getItem("rust-addrs") || "http://127.0.0.1:3030";
   sseSource = new EventSource(`${rustAddr}/events`);
   sseSource.onopen = () => {
     sseReconnectDelay = 1000;
@@ -29,7 +30,10 @@ export function startSSE() {
 }
 
 export function stopSSE() {
-  if (sseSource) { sseSource.close(); sseSource = null; }
+  if (sseSource) {
+    sseSource.close();
+    sseSource = null;
+  }
 }
 
 // ─── Driver marker management from SSE ──────────────────────────────────────
@@ -58,12 +62,14 @@ function onDriverUpdate(update) {
   } else {
     marker.setLatLng([lat, lon]);
     const color = status === "available" ? "#00ff88" : "#ff5252";
-    marker.setIcon(L.divIcon({
-      html: `<div style="width:12px;height:12px;border-radius:50%;background:${color};box-shadow:0 0 6px ${color};"></div>`,
-      className: "",
-      iconSize: [12, 12],
-      iconAnchor: [6, 6],
-    }));
+    marker.setIcon(
+      L.divIcon({
+        html: `<div style="width:12px;height:12px;border-radius:50%;background:${color};box-shadow:0 0 6px ${color};"></div>`,
+        className: "",
+        iconSize: [12, 12],
+        iconAnchor: [6, 6],
+      })
+    );
   }
 }
 
@@ -84,7 +90,14 @@ function apiHeaders() {
 }
 
 // Create a new order
-export async function createOrder(pickupLat, pickupLon, dropoffLat, dropoffLon, pickupAddr, dropoffAddr) {
+export async function createOrder(
+  pickupLat,
+  pickupLon,
+  dropoffLat,
+  dropoffLon,
+  pickupAddr,
+  dropoffAddr
+) {
   const res = await fetch(`${LOGISTICS_API}/api/orders`, {
     method: "POST",
     headers: apiHeaders(),
@@ -103,7 +116,9 @@ export async function createOrder(pickupLat, pickupLon, dropoffLat, dropoffLon, 
 
 // List orders
 export async function listOrders(status) {
-  const url = status ? `${LOGISTICS_API}/api/orders?status=${status}` : `${LOGISTICS_API}/api/orders`;
+  const url = status
+    ? `${LOGISTICS_API}/api/orders?status=${status}`
+    : `${LOGISTICS_API}/api/orders`;
   const res = await fetch(url, { headers: apiHeaders() });
   if (!res.ok) throw new Error(await res.text());
   return res.json();
@@ -134,14 +149,18 @@ export async function updateOrderStatus(orderId, status, driverId) {
 // Render order markers on the map
 export function renderOrders(orders) {
   // Clear previous
-  orderMarkers.forEach(m => map.removeLayer(m));
+  orderMarkers.forEach((m) => map.removeLayer(m));
   orderMarkers.length = 0;
 
-  orders.forEach(o => {
-    const color = o.status === "pending" ? "#ffb700"
-      : o.status === "assigned" ? "#00d4ff"
-      : o.status === "delivered" ? "#00ff88"
-      : "#888";
+  orders.forEach((o) => {
+    const color =
+      o.status === "pending"
+        ? "#ffb700"
+        : o.status === "assigned"
+        ? "#00d4ff"
+        : o.status === "delivered"
+        ? "#00ff88"
+        : "#888";
 
     // Pickup marker
     const pickupIcon = L.divIcon({
@@ -152,7 +171,9 @@ export function renderOrders(orders) {
     });
     const pm = L.marker([o.pickup_lat, o.pickup_lon], { icon: pickupIcon })
       .addTo(map)
-      .bindTooltip(`Order ${o.id.slice(-6)}: ${o.status}`, { direction: "top" });
+      .bindTooltip(`Order ${o.id.slice(-6)}: ${o.status}`, {
+        direction: "top",
+      });
     pm._orderId = o.id;
     pm._type = "pickup";
     orderMarkers.push(pm);
@@ -215,20 +236,32 @@ async function refreshDispatchPanel() {
   try {
     const data = await listOrders();
     renderOrders(data.orders || []);
-    listEl.innerHTML = (data.orders || []).map(o => `
+    listEl.innerHTML = (data.orders || [])
+      .map(
+        (o) => `
       <div style="padding:6px 4px;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;justify-content:space-between;align-items:center;">
         <span style="flex:1;">
           <span style="color:${statusColor(o.status)};font-weight:600;">●</span>
           ${o.id.slice(-6)}
         </span>
         <span style="font-size:11px;color:#888;margin:0 8px;">${o.status}</span>
-        ${o.status === "pending" ? `<button class="dp-dispatch" data-id="${o.id}" style="background:#00ff88;border:none;color:#111;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:11px;">Assign</button>` : ""}
-        ${o.status === "assigned" ? `<button class="dp-deliver" data-id="${o.id}" style="background:#ffb700;border:none;color:#111;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:11px;">Done</button>` : ""}
+        ${
+          o.status === "pending"
+            ? `<button class="dp-dispatch" data-id="${o.id}" style="background:#00ff88;border:none;color:#111;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:11px;">Assign</button>`
+            : ""
+        }
+        ${
+          o.status === "assigned"
+            ? `<button class="dp-deliver" data-id="${o.id}" style="background:#ffb700;border:none;color:#111;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:11px;">Done</button>`
+            : ""
+        }
       </div>
-    `).join("");
+    `
+      )
+      .join("");
 
     // Wire dispatch buttons
-    listEl.querySelectorAll(".dp-dispatch").forEach(btn => {
+    listEl.querySelectorAll(".dp-dispatch").forEach((btn) => {
       btn.onclick = async () => {
         try {
           const result = await dispatchOrder(btn.dataset.id);
@@ -238,7 +271,7 @@ async function refreshDispatchPanel() {
         }
       };
     });
-    listEl.querySelectorAll(".dp-deliver").forEach(btn => {
+    listEl.querySelectorAll(".dp-deliver").forEach((btn) => {
       btn.onclick = async () => {
         try {
           await updateOrderStatus(btn.dataset.id, "delivered", "");
@@ -255,21 +288,31 @@ async function refreshDispatchPanel() {
 
 function statusColor(status) {
   switch (status) {
-    case "pending": return "#ffb700";
-    case "assigned": return "#00d4ff";
-    case "picked_up": return "#8888ff";
-    case "delivered": return "#00ff88";
-    case "cancelled": return "#ff5252";
-    default: return "#888";
+    case "pending":
+      return "#ffb700";
+    case "assigned":
+      return "#00d4ff";
+    case "picked_up":
+      return "#8888ff";
+    case "delivered":
+      return "#00ff88";
+    case "cancelled":
+      return "#ff5252";
+    default:
+      return "#888";
   }
 }
 
 function showCreateOrderForm() {
   const existing = document.getElementById("dp-create-form");
-  if (existing) { existing.remove(); return; }
+  if (existing) {
+    existing.remove();
+    return;
+  }
   const form = document.createElement("div");
   form.id = "dp-create-form";
-  form.style.cssText = "margin-top:8px;padding:8px;background:#1a1a2e;border-radius:6px;";
+  form.style.cssText =
+    "margin-top:8px;padding:8px;background:#1a1a2e;border-radius:6px;";
   form.innerHTML = `
     <div style="font-size:11px;color:#888;margin-bottom:4px;">Click map for pickup, then dropoff</div>
     <input id="dp-pickup" placeholder="Pickup lat,lng (or click map)" style="width:100%;background:#2a2a3e;border:1px solid #444;color:#e0e0e0;border-radius:4px;padding:4px 6px;margin-bottom:4px;font-size:12px;">
@@ -288,10 +331,14 @@ function showCreateOrderForm() {
   const clickHandler = (e) => {
     const ll = e.latlng;
     if (pickStage === 0) {
-      document.getElementById("dp-pickup").value = `${ll.lat.toFixed(5)},${ll.lng.toFixed(5)}`;
+      document.getElementById("dp-pickup").value = `${ll.lat.toFixed(
+        5
+      )},${ll.lng.toFixed(5)}`;
       pickStage = 1;
     } else {
-      document.getElementById("dp-dropoff").value = `${ll.lat.toFixed(5)},${ll.lng.toFixed(5)}`;
+      document.getElementById("dp-dropoff").value = `${ll.lat.toFixed(
+        5
+      )},${ll.lng.toFixed(5)}`;
       pickStage = 0;
       map.off("click", clickHandler);
     }
@@ -324,7 +371,8 @@ document.addEventListener("keydown", (e) => {
     if (!dispatchPanelEl) {
       initDispatchPanel();
     } else {
-      dispatchPanelEl.style.display = dispatchPanelEl.style.display === "none" ? "" : "none";
+      dispatchPanelEl.style.display =
+        dispatchPanelEl.style.display === "none" ? "" : "none";
     }
   }
 });

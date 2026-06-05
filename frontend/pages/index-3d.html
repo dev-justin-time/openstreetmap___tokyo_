@@ -1,91 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Tokyo Logistics — 3D PLATEAU View</title>
 
     <!-- MapLibre GL JS -->
-    <link href="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.css" rel="stylesheet" />
+    <link
+      href="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.css"
+      rel="stylesheet"
+    />
     <script src="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.js"></script>
 
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/plateau.css">
-</head>
-<body>
+    <link rel="stylesheet" href="css/plateau.css" />
+  </head>
+  <body>
     <!-- 3D Map Container -->
     <div id="map3d"></div>
 
     <!-- HUD Overlay -->
     <div id="hud">
-        <div class="hud-panel hud-top-left">
-            <h2>🗼 Tokyo 3D Logistics</h2>
-            <div class="stat">
-                <span class="label">Active Drivers</span>
-                <span class="value" id="driver-count">0</span>
-            </div>
-            <div class="stat">
-                <span class="label">Pending Orders</span>
-                <span class="value" id="order-count">0</span>
-            </div>
-            <div class="stat">
-                <span class="label">Avg ETA</span>
-                <span class="value" id="avg-eta">-- min</span>
-            </div>
+      <div class="hud-panel hud-top-left">
+        <h2>🗼 Tokyo 3D Logistics</h2>
+        <div class="stat">
+          <span class="label">Active Drivers</span>
+          <span class="value" id="driver-count">0</span>
         </div>
+        <div class="stat">
+          <span class="label">Pending Orders</span>
+          <span class="value" id="order-count">0</span>
+        </div>
+        <div class="stat">
+          <span class="label">Avg ETA</span>
+          <span class="value" id="avg-eta">-- min</span>
+        </div>
+      </div>
 
-        <!-- Layer Controls -->
-        <div class="hud-panel hud-top-right">
-            <h3>🎛️ Layers</h3>
-            <label class="toggle">
-                <input type="checkbox" id="toggle-buildings" checked>
-                <span>PLATEAU Buildings</span>
-            </label>
-            <label class="toggle">
-                <input type="checkbox" id="toggle-terrain" checked>
-                <span>Terrain</span>
-            </label>
-            <label class="toggle">
-                <input type="checkbox" id="toggle-heatmap">
-                <span>Order Heatmap</span>
-            </label>
-            <label class="toggle">
-                <input type="checkbox" id="toggle-routes" checked>
-                <span>Driver Routes</span>
-            </label>
-            <hr>
-            <h3>📷 Camera</h3>
-            <button id="cam-tokyo-station">Tokyo Station</button>
-            <button id="cam-shibuya">Shibuya</button>
-            <button id="cam-shinjuku">Shinjuku</button>
-            <button id="cam-birds-eye">Bird's Eye</button>
-        </div>
+      <!-- Layer Controls -->
+      <div class="hud-panel hud-top-right">
+        <h3>🎛️ Layers</h3>
+        <label class="toggle">
+          <input type="checkbox" id="toggle-buildings" checked />
+          <span>PLATEAU Buildings</span>
+        </label>
+        <label class="toggle">
+          <input type="checkbox" id="toggle-terrain" checked />
+          <span>Terrain</span>
+        </label>
+        <label class="toggle">
+          <input type="checkbox" id="toggle-heatmap" />
+          <span>Order Heatmap</span>
+        </label>
+        <label class="toggle">
+          <input type="checkbox" id="toggle-routes" checked />
+          <span>Driver Routes</span>
+        </label>
+        <hr />
+        <h3>📷 Camera</h3>
+        <button id="cam-tokyo-station">Tokyo Station</button>
+        <button id="cam-shibuya">Shibuya</button>
+        <button id="cam-shinjuku">Shinjuku</button>
+        <button id="cam-birds-eye">Bird's Eye</button>
+      </div>
 
-        <!-- Simulation Controls -->
-        <div class="hud-panel hud-bottom-left">
-            <h3>⚡ Simulation</h3>
-            <button id="btn-play" class="btn-primary">▶ Play</button>
-            <button id="btn-pause">⏸ Pause</button>
-            <button id="btn-reset">↺ Reset</button>
-            <div class="speed-control">
-                <label>Speed: <span id="speed-val">1x</span></label>
-                <input type="range" id="speed-slider" min="1" max="10" value="1">
-            </div>
+      <!-- Simulation Controls -->
+      <div class="hud-panel hud-bottom-left">
+        <h3>⚡ Simulation</h3>
+        <button id="btn-play" class="btn-primary">▶ Play</button>
+        <button id="btn-pause">⏸ Pause</button>
+        <button id="btn-reset">↺ Reset</button>
+        <div class="speed-control">
+          <label>Speed: <span id="speed-val">1x</span></label>
+          <input type="range" id="speed-slider" min="1" max="10" value="1" />
         </div>
+      </div>
 
-        <!-- Driver Info Panel -->
-        <div class="hud-panel hud-bottom-right" id="driver-panel" style="display:none;">
-            <h3>🚗 Driver Details</h3>
-            <div id="driver-info"></div>
-        </div>
+      <!-- Driver Info Panel -->
+      <div
+        class="hud-panel hud-bottom-right"
+        id="driver-panel"
+        style="display: none"
+      >
+        <h3>🚗 Driver Details</h3>
+        <div id="driver-info"></div>
+      </div>
     </div>
 
     <!-- Loading Overlay -->
     <div id="loading">
-        <div class="spinner"></div>
-        <p>Loading PLATEAU 3D City Model...</p>
+      <div class="spinner"></div>
+      <p>Loading PLATEAU 3D City Model...</p>
     </div>
 
     <script src="js/plateau.js"></script>
-</body>
+  </body>
 </html>

@@ -1,7 +1,21 @@
 // gui.js
 import { appConfig } from "./config.js";
 import { updateHUD, updateTurnUI, showLoading, hideLoading } from "./ui.js";
-import { setCurrencyForCountryCode, fuelLiters, money, setFuelLiters, setMoney, setCurrentCountryName, setFollowCar, setCurrentRouteName, setCurrentRoadType, startAnimation, getEffectiveCruiseKmph, updateCountryDisplay, gasMarkers } from "./simulation.js";
+import {
+  setCurrencyForCountryCode,
+  fuelLiters,
+  money,
+  setFuelLiters,
+  setMoney,
+  setCurrentCountryName,
+  setFollowCar,
+  setCurrentRouteName,
+  setCurrentRoadType,
+  startAnimation,
+  getEffectiveCruiseKmph,
+  updateCountryDisplay,
+  gasMarkers,
+} from "./simulation.js";
 import { driverMarker, map, markerLayer, addMarker } from "./map.js";
 import { fetchRouteAlternatives, fetchRoute, searchPlace } from "./api.js";
 import { showConfirmModal } from "./confirmModal.js";
@@ -33,19 +47,26 @@ export function initGUI() {
   }
   if (instantAccCb) instantAccCb.checked = appConfig.GUI_INSTANT_ACCEL;
   if (noSpeedLimitCb) noSpeedLimitCb.checked = appConfig.GUI_NO_SPEED_LIMIT;
-  if (disableSmartCb) disableSmartCb.checked = appConfig.GUI_DISABLE_SMART_SPEED;
+  if (disableSmartCb)
+    disableSmartCb.checked = appConfig.GUI_DISABLE_SMART_SPEED;
   if (infiniteFuelCb) infiniteFuelCb.checked = appConfig.GUI_INFINITE_FUEL;
-  if (invertTurnsCb) invertTurnsCb.checked = appConfig.GUI_INVERT_TURN_DIRECTIONS;
+  if (invertTurnsCb)
+    invertTurnsCb.checked = appConfig.GUI_INVERT_TURN_DIRECTIONS;
   if (incidentsCb) incidentsCb.checked = appConfig.GUI_INCIDENTS_ENABLED;
   if (incidentProbRange) {
-    incidentProbRange.value = Math.round(appConfig.INCIDENT_PROBABILITY_PER_KM * 100);
+    incidentProbRange.value = Math.round(
+      appConfig.INCIDENT_PROBABILITY_PER_KM * 100
+    );
   }
   if (incidentProbVal) {
-    incidentProbVal.textContent = `${Math.round(appConfig.INCIDENT_PROBABILITY_PER_KM * 100)}%`;
+    incidentProbVal.textContent = `${Math.round(
+      appConfig.INCIDENT_PROBABILITY_PER_KM * 100
+    )}%`;
   }
   if (imperialCb) imperialCb.checked = appConfig.GUI_IMPERIAL;
   if (turboAltsRange) turboAltsRange.value = appConfig.TURBO_MAX_ALTERNATIVES;
-  if (turboAltsVal) turboAltsVal.textContent = `${appConfig.TURBO_MAX_ALTERNATIVES}`;
+  if (turboAltsVal)
+    turboAltsVal.textContent = `${appConfig.TURBO_MAX_ALTERNATIVES}`;
 
   // GUI Toggle
   guiToggle.addEventListener("click", () => {
@@ -118,7 +139,8 @@ export function initGUI() {
   if (turboAltsRange) {
     turboAltsRange.addEventListener("input", (e) => {
       appConfig.TURBO_MAX_ALTERNATIVES = Number(e.target.value);
-      if (turboAltsVal) turboAltsVal.textContent = `${appConfig.TURBO_MAX_ALTERNATIVES}`;
+      if (turboAltsVal)
+        turboAltsVal.textContent = `${appConfig.TURBO_MAX_ALTERNATIVES}`;
     });
   }
 
@@ -144,9 +166,15 @@ export function initGUI() {
         if (window._routeLine) {
           const ok = await showConfirmModal();
           if (ok) {
-            try { map.removeLayer(window._routeLine); } catch {}
+            try {
+              map.removeLayer(window._routeLine);
+            } catch {}
             window._routeLine = null;
-            gasMarkers.forEach(m => { try { map.removeLayer(m); } catch { } });
+            gasMarkers.forEach((m) => {
+              try {
+                map.removeLayer(m);
+              } catch {}
+            });
             gasMarkers.length = 0;
             setCurrentRouteName("");
             setCurrentRoadType("");
@@ -167,7 +195,8 @@ export function initGUI() {
     setMaxCruise: (k) => {
       appConfig.GUI_MAX_CRUISE_KMPH = Number(k);
       if (cruiseRange) cruiseRange.value = appConfig.GUI_MAX_CRUISE_KMPH;
-      if (cruiseVal) cruiseVal.textContent = `${appConfig.GUI_MAX_CRUISE_KMPH} km/h`;
+      if (cruiseVal)
+        cruiseVal.textContent = `${appConfig.GUI_MAX_CRUISE_KMPH} km/h`;
     },
     /* @tweakable [toggle instant acceleration] */
     setInstantAccel: (b) => {
@@ -182,7 +211,8 @@ export function initGUI() {
     /* @tweakable [toggle disable smart speed] */
     setDisableSmartSpeed: (b) => {
       appConfig.GUI_DISABLE_SMART_SPEED = Boolean(b);
-      if (disableSmartCb) disableSmartCb.checked = appConfig.GUI_DISABLE_SMART_SPEED;
+      if (disableSmartCb)
+        disableSmartCb.checked = appConfig.GUI_DISABLE_SMART_SPEED;
     },
     /* @tweakable [toggle infinite fuel] */
     setInfiniteFuel: (b) => {
@@ -199,7 +229,8 @@ export function initGUI() {
     /* @tweakable [toggle invert turn directions] */
     setInvertTurns: (b) => {
       appConfig.GUI_INVERT_TURN_DIRECTIONS = Boolean(b);
-      if (invertTurnsCb) invertTurnsCb.checked = appConfig.GUI_INVERT_TURN_DIRECTIONS;
+      if (invertTurnsCb)
+        invertTurnsCb.checked = appConfig.GUI_INVERT_TURN_DIRECTIONS;
       updateTurnUI(window._simulationState.routeIndexFloat || 0);
     },
     /* @tweakable [toggle enable car incidents] */
@@ -210,14 +241,22 @@ export function initGUI() {
     /* @tweakable [set incident probability per km (0-1, as a percentage)] */
     setIncidentProbabilityPerKm: (p) => {
       appConfig.INCIDENT_PROBABILITY_PER_KM = Number(p);
-      if (incidentProbRange) incidentProbRange.value = Math.round(appConfig.INCIDENT_PROBABILITY_PER_KM * 100);
-      if (incidentProbVal) incidentProbVal.textContent = `${Math.round(appConfig.INCIDENT_PROBABILITY_PER_KM * 100)}%`;
+      if (incidentProbRange)
+        incidentProbRange.value = Math.round(
+          appConfig.INCIDENT_PROBABILITY_PER_KM * 100
+        );
+      if (incidentProbVal)
+        incidentProbVal.textContent = `${Math.round(
+          appConfig.INCIDENT_PROBABILITY_PER_KM * 100
+        )}%`;
     },
     /* @tweakable [set max alternatives requested when turbo is on] */
     setTurboMaxAlternatives: (n) => {
       appConfig.TURBO_MAX_ALTERNATIVES = Number(n);
-      if (turboAltsRange) turboAltsRange.value = appConfig.TURBO_MAX_ALTERNATIVES;
-      if (turboAltsVal) turboAltsVal.textContent = `${appConfig.TURBO_MAX_ALTERNATIVES}`;
+      if (turboAltsRange)
+        turboAltsRange.value = appConfig.TURBO_MAX_ALTERNATIVES;
+      if (turboAltsVal)
+        turboAltsVal.textContent = `${appConfig.TURBO_MAX_ALTERNATIVES}`;
     },
     /* @tweakable [toggle turbo mode on/off] */
     setTurboMode: (b) => {
