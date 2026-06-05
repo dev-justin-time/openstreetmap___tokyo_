@@ -12,6 +12,9 @@
     "build:rust": "cd services/rust && cargo build --release",
     "build:all": "npm run build && npm run build:frontend",
     "build:frontend": "echo \"No frontend build step (native ES modules)\"",
+    "build:tiles": "cd services/python && python generate_placeholder_b3dm.py",
+    "build:demo": "cd services/nyc-app-server && go build -o ../../bin/nyc-app-server.exe .",
+    "demo": "npm run build:demo && npm run build:tiles && start http://localhost:8080/pages/nyc-demo.html && bin\\nyc-app-server.exe",
     "lint": "eslint . --ext .js",
     "format": "prettier --write ."
   },

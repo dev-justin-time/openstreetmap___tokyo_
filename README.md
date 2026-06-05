@@ -134,19 +134,29 @@ cd services/plateau-server && npm start
 ## Quick Start
 
 ```bash
+# One command: build demo server, generate placeholder 3D tiles, open browser
+npm run demo
+
+# Or manually:
 # 1. Start NYC demo server
 cd services/nyc-app-server && go build -o ../../bin/nyc-app-server.exe .
 ../../bin/nyc-app-server.exe   # → :8080
 
 # 2. Open frontend
 # Open frontend/pages/nyc-demo.html in browser
+```
 
-# 3. (Optional) Start gateway + Rust tracker
+That's it. The demo starts on `http://localhost:8080` with 1000 live drivers, game HUD, and 3D tiles placeholder at `/tiles/tileset.json`.
+
+### Optional Components
+
+```bash
+# Start gateway + Rust tracker (live mode)
 cd services/go && go build -o ../../bin/gateway.exe .
 cd services/rust && cargo build --release
 
-# 4. (Optional) Start plateu 3D tiles server
-cd services/plateau-server && npm start  # → :8080 (if nyc-app-server not running)
+# Start plateu 3D tiles server (standalone, :8082)
+cd services/plateau-server && npm start
 ```
 
 ## Build

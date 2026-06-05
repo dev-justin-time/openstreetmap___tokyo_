@@ -1,6 +1,43 @@
 {
-  "asset": { "version": "1.0" },
+  "asset": {
+    "version": "1.0",
+    "generator": "kinetic-fleet-placeholder"
+  },
   "geometricError": 500,
-  "root": { "geometricError": 500, "refine": "ADD", "boundingVolume": { "region": [-180, -90, 180, 90, 0, 1000] } },
-  "notice": "No 3D tiles generated yet. Run: cjio input.gml export buildings.city.json && py3dtiles tileset --srs_in EPSG:6697 --srs_out EPSG:4326 --out ./tiles buildings.city.json"
+  "root": {
+    "boundingVolume": {
+      "region": [
+        139.767,
+        35.681,
+        139.768,
+        35.682,
+        0,
+        150
+      ]
+    },
+    "refine": "ADD",
+    "geometricError": 500,
+    "transform": [
+      50,
+      0,
+      0,
+      0,
+      0,
+      50,
+      0,
+      0,
+      0,
+      0,
+      50,
+      0,
+      139.7671,
+      35.6812,
+      0,
+      1
+    ],
+    "content": {
+      "uri": "buildings.b3dm"
+    },
+    "children": []
+  }
 }
