@@ -47,6 +47,13 @@ try:
 except ImportError:
     HAS_CONTEXTILY = False
 
+try:
+    import folium
+    from folium import plugins
+    HAS_FOLIUM = True
+except ImportError:
+    HAS_FOLIUM = False
+
 # ─── Config ──────────────────────────────────────────────────────────────────
 
 RUST_API = os.environ.get("RUST_API", "http://127.0.0.1:3030")
@@ -57,12 +64,15 @@ OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # ─── Data fetching ───────────────────────────────────────────────────────────
 
-def _fetch(url: str) -> Optional[dict]:
-    req = urllib.request.Request(url)
+def _fetch(url: str, method: str = "GET", body: Optional[bytes] = None) -> Optional[dict]:
+    """HTTP fetch with optional POST body."""
+    req = urllib.request.Request(url, data=body, method=method)
     if API_KEY:
         req.add_header("X-API-Key", API_KEY)
+    if body:
+        req.add_header("Content-Type", "application/json")
     try:
-        with urllib.request.urlopen(req, timeout=5) as resp:
+        with urllib.request.urlopen(req, timeout=10) as resp:
             return json.loads(resp.read().decode())
     except (urllib.error.URLError, json.JSONDecodeError, OSError) as e:
         print(f"  [warn] fetch failed {url}: {e}")
@@ -139,6 +149,20 @@ def compute_bounds(drivers: list, orders: list, padding_deg: float = 0.02) -> tu
         max(all_lons) + padding_deg,
         max(all_lats) + padding_deg,
     )
+
+
+# ─── OSRM actual route fetching ─────────────────────────────────────────────
+
+def fetch_osrm_route(lat1: float, lon1: float, lat2: float, lon2: float) -> Optional[np.ndarray]:
+    """Fetch actual driving route from Rust route-eta endpoint (OSRM with haversine fallback).
+    Returns array of [lon, lat] points or None."""
+    data = _fetch(f"{RUST_API}/route-eta", method="POST",
+                  body=json.dumps({"pickup_lat": lat1, "pickup_lon": lon1,
+                                   "dropoff_lat": lat2, "dropoff_lon": lon2}).encode())
+    if data and "route" in data:
+        pts = data["route"]
+        return np.array([[p["lon"], p["lat"]] for p in pts])
+    return None
 
 
 # ─── Visualization ───────────────────────────────────────────────────────────
@@ -250,11 +274,14 @@ def render_map(drivers: list, orders: list, stats: dict,
                         va="center", color="white", fontweight="bold",
                         transform=transform, zorder=7)
 
-            # Route line
-            route = interpolate_route(p_lat, p_lon, d_lat, d_lon)
+            # Route line (try OSRM actual route, fallback to great-circle interpolation)
+            route = fetch_osrm_route(p_lat, p_lon, d_lat, d_lon)
+            if route is None:
+                route = interpolate_route(p_lat, p_lon, d_lat, d_lon)
             dist = haversine(p_lat, p_lon, d_lat, d_lon)
+            ls = ":" if route is None else "--"
             ax.plot(route[:, 0], route[:, 1], color=color, linewidth=1.2,
-                    linestyle="--", alpha=0.5, transform=transform, zorder=3)
+                    linestyle=ls, alpha=0.5, transform=transform, zorder=3)
 
     # ── Stats inset ──────────────────────────────────────────────────────
     stats_text = (
@@ -364,6 +391,143 @@ def render_heatmap(drivers: list, orders: list,
     return out_path
 
 
+# ─── Folium interactive maps ─────────────────────────────────────────────────
+
+def render_folium_map(drivers: list, orders: list, stats: dict,
+                      filename: str = "ops_map.html") -> Optional[Path]:
+    """Create interactive HTML map with folium.
+    Shows driver markers, order pickup/dropoff, and actual OSRM routes."""
+    if not HAS_FOLIUM:
+        return None
+    if not drivers and not orders:
+        return None
+
+    bounds = compute_bounds(drivers, orders, 0.05)
+    center = ((bounds[1] + bounds[3]) / 2, (bounds[0] + bounds[2]) / 2)
+    m = folium.Map(location=center, zoom_start=13,
+                   tiles="CartoDB dark_matter",
+                   control_scale=True)
+
+    # Driver marker clusters
+    avail_group = plugins.FeatureGroupSubGroup(m, "Available drivers",
+                                                show=True)
+    busy_group = plugins.FeatureGroupSubGroup(m, "Busy drivers", show=True)
+    m.add_child(avail_group)
+    m.add_child(busy_group)
+
+    for d in drivers:
+        lat, lon = d.get("lat", 0), d.get("lon", 0)
+        status = d.get("status", "available")
+        color = "green" if status == "available" else "red"
+        icon = folium.Icon(color=color, icon="car", prefix="fa", icon_color="white")
+        popup = folium.Popup(
+            f"Driver {d.get('id', '?')}<br>Status: {status}<br>"
+            f"Speed: {d.get('speed', 0):.1f} km/h",
+            max_width=200)
+        marker = folium.Marker([lat, lon], icon=icon, popup=popup)
+        target = avail_group if status == "available" else busy_group
+        marker.add_to(target)
+
+    # Order layer groups by status
+    order_colors = {"pending": "orange", "assigned": "blue",
+                    "picked_up": "purple", "delivered": "green",
+                    "cancelled": "red"}
+    for o in orders:
+        color = order_colors.get(o.get("status", "pending"), "gray")
+        p_lat, p_lon = o.get("pickup_lat", 0), o.get("pickup_lon", 0)
+        d_lat, d_lon = o.get("dropoff_lat", 0), o.get("dropoff_lon", 0)
+        oid = o.get("id", "?")
+
+        # Pickup
+        folium.CircleMarker(
+            [p_lat, p_lon], radius=10, color=color, fill=True,
+            fill_opacity=0.7, weight=2,
+            popup=f"Order {oid}: Pickup<br>Status: {o.get('status', '?')}"
+        ).add_to(m)
+
+        # Dropoff
+        if d_lat and d_lon:
+            folium.Marker(
+                [d_lat, d_lon],
+                icon=folium.Icon(color=color, icon="flag", prefix="fa"),
+                popup=f"Order {oid}: Dropoff"
+            ).add_to(m)
+
+            # Route (try OSRM first)
+            route = fetch_osrm_route(p_lat, p_lon, d_lat, d_lon)
+            if route is None:
+                route = interpolate_route(p_lat, p_lon, d_lat, d_lon)
+            folium.PolyLine(
+                [(p[1], p[0]) for p in route],
+                color=color, weight=3, opacity=0.6, dash_array="5,10" if route is None else None
+            ).add_to(m)
+
+    # Layer control
+    folium.LayerControl(collapsed=True).add_to(m)
+
+    # Fullscreen plugin
+    plugins.Fullscreen().add_to(m)
+
+    # Stats overlay
+    stats_text = (
+        f"Drivers: {len(drivers)} | "
+        f"Pending: {stats.get('orders_pending', 0)} | "
+        f"Assigned: {stats.get('orders_assigned', 0)} | "
+        f"Delivered: {stats.get('orders_delivered', 0)} | "
+        f"Total: {stats.get('orders_total', 0)}"
+    )
+    title_html = f"""
+    <div style="position:fixed;top:10px;left:50%;transform:translateX(-50%);
+                z-index:9999;background:rgba(0,0,0,0.8);color:#fff;
+                padding:6px 16px;border-radius:20px;font-family:sans-serif;
+                font-size:13px;white-space:nowrap;">
+      {stats_text}
+    </div>"""
+    m.get_root().html.add_child(folium.Element(title_html))
+
+    out_path = OUTPUT_DIR / filename
+    m.save(str(out_path))
+    print(f"  [ok] saved {out_path} ({out_path.stat().st_size / 1024:.0f} KB)")
+    return out_path
+
+
+def render_folium_heatmap(drivers: list, orders: list,
+                          filename: str = "heatmap.html") -> Optional[Path]:
+    """Create interactive heatmap with folium heatmap plugin."""
+    if not HAS_FOLIUM or not drivers:
+        return None
+
+    bounds = compute_bounds(drivers, orders, 0.05)
+    center = ((bounds[1] + bounds[3]) / 2, (bounds[0] + bounds[2]) / 2)
+    m = folium.Map(location=center, zoom_start=13,
+                   tiles="CartoDB dark_matter")
+
+    # Heat data: [lat, lon, intensity]
+    heat_data = [[d["lat"], d["lon"], 0.5] for d in drivers]
+    plugins.HeatMap(heat_data, radius=20, blur=15,
+                    min_opacity=0.3, gradient={0.4: "blue", 0.6: "lime", 0.8: "yellow", 1.0: "red"}
+                    ).add_to(m)
+
+    # Order overlays
+    for o in orders:
+        p_lat, p_lon = o.get("pickup_lat", 0), o.get("pickup_lon", 0)
+        d_lat, d_lon = o.get("dropoff_lat", 0), o.get("dropoff_lon", 0)
+        folium.CircleMarker([p_lat, p_lon], radius=8,
+                            color="white", fill=True, fill_opacity=0.8,
+                            popup=f"Order {o.get('id', '?')}: {o.get('status', '?')}"
+                            ).add_to(m)
+        if d_lat and d_lon:
+            folium.CircleMarker([d_lat, d_lon], radius=6,
+                                color="white", fill=True, fill_opacity=0.6,
+                                popup=f"Dropoff {o.get('id', '?')}"
+                                ).add_to(m)
+
+    out_path = OUTPUT_DIR / filename
+    m.save(str(out_path))
+    print(f"  [ok] saved {out_path} ({out_path.stat().st_size / 1024:.0f} KB)")
+    return out_path
+
+
 # ─── Run loop ────────────────────────────────────────────────────────────────
 
 def run_once() -> dict:
@@ -381,6 +545,10 @@ def run_once() -> dict:
     render_heatmap(drivers, orders,
                    title=f"Driver Density — {time.strftime('%Y-%m-%d %H:%M:%S')}",
                    filename=f"heatmap_{ts}.png")
+    render_folium_map(drivers, orders, stats,
+                      filename=f"ops_map_{ts}.html")
+    render_folium_heatmap(drivers, orders,
+                          filename=f"heatmap_{ts}.html")
 
     # Always write latest
     render_map(drivers, orders, stats,
@@ -389,6 +557,10 @@ def run_once() -> dict:
     render_heatmap(drivers, orders,
                    title="Driver Density (live)",
                    filename="heatmap_latest.png")
+    render_folium_map(drivers, orders, stats,
+                      filename="ops_map_latest.html")
+    render_folium_heatmap(drivers, orders,
+                          filename="heatmap_latest.html")
 
     return stats
 
@@ -418,6 +590,10 @@ class VizHandler(BaseHTTPRequestHandler):
             self._serve_file("ops_map_latest.png", "image/png")
         elif self.path == "/heatmap.png":
             self._serve_file("heatmap_latest.png", "image/png")
+        elif self.path == "/ops_map.html":
+            self._serve_file("ops_map_latest.html", "text/html")
+        elif self.path == "/heatmap.html":
+            self._serve_file("heatmap_latest.html", "text/html")
         elif self.path == "/data":
             self._serve_json()
         elif self.path == "/refresh":
@@ -437,8 +613,12 @@ class VizHandler(BaseHTTPRequestHandler):
 body { font-family:system-ui,sans-serif; background:#111; color:#e0e0e0; margin:0; padding:20px; }
 h1 { color:#00d4ff; }
 img { max-width:100%; border-radius:8px; border:1px solid #333; margin:10px 0; }
+iframe { width:100%; height:500px; border:none; border-radius:8px; border:1px solid #333; }
 .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
 @media(max-width:800px){ .grid{grid-template-columns:1fr; } }
+.tabs { display:flex; gap:8px; margin:10px 0; }
+.tab { padding:6px 14px; border-radius:6px; cursor:pointer; background:#333; color:#ccc; font-size:13px; }
+.tab.active { background:#00d4ff; color:#111; font-weight:bold; }
 button { background:#00d4ff; color:#111; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:600; }
 button:hover { opacity:0.85; }
 #stats { background:#1a1a2e; padding:12px; border-radius:8px; margin:10px 0; font-size:14px; }
@@ -446,17 +626,33 @@ button:hover { opacity:0.85; }
 <h1>Logistics Operations Dashboard</h1>
 <button onclick="refresh()">↻ Refresh</button>
 <div id="stats">Loading...</div>
-<div class="grid">
+<div class="tabs">
+<span class="tab active" onclick="switchView('static',this)">Static PNG</span>
+<span class="tab" onclick="switchView('interactive',this)">Interactive HTML</span>
+</div>
+<div id="view-static" class="grid">
 <div><h3>Operations Map</h3><img src="/ops_map.png" id="map1"></div>
 <div><h3>Driver Density</h3><img src="/heatmap.png" id="map2"></div>
 </div>
+<div id="view-interactive" class="grid" style="display:none">
+<div><h3>Operations Map</h3><iframe src="/ops_map.html" id="folium1"></iframe></div>
+<div><h3>Driver Density</h3><iframe src="/heatmap.html" id="folium2"></iframe></div>
+</div>
 <script>
+function switchView(name, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('view-static').style.display = name === 'static' ? 'grid' : 'none';
+  document.getElementById('view-interactive').style.display = name === 'interactive' ? 'grid' : 'none';
+}
 async function refresh() {
   const btn = document.querySelector('button');
   btn.textContent = '↻ Refreshing...';
   await fetch('/refresh');
   document.getElementById('map1').src = '/ops_map.png?' + Date.now();
   document.getElementById('map2').src = '/heatmap.png?' + Date.now();
+  document.getElementById('folium1').src = '/ops_map.html?' + Date.now();
+  document.getElementById('folium2').src = '/heatmap.html?' + Date.now();
   fetch('/data').then(r=>r.json()).then(d=>{
     document.getElementById('stats').innerHTML =
       `Drivers: ${d.drivers} | Orders: ${d.orders_total} | Pending: ${d.orders_pending} | Delivered: ${d.orders_delivered}`;
@@ -520,9 +716,11 @@ def serve_forever(port: int = 9090):
         print(f"  [warn] initial render: {e}")
 
     print(f"[viz] HTTP server on http://0.0.0.0:{port}")
-    print(f"      /           — dashboard HTML")
-    print(f"      /ops_map.png — latest operations map")
-    print(f"      /heatmap.png — latest heatmap")
+    print(f"      /            — dashboard HTML (static + interactive tabs)")
+    print(f"      /ops_map.png — latest static operations map")
+    print(f"      /heatmap.png — latest static heatmap")
+    print(f"      /ops_map.html — latest interactive folium map")
+    print(f"      /heatmap.html — latest interactive folium heatmap")
     print(f"      /data        — JSON stats")
     print(f"      /refresh     — regenerate + JSON ok")
     try:

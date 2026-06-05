@@ -57,6 +57,61 @@ def analyze_secondary_from_file(primary_json_str, gpx_path):
                     'time': p.time.isoformat() if p.time else None
                 })
 
+    # ── OSMnx road-network matching (optional) ─────────────────────────
+    osm_analysis = {}
+    try:
+        import osmnx as ox
+        ox.settings.use_cache = True
+        ox.settings.log_console = False
+
+        # Build a graph from the track bounding box
+        lats = [p['lat'] for p in pts]
+        lons = [p['lon'] for p in pts]
+        if lats and lons:
+            margin = 0.01
+            bbox = (min(lats) - margin, max(lats) + margin,
+                    min(lons) - margin, max(lons) + margin)
+            G = ox.graph_from_bbox(bbox, network_type='drive', simplify=True, retain_all=False)
+
+            # Nearest road types along the route
+            from shapely.geometry import Point
+            import geopandas as gpd
+            nodes, edges = ox.graph_to_gdfs(G, nodes=True, edges=True)
+            road_types = edges['highway'].dropna().unique().tolist() if 'highway' in edges.columns else []
+
+            # Nearest edge for each track point (sample every 10th)
+            sampled = pts[::max(1, len(pts) // 50)]
+            nearest_roads = []
+            for p in sampled:
+                pt = Point(p['lon'], p['lat'])
+                if not edges.empty and len(edges) > 0:
+                    dists = edges.distance(pt)
+                    nearest_idx = dists.idxmin()
+                    nearest_road = edges.loc[nearest_idx]
+                    road_name = nearest_road.get('name', 'unknown')
+                    road_type = nearest_road.get('highway', 'unknown')
+                    min_dist = dists.min()
+                    nearest_roads.append({
+                        'lat': p['lat'],
+                        'lon': p['lon'],
+                        'road_name': road_name if isinstance(road_name, str) else str(road_name),
+                        'road_type': road_type if isinstance(road_type, str) else str(road_type),
+                        'distance_m': float(min_dist * 111320) if hasattr(min_dist, 'item') else 0,
+                    })
+
+            osm_analysis = {
+                'road_types_found': [str(t) for t in road_types],
+                'nearest_roads_sample': nearest_roads[:20],
+                'graph_nodes': len(G.nodes) if G else 0,
+                'graph_edges': len(G.edges) if G else 0,
+                'matches_road_network': len(nearest_roads) > 0 and any(
+                    r['distance_m'] < 50 for r in nearest_roads),
+            }
+    except ImportError:
+        osm_analysis = {'note': 'osmnx not installed, skipping OSM road analysis'}
+    except Exception as e:
+        osm_analysis = {'error': str(e), 'note': 'osmnx analysis failed'}
+
     # If trace is long, downsample using Douglas-Peucker to reduce heavy processing cost
     def douglas_peucker(points, epsilon):
         # points: list of dicts with 'lat','lon'
@@ -158,13 +213,32 @@ def analyze_secondary_from_file(primary_json_str, gpx_path):
         res['plot_error'] = str(e)
         plot_path = None
 
+    # ── Folium interactive route map ───────────────────────────────────
+    folium_path = None
+    try:
+        import folium
+        m = folium.Map(location=[pts[0]['lat'], pts[0]['lon']], zoom_start=14,
+                       tiles="CartoDB positron")
+        coords = [(p['lat'], p['lon']) for p in pts]
+        folium.PolyLine(coords, color="#8b37ff", weight=4, opacity=0.8).add_to(m)
+        folium.CircleMarker(coords[0], radius=8, color="green", fill=True,
+                            popup="Start").add_to(m)
+        folium.CircleMarker(coords[-1], radius=8, color="red", fill=True,
+                            popup="End").add_to(m)
+        folium_path = ANALYSIS_DIR / f"route_{int(time.time())}.html"
+        m.save(str(folium_path))
+    except Exception as e:
+        folium_path = None
+
     res.update({
         'total_distance_m': total_distance,
         'elevation_gain_m': elev_gain,
         'points': len(df),
         'speed_stats': speed_stats,
         'plot_file': str(plot_path) if plot_path else None,
-        'note': 'secondary analysis produced by Python worker (gpxpy, geopandas, pandas, shapely, matplotlib)'
+        'folium_file': str(folium_path) if folium_path else None,
+        'osm_analysis': osm_analysis,
+        'note': 'secondary analysis produced by Python worker (gpxpy, geopandas, pandas, shapely, matplotlib, osmnx, folium)'
     })
     return res
 

@@ -1,0 +1,49 @@
+syntax = "proto3";
+package osm.trace;
+
+// GPX trace data flowing through the polyglot pipeline.
+// Rust produces primary stats; Python enriches with OSM analysis.
+
+message TrackPoint {
+  double lat = 1;
+  double lon = 2;
+  double elevation = 3;
+  string time = 4;           // ISO 8601
+}
+
+message PrimaryStats {
+  double total_distance_m = 1;
+  double elevation_gain_m = 2;
+  double duration_seconds = 3;
+  int32 point_count = 4;
+  double avg_speed_m_s = 5;
+  string error = 6;
+}
+
+message NearestRoad {
+  double lat = 1;
+  double lon = 2;
+  string road_name = 3;
+  string road_type = 4;      // highway tag value
+  double distance_m = 5;
+}
+
+message OsmAnalysis {
+  repeated string road_types_found = 1;
+  repeated NearestRoad nearest_roads_sample = 2;
+  int32 graph_nodes = 3;
+  int32 graph_edges = 4;
+  bool matches_road_network = 5;
+  string error = 6;
+}
+
+message TraceResult {
+  string trace_id = 1;
+  string status = 2;         // pending | processing | done | error
+  PrimaryStats stats = 3;
+  repeated TrackPoint path = 4;
+  OsmAnalysis osm_analysis = 5;
+  string plot_file = 6;      // path to PNG
+  string folium_file = 7;    // path to HTML
+  string created_at = 8;
+}

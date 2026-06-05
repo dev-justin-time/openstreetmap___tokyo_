@@ -1,0 +1,52 @@
+syntax = "proto3";
+package osm.tracker;
+
+// Driver GPS position and status for the Rust tracker and Go logistics API.
+
+message DriverPosition {
+  int32 driver_id = 1;
+  double lat = 2;
+  double lon = 3;
+  double speed_kmh = 4;
+  string status = 5;         // available | busy | offline
+  string updated_at = 6;     // ISO 8601
+}
+
+message TrackBatchRequest {
+  repeated DriverPosition updates = 1;
+}
+
+message TrackBatchResponse {
+  int32 accepted = 1;
+  int32 rejected = 2;
+}
+
+message NearestDriverRequest {
+  double pickup_lat = 1;
+  double pickup_lon = 2;
+  int32 radius_m = 3;        // search radius
+}
+
+message NearestDriverResponse {
+  DriverPosition driver = 1;
+  double distance_m = 2;
+  double eta_seconds = 3;
+}
+
+message RouteEtaRequest {
+  double origin_lat = 1;
+  double origin_lon = 2;
+  double dest_lat = 3;
+  double dest_lon = 4;
+}
+
+message RoutePoint {
+  double lat = 1;
+  double lon = 2;
+}
+
+message RouteEtaResponse {
+  double distance_m = 1;
+  double duration_seconds = 2;
+  repeated RoutePoint route = 3;
+}
