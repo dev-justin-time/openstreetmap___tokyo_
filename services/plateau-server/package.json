@@ -1,0 +1,13 @@
+{
+  "name": "plateau-server",
+  "version": "1.0.0",
+  "description": "CORS-enabled local 3D Tile server for PLATEAU CityGML data",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.0"
+  }
+}
