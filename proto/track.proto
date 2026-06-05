@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package track;
 
+// Single sample point
 message Point {
   double lat = 1;
   double lon = 2;
@@ -9,12 +10,28 @@ message Point {
   int64 time_unix_ms = 4;
 }
 
+// Track segment composed of points
 message TrackSegment {
   repeated Point points = 1;
 }
 
+// Primary summary returned by fast processors
 message TrackSummary {
   int32 points = 1;
   double distance_m = 2;
   double elevation_gain_m = 3;
+}
+
+// Batched driver update (for telemetry gRPC/Protobuf streaming or batched POSTs)
+message DriverUpdate {
+  string id = 1;
+  double lat = 2;
+  double lon = 3;
+  string status = 4;
+  int64 ts_unix_ms = 5;
+}
+
+// Batch of driver updates to reduce HTTP/GPRC call overhead
+message TrackBatch {
+  repeated DriverUpdate updates = 1;
 }

@@ -1,24 +1,26 @@
 """
-Minimal Python worker that polls the Go queue file and performs placeholder spatial analysis.
-This is a lightweight scaffold: extend with osmnx or geopandas as needed.
+Python worker updated to consume the SQLite metadata queue produced by the Go gateway.
+The worker will:
+ - connect to queue_store/queue.db
+ - poll for pending entries
+ - mark them 'processing', run analyze_secondary() using the payload_ref (local backup GPX file)
+ - save secondary analysis to services/python/analysis and mark queue row 'done'
 """
 import time
 import json
 from pathlib import Path
+import sqlite3
+import os
 
-QUEUE = Path("services/go/queue.log")
+QUEUE_DB = Path("queue_store/queue.db")
 ANALYSIS_DIR = Path("services/python/analysis")
 ANALYSIS_DIR.mkdir(parents=True, exist_ok=True)
 
-def analyze_secondary(entry):
+def analyze_secondary_from_file(primary_json_str, gpx_path):
     """
-    Secondary, richer analysis using gpxpy + geopandas/osmnx/pandas/shapely/matplotlib.
-    Expects `entry` to be a dict with keys:
-      - primary: the rust summary dict
-      - gpx_raw: string contents of the GPX file
-    Produces a 'secondary' dict with richer metrics and saves a plotted route PNG.
+    Secondary analysis reading the GPX from file path.
+    Returns a dict with analysis results (or error keys).
     """
-    import json
     try:
         import gpxpy
         import gpxpy.gpx
@@ -30,7 +32,12 @@ def analyze_secondary(entry):
         return {'error': 'missing libraries in environment: ' + str(e)}
 
     res = {}
-    gpx_text = entry.get('gpx_raw', '')
+    try:
+        with open(gpx_path, 'r', encoding='utf-8', errors='ignore') as fh:
+            gpx_text = fh.read()
+    except Exception as e:
+        return {'error': f'failed to read gpx file {gpx_path}: {e}'}
+
     # parse GPX
     try:
         gpx = gpxpy.parse(gpx_text)
@@ -49,6 +56,53 @@ def analyze_secondary(entry):
                     'ele': p.elevation if p.elevation is not None else 0.0,
                     'time': p.time.isoformat() if p.time else None
                 })
+
+    # If trace is long, downsample using Douglas-Peucker to reduce heavy processing cost
+    def douglas_peucker(points, epsilon):
+        # points: list of dicts with 'lat','lon'
+        if not points or len(points) < 3:
+            return points
+        import math
+        def perp_distance(a, b, p):
+            # a,b,p are (lat,lon)
+            x0, y0 = p
+            x1, y1 = a
+            x2, y2 = b
+            num = abs((y2 - y1)*x0 - (x2 - x1)*y0 + x2*y1 - y2*x1)
+            den = math.hypot(y2 - y1, x2 - x1)
+            return num / den if den != 0 else math.hypot(x0 - x1, y0 - y1)
+        def rdp(pts):
+            if len(pts) < 3:
+                return pts
+            # find point with max distance
+            a = (pts[0]['lat'], pts[0]['lon'])
+            b = (pts[-1]['lat'], pts[-1]['lon'])
+            maxd = 0.0
+            idx = 0
+            for i in range(1, len(pts)-1):
+                d = perp_distance(a, b, (pts[i]['lat'], pts[i]['lon']))
+                if d > maxd:
+                    idx = i
+                    maxd = d
+            if maxd > epsilon:
+                left = rdp(pts[:idx+1])
+                right = rdp(pts[idx:])
+                return left[:-1] + right
+            else:
+                return [pts[0], pts[-1]]
+        return rdp(points)
+
+    # choose epsilon dynamically based on point count and bounding box
+    if len(pts) > 800:
+        # compute bbox diagonal in degrees approx
+        lats = [p['lat'] for p in pts]
+        lons = [p['lon'] for p in pts]
+        lat_span = max(lats) - min(lats) if lats else 0.0
+        lon_span = max(lons) - min(lons) if lons else 0.0
+        # set epsilon roughly as small fraction of diagonal
+        diag = (lat_span**2 + lon_span**2) ** 0.5
+        epsilon = max(1e-6, diag * 0.002)  # tunable
+        pts = douglas_peucker(pts, epsilon)
 
     if not pts:
         res['error'] = 'no points found'
@@ -115,36 +169,58 @@ def analyze_secondary(entry):
     return res
 
 def run():
-    last_size = 0
+    if not QUEUE_DB.exists():
+        print("queue DB not found at", QUEUE_DB, "waiting for it to appear...")
+    # connect with sqlite3 - allow other writers
     while True:
-        if QUEUE.exists():
-            size = QUEUE.stat().st_size
-            if size > last_size:
-                with QUEUE.open('r', encoding='utf-8') as f:
-                    f.seek(last_size)
-                    for line in f:
-                        line = line.strip()
-                        if not line:
-                            continue
-                        try:
-                            entry = json.loads(line)
-                        except Exception:
-                            entry = {"raw": line}
+        try:
+            conn = sqlite3.connect(str(QUEUE_DB), timeout=5, isolation_level=None)
+            break
+        except Exception as e:
+            print("waiting for queue DB:", e)
+            time.sleep(2)
 
-                        # If a primary summary exists but no secondary, run heavy analysis
-                        primary = entry.get('primary')
-                        secondary = entry.get('secondary')
-                        if primary is not None and secondary is None:
-                            sec = analyze_secondary(entry)
-                            # persist secondary alongside a timestamped file for later inspection
-                            outfile = ANALYSIS_DIR / f"analysis_{int(time.time())}.json"
-                            with outfile.open('w', encoding='utf-8') as out:
-                                json.dump({'primary': primary, 'secondary': sec}, out, ensure_ascii=False, indent=2)
-                            print("Secondary analysis saved:", outfile)
-                        else:
-                            print("Skipping entry (no primary or already secondary)", entry.get('primary') is not None)
-                last_size = size
-        time.sleep(2)
+    cur = conn.cursor()
+    while True:
+        try:
+            # fetch a small batch of pending rows
+            cur.execute("SELECT id, payload_ref, primary_json FROM queue WHERE status = 'pending' ORDER BY created_at LIMIT 4")
+            rows = cur.fetchall()
+            if not rows:
+                time.sleep(2)
+                continue
+
+            for row in rows:
+                qid, payload_ref, primary_json = row
+                # attempt to atomically mark processing if still pending
+                try:
+                    cur.execute("UPDATE queue SET status='processing', attempts=attempts+1 WHERE id = ? AND status = 'pending'", (qid,))
+                    if cur.rowcount == 0:
+                        # someone else picked it
+                        continue
+                except Exception as e:
+                    print("failed to mark processing:", e)
+                    continue
+
+                # do secondary analysis using file at payload_ref
+                result = analyze_secondary_from_file(primary_json, payload_ref)
+                # persist secondary output
+                outpath = ANALYSIS_DIR / f"analysis_{int(time.time())}_{qid}.json"
+                try:
+                    with open(outpath, 'w', encoding='utf-8') as out:
+                        json.dump({'primary': json.loads(primary_json) if primary_json else None, 'secondary': result}, out, ensure_ascii=False, indent=2)
+                    # mark done
+                    cur.execute("UPDATE queue SET status='done' WHERE id = ?", (qid,))
+                    print("Saved secondary analysis:", outpath)
+                except Exception as e:
+                    print("failed to save analysis for", qid, e)
+                    # revert to pending so it can be retried later
+                    cur.execute("UPDATE queue SET status='pending' WHERE id = ?", (qid,))
+            # small pause between batches
+            time.sleep(0.5)
+        except Exception as e:
+            print("worker loop error:", e)
+            time.sleep(2)
 
 if __name__ == "__main__":
     run()
