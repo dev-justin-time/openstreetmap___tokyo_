@@ -7,7 +7,11 @@
   },
   "scripts": {
     "start": "serve -s . -l 8080",
-    "build": "echo \"No build step (ES modules)\"",
+    "build": "npm run build:go && npm run build:rust",
+    "build:go": "cd services/go && go build -o go-gateway.exe .",
+    "build:rust": "cd services/rust && cargo build --release",
+    "build:all": "npm run build && npm run build:frontend",
+    "build:frontend": "echo \"No frontend build step (native ES modules)\"",
     "lint": "eslint . --ext .js",
     "format": "prettier --write ."
   },

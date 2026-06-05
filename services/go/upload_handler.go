@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 // lightweight instrument wrapper moved here for clarity

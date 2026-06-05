@@ -1,5 +1,5 @@
 // ui.js
-import { appConfig } from "./frontend/config.js";
+import { appConfig } from "./config.js";
 import { map } from "./map.js";
 import { money, fuelLiters, currentSpeedKmph, vehicleSpeedMps, followCar, routeCoords, routeIndexFloat, routeOriginalCoords, CURRENT_COUNTRY_NAME, CURRENT_ROUTE_NAME, CURRENT_ROAD_TYPE } from "./simulation.js";
 import { distanceToIndexFraction, formatDistanceForDisplay, formatManeuver, getManeuverIconSVG, containsCJK, romanizePlaceNameIfNeeded } from "./utils.js";

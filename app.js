@@ -25,7 +25,7 @@ function initMap() {
 
 function setupLocationTracking() {
   if (!navigator.geolocation) {
-    showError('Geolocalización no disponible en su navegador');
+      showError('Geolocation not available in your browser');
     return;
   }
 
@@ -53,7 +53,7 @@ function setupLocationTracking() {
       }
     },
     error => {
-      showError('Error al obtener la ubicación: ' + error.message);
+      showError('Error getting location: ' + error.message);
     },
     {
       enableHighAccuracy: true,
@@ -95,7 +95,7 @@ function startWatchingPosition() {
       if (marker) marker.setLatLng([pos.lat, pos.lng]);
     },
     error => {
-      showError('Error al seguir la ubicación: ' + error.message);
+      showError('Error following location: ' + error.message);
     },
     {
       enableHighAccuracy: true,
@@ -144,7 +144,7 @@ function toggleConnection() {
   isConnected = !isConnected;
 
   if (isConnected) {
-    btn.textContent = 'Desconectarse';
+    btn.textContent = 'Disconnect';
     btn.classList.add('connected');
     startTime = Date.now();
     timerContainer.classList.remove('hidden');
@@ -152,7 +152,7 @@ function toggleConnection() {
     timerInterval = setInterval(updateTimer, 1000);
     startWatchingPosition();
   } else {
-    btn.textContent = 'Conectarse';
+    btn.textContent = 'Connect';
     btn.classList.remove('connected');
     timerContainer.classList.add('hidden');
     clearInterval(timerInterval);
@@ -268,7 +268,7 @@ function switchGearTab(tab) {
   runtimePanel.setAttribute('aria-hidden', 'true');
 
   if (tab === 'assign') {
-    title.textContent = 'Asignaciones';
+    title.textContent = 'Assignments';
     tabAssignBtn.setAttribute('aria-selected', 'true');
     assignPanel.classList.remove('hidden');
     assignPanel.setAttribute('aria-hidden', 'false');
@@ -278,7 +278,7 @@ function switchGearTab(tab) {
     runtimePanel.classList.remove('hidden');
     runtimePanel.setAttribute('aria-hidden', 'false');
   } else {
-    title.textContent = 'Qué rastrear';
+    title.textContent = 'What to track';
     tabTrackBtn.setAttribute('aria-selected', 'true');
     trackPanel.classList.remove('hidden');
   }
@@ -300,7 +300,7 @@ function populateDriverSelect() {
   }
   const blank = document.createElement('option');
   blank.value = '';
-  blank.textContent = 'Seleccione conductor…';
+  blank.textContent = 'Select driver\u2026';
   sel.appendChild(blank);
   ids.forEach(id => {
     const opt = document.createElement('option');
@@ -336,7 +336,7 @@ function assignToDriver(evt) {
   if (!sel || !out) return;
   const driverId = sel.value;
   if (!driverId) {
-    out.textContent = 'Seleccione un conductor para asignar.';
+    out.textContent = 'Select a driver to assign.';
     return;
   }
   const payload = {
@@ -488,7 +488,7 @@ function loadRuntimeSettings() {
   simBatchInput.value = settings.simBatchSize || 50;
   rustAddrsInput.value = settings.rustAddrs || 'http://127.0.0.1:3030';
   // set poll button label based on current polling
-  pollToggleBtn.textContent = driversPollingInterval ? 'Detener polling' : 'Iniciar polling';
+  pollToggleBtn.textContent = driversPollingInterval ? 'Stop polling' : 'Start polling';
 
   // apply interval if polling already running
   if (driversPollingInterval) {
@@ -504,12 +504,12 @@ function toggleDriversPolling() {
   if (!pollBtn || !pollIntervalInput) return;
   if (driversPollingInterval) {
     stopDriversPolling();
-    pollBtn.textContent = 'Iniciar polling';
+    pollBtn.textContent = 'Start polling';
   } else {
     const ms = Math.max(500, parseInt(pollIntervalInput.value || '2000', 10));
     driversPollingInterval = setInterval(fetchAndRenderDrivers, ms);
     fetchAndRenderDrivers();
-    pollBtn.textContent = 'Detener polling';
+    pollBtn.textContent = 'Stop polling';
   }
   persistRuntimeSettingsToStorage({
     pollInterval: parseInt(document.getElementById('poll-interval').value || '2000', 10),
@@ -565,18 +565,18 @@ function startSimulatorFromUI() {
   // If Go gateway exposes a simulator control, try calling it. Fallback: call generate-drivers to prime data.
   fetch('/generate-drivers?count=' + encodeURIComponent(Math.max(1, count))).then(r => {
     if (r.ok) {
-      document.getElementById('gear-output').textContent = `Generador iniciado: count=${count}`;
+      document.getElementById('gear-output').textContent = `Generator started: count=${count}`;
     } else {
-      document.getElementById('gear-output').textContent = `Generador no disponible (HTTP ${r.status})`;
+      document.getElementById('gear-output').textContent = `Generator unavailable (HTTP ${r.status})`;
     }
   }).catch(e => {
-    document.getElementById('gear-output').textContent = 'Error al contactar el generador: ' + e.message;
+    document.getElementById('gear-output').textContent = 'Error contacting generator: ' + e.message;
   });
 }
 
 function stopSimulatorFromUI() {
   // Frontend cannot forcibly stop background Go simulator; attempt to notify driverhome endpoint or inform user.
-  document.getElementById('gear-output').textContent = 'Solicitud de detener simulador enviada (si está disponible).';
+  document.getElementById('gear-output').textContent = 'Stop simulator request sent (if available).';
   // If there was an admin endpoint it could be called here; we keep a best-effort message.
 }
 

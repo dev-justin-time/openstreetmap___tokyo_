@@ -9,6 +9,8 @@ serde_json = "1.0"
 warp = "0.3"
 gpx = "0.10"
 tokio = { version = "1", features = ["full"] }
+prometheus = { version = "0.13", features = ["process"] }
+async-stream = "0.3"
 
 # spatial index and lightweight on-disk cache
 rstar = "0.11"

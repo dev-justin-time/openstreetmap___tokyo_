@@ -1,6 +1,6 @@
 // map.js
 import * as L from "leaflet";
-import { appConfig } from "./frontend/config.js";
+import { appConfig } from "./config.js";
 
 // Initialize the map
 export const map = L.map("map", {

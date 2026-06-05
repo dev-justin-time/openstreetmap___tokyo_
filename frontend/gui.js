@@ -4,7 +4,7 @@ import { updateHUD, updateTurnUI, showLoading, hideLoading } from "./ui.js";
 import { setCurrencyForCountryCode, fuelLiters, money, setFuelLiters, setMoney, setCurrentCountryName, setFollowCar, setCurrentRouteName, setCurrentRoadType, startAnimation, getEffectiveCruiseKmph } from "./simulation.js";
 import { driverMarker, map, markerLayer, addMarker } from "./map.js";
 import { fetchRouteAlternatives, fetchRoute } from "./api.js";
-import { showConfirmModal } from "../confirmModal.js";
+import { showConfirmModal } from "./confirmModal.js";
 
 export function initGUI() {
   const gui = document.getElementById("gui");

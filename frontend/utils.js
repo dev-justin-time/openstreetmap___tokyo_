@@ -1,6 +1,6 @@
 // utils.js
 import { map } from "./map.js";
-import { appConfig } from "./frontend/config.js";
+import { appConfig } from "./config.js";
 
 // @tweakable [use remote romanization via Nominatim (true) or return original name immediately (false)]
 const UTIL_USE_REMOTE_ROMANIZE = true;

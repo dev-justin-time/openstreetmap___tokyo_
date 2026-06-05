@@ -25,7 +25,6 @@ startSimulator launches N simulated drivers and periodically sends updates.
 Uses rendezvous hashing to pick Rust instance for each driver id.
 */
 func startSimulator(count int, interval time.Duration, rustAddrs []string) {
-	rand.Seed(time.Now().UnixNano())
 	centerLat := 19.4326
 	centerLon := -99.1332
 

@@ -242,7 +242,7 @@ function initMap() {
 
 function setupLocationTracking() {
   if (!navigator.geolocation) {
-    showError('Geolocalización no disponible en su navegador');
+      showError('Geolocation not available in your browser');
     return;
   }
 
@@ -270,7 +270,7 @@ function setupLocationTracking() {
       }
     },
     error => {
-      showError('Error al obtener la ubicación: ' + error.message);
+      showError('Error getting location: ' + error.message);
     },
     {
       enableHighAccuracy: true,
@@ -312,7 +312,7 @@ function startWatchingPosition() {
       if (marker) marker.setLatLng([pos.lat, pos.lng]);
     },
     error => {
-      showError('Error al seguir la ubicación: ' + error.message);
+      showError('Error following location: ' + error.message);
     },
     {
       enableHighAccuracy: true,
@@ -361,7 +361,7 @@ function toggleConnection() {
   isConnected = !isConnected;
 
   if (isConnected) {
-    btn.textContent = 'Desconectarse';
+    btn.textContent = 'Disconnect';
     btn.classList.add('connected');
     startTime = Date.now();
     timerContainer.classList.remove('hidden');
@@ -369,7 +369,7 @@ function toggleConnection() {
     timerInterval = setInterval(updateTimer, 1000);
     startWatchingPosition();
   } else {
-    btn.textContent = 'Conectarse';
+    btn.textContent = 'Connect';
     btn.classList.remove('connected');
     timerContainer.classList.add('hidden');
     clearInterval(timerInterval);

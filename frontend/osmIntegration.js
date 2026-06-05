@@ -1,6 +1,6 @@
 // osmIntegration.js
 import { appConfig } from "./config.js";
-import { map } from "../map.js";
+import { map } from "./map.js";
 
 /* @tweakable [Nominatim base URL used for place search / reverse geocoding] */
 const NOMINATIM_BASE = appConfig.OSM_NOMINATIM_BASE || "https://nominatim.openstreetmap.org";

@@ -1,5 +1,5 @@
 // betaBanner.js
-import { appConfig } from "./frontend/config.js";
+import { appConfig } from "./config.js";
 
 export function initBetaBanner() {
   const banner = document.getElementById("osm-beta-banner");

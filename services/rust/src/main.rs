@@ -4,17 +4,13 @@ use std::hash::{Hash, Hasher};
 use std::collections::hash_map::DefaultHasher;
 use warp::Filter;
 use serde::{Serialize, Deserialize};
-use tokio::sync::{Mutex, RwLock, broadcast};
+use tokio::sync::{Mutex, broadcast};
 use std::collections::HashMap;
 
 // Prometheus
 use prometheus::{Encoder, TextEncoder, register_counter_vec, register_histogram_vec, register_int_gauge, CounterVec, HistogramVec, IntGauge};
 
-// for reading headers
-use warp::http::HeaderMap;
 
-// new deps (kept for future use, rstar sled not used in this simplified replacement but left in Cargo)
-use serde_json::json;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 struct DriverUpdate {
@@ -82,6 +78,7 @@ impl Shard {
     }
 
     // Remove by id if present (O(1)). Returns true if removed.
+    #[allow(dead_code)]
     fn remove(&mut self, id: &str) -> bool {
         if let Some(&idx) = self.index_map.get(id) {
             self.buffer[idx] = None;
@@ -236,9 +233,9 @@ async fn main() {
     let instance_info = warp::any().map(move || (instance_index, instance_count));
 
     // Prometheus metrics clones into closures
-    let req_counter_filter = warp::any().map(move || req_counter.clone());
-    let req_latency_filter = warp::any().map(move || req_latency.clone());
-    let drivers_count_filter = warp::any().map(move || drivers_count.clone());
+    let _req_counter_filter = warp::any().map(move || req_counter.clone());
+    let _req_latency_filter = warp::any().map(move || req_latency.clone());
+    let _drivers_count_filter = warp::any().map(move || drivers_count.clone());
 
     // POST /track  -> accept JSON driver update and broadcast/store it
     let track = warp::post()
@@ -262,7 +259,6 @@ async fn main() {
     let drivers = warp::get()
         .and(warp::path("drivers"))
         .and(state_filter.clone())
-        .and(drivers_count_filter.clone())
         .and_then(handle_drivers);
 
     // GET /nearby?lat=&lon=&radius_deg=0.01 -> return nearby drivers using per-shard scan
@@ -322,15 +318,6 @@ async fn handle_track(update: DriverUpdate, state: SharedState, tx: broadcast::S
         state.insert(update.clone()).await;
         // broadcast (best-effort)
         let _ = tx.send(update.clone());
-        // update approximate gauge
-        // compute total drivers count (cheap approximation by summing shards sizes)
-        let all = state.all().await;
-        // try to set gauge; ignore error
-        let _ = std::panic::catch_unwind(|| {
-            if let Some(gauge) = prometheus::gather().into_iter().find_map(|mf| None) {
-                // noop: we can't set via gathered families; instead rely on external metrics above
-            }
-        });
         Ok(warp::reply::with_status("ok", warp::http::StatusCode::OK))
     } else {
         // Not owned by this instance -> respond 204 No Content to indicate forward/ignore
@@ -385,14 +372,6 @@ async fn handle_track_batch(updates: Vec<DriverUpdate>, state: SharedState, tx: 
             let _ = tx.send(u.clone());
         }
     }
-
-    // update approximate drivers gauge by summing shard sizes (cheap)
-    let mut total = 0usize;
-    for shard in &state.shards {
-        let s = shard.lock().await;
-        total += s.size;
-    }
-    // Note: drivers_count gauge capture was registered earlier; to avoid borrow issues we omit direct set here.
 
     Ok(warp::reply::with_status("ok", warp::http::StatusCode::OK))
 }

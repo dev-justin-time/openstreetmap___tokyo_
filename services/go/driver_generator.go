@@ -92,7 +92,6 @@ func driverHomeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func generateEvenlyDispersedDrivers(count int, centerLat, centerLon, radiusMiles float64) []DriverRecord {
-	rand.Seed(time.Now().UnixNano())
 	drivers := make([]DriverRecord, 0, count)
 
 	// Convert miles to meters

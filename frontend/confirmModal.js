@@ -1,5 +1,5 @@
 // confirmModal.js
-import { appConfig } from "./frontend/config.js";
+import { appConfig } from "./config.js";
 
 const confirmModal = document.getElementById("confirm-modal");
 const confirmOk = document.getElementById("confirm-ok");
