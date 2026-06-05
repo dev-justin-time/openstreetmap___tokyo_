@@ -41,6 +41,12 @@
         reverse_proxy rust-tracker:3030
     }
 
+    # GPX Store (parse, persist, export GPX files)
+    handle_path /gpx/* {
+        rewrite * /{path}
+        reverse_proxy go-gateway:8083
+    }
+
     # Python visualizer (operational maps, heatmaps, dashboard)
     handle_path /viz/* {
         rewrite * /{path}

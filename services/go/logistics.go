@@ -14,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/gorilla/websocket"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 
@@ -114,24 +115,149 @@ func (s *OrderStore) UpdateStatus(id string, status OrderStatus, driverID string
 	return true
 }
 
-// ─── WebSocket hub ──────────────────────────────────────────────────────────
+// ─── WebSocket hub (driver push notifications) ───────────────────────────────
+
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+	CheckOrigin:     func(r *http.Request) bool { return true },
+}
 
 type WSClient struct {
-	ID     string
-	ch     chan []byte
-	done   chan struct{}
-	driver map[string]bool // driver ids this client cares about
+	ID       string
+	DriverID string
+	conn     *websocket.Conn
+	done     chan struct{}
+	mu       sync.Mutex // protects write on conn
 }
 
 type WSHub struct {
 	mu      sync.RWMutex
-	clients map[string]*WSClient
+	clients map[string]*WSClient // keyed by driver_id
 }
 
 var wsHub = &WSHub{clients: make(map[string]*WSClient)}
 
-// Upgrade handler: in production use gorilla/websocket; here we keep it simple
-// with SSE fallback. The frontend reads /events (Rust SSE) for live driver positions.
+// Register adds a WebSocket client keyed by driver ID.
+func (h *WSHub) Register(client *WSClient) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	h.clients[client.DriverID] = client
+	log.Printf("[ws] driver %s connected", client.DriverID)
+}
+
+// Unregister removes a WebSocket client.
+func (h *WSHub) Unregister(driverID string) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	if c, ok := h.clients[driverID]; ok {
+		close(c.done)
+		delete(h.clients, driverID)
+		log.Printf("[ws] driver %s disconnected", driverID)
+	}
+}
+
+// BroadcastToDriver sends a JSON message to a specific driver's WebSocket.
+func (h *WSHub) BroadcastToDriver(driverID string, msg []byte) {
+	h.mu.RLock()
+	client, ok := h.clients[driverID]
+	h.mu.RUnlock()
+	if !ok {
+		return
+	}
+	select {
+	case <-client.done:
+		h.Unregister(driverID)
+	default:
+		client.mu.Lock()
+		defer client.mu.Unlock()
+		client.conn.SetWriteDeadline(time.Now().Add(5 * time.Second))
+		if err := client.conn.WriteMessage(websocket.TextMessage, msg); err != nil {
+			log.Printf("[ws] write error to %s: %v", driverID, err)
+			h.Unregister(driverID)
+		}
+	}
+}
+
+// BroadcastToAll sends a JSON message to all connected drivers.
+func (h *WSHub) BroadcastToAll(msg []byte) {
+	h.mu.RLock()
+	clients := make([]*WSClient, 0, len(h.clients))
+	for _, c := range h.clients {
+		clients = append(clients, c)
+	}
+	h.mu.RUnlock()
+	for _, c := range clients {
+		h.BroadcastToDriver(c.DriverID, msg)
+	}
+}
+
+
+
+// ─── SSE fallback for web clients ─────────────────────────────────────────────
+
+type SSEBroker struct {
+	mu      sync.RWMutex
+	clients map[string]chan string
+}
+
+var sseBroker = &SSEBroker{clients: make(map[string]chan string)}
+
+func (b *SSEBroker) AddClient(id string) chan string {
+	ch := make(chan string, 16)
+	b.mu.Lock()
+	b.clients[id] = ch
+	b.mu.Unlock()
+	return ch
+}
+
+func (b *SSEBroker) RemoveClient(id string) {
+	b.mu.Lock()
+	delete(b.clients, id)
+	b.mu.Unlock()
+}
+
+func (b *SSEBroker) Broadcast(event string, data string) {
+	msg := fmt.Sprintf("event: %s\ndata: %s\n\n", event, data)
+	b.mu.RLock()
+	chans := make([]chan string, 0, len(b.clients))
+	for _, ch := range b.clients {
+		chans = append(chans, ch)
+	}
+	b.mu.RUnlock()
+	for _, ch := range chans {
+		select {
+		case ch <- msg:
+		default:
+		}
+	}
+}
+
+func handleSSE(w http.ResponseWriter, r *http.Request) {
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		http.Error(w, "streaming unsupported", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+
+	id := fmt.Sprintf("sse-%d", time.Now().UnixNano())
+	ch := sseBroker.AddClient(id)
+	defer sseBroker.RemoveClient(id)
+
+	ctx := r.Context()
+	for {
+		select {
+		case msg := <-ch:
+			fmt.Fprint(w, msg)
+			flusher.Flush()
+		case <-ctx.Done():
+			return
+		}
+	}
+}
 
 // ─── REST handlers ──────────────────────────────────────────────────────────
 
@@ -219,21 +345,59 @@ func handleDispatch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Query nearby drivers from SQLite RTree
-	drivers, err := QueryNearbyDrivers(order.PickupLat, order.PickupLon, 5000, 20)
-	if err != nil || len(drivers) == 0 {
-		// Fallback: query Rust's in-memory nearby endpoint
-		drivers = queryRustNearby(order.PickupLat, order.PickupLon, 5000)
-		if len(drivers) == 0 {
-			http.Error(w, `{"error":"no_nearby_drivers"}`, http.StatusNotFound)
+	var assignedID string
+
+	// When NYC Demo is active, use the DriverManager for dispatch
+	if os.Getenv("NYC_DEMO") == "1" && nycDriverManager != nil {
+		drivers := nycDriverManager.GetAllDrivers()
+		var bestDriver *Driver
+		bestDist := math.MaxFloat64
+		for _, d := range drivers {
+			if d.Status != "available" {
+				continue
+			}
+			dist := haversine(order.PickupLat, order.PickupLon, d.Lat, d.Lng)
+			if dist < bestDist {
+				bestDist = dist
+				bestDriver = &d
+			}
+		}
+		if bestDriver == nil {
+			http.Error(w, `{"error":"no_available_drivers"}`, http.StatusNotFound)
 			return
 		}
+		assignedID = bestDriver.ID
+
+		// Assign pickup as the driver's destination
+		nycDriverManager.AssignDestination(assignedID, &Destination{
+			Lat: order.PickupLat,
+			Lng: order.PickupLon,
+		})
+	} else {
+		// Query nearby drivers from SQLite RTree
+		drivers, err := QueryNearbyDrivers(order.PickupLat, order.PickupLon, 5000, 20)
+		if err != nil || len(drivers) == 0 {
+			// Fallback: query Rust's in-memory nearby endpoint
+			drivers = queryRustNearby(order.PickupLat, order.PickupLon, 5000)
+			if len(drivers) == 0 {
+				http.Error(w, `{"error":"no_nearby_drivers"}`, http.StatusNotFound)
+				return
+			}
+		}
+		assignedID = drivers[0]
 	}
 
-	// Pick the first available driver (Rust /nearby returns ordered by recency)
-	assignedID := drivers[0]
 	orderStore.UpdateStatus(order.ID, OrderAssigned, assignedID)
 	promOrdersDispatched.Inc()
+
+	// Broadcast dispatch event via WebSocket
+	event, _ := json.Marshal(map[string]interface{}{
+		"type":    "dispatch",
+		"order":   order,
+		"driver":  assignedID,
+	})
+	wsHub.BroadcastToDriver(assignedID, event)
+	sseBroker.Broadcast("dispatch", string(event))
 
 	resp, _ := json.Marshal(map[string]interface{}{
 		"status":    "assigned",
@@ -265,6 +429,39 @@ func handleUpdateOrderStatus(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error":"order_not_found"}`, http.StatusNotFound)
 		return
 	}
+
+	// Update driver destination on status change (NYC_DEMO mode)
+	if os.Getenv("NYC_DEMO") == "1" && nycDriverManager != nil && req.DriverID != "" {
+		order := orderStore.Get(orderID)
+		if order != nil {
+			switch OrderStatus(req.Status) {
+			case OrderPickedUp:
+				// Set destination to dropoff
+				nycDriverManager.AssignDestination(req.DriverID, &Destination{
+					Lat: order.DropoffLat,
+					Lng: order.DropoffLon,
+				})
+			case OrderDelivered:
+				// Set driver back to available with random movement
+				nycDriverManager.MarkAvailable(req.DriverID)
+			case OrderCancelled:
+				nycDriverManager.MarkAvailable(req.DriverID)
+			}
+		}
+	}
+
+	// Broadcast status update via WebSocket/SSE
+	event, _ := json.Marshal(map[string]interface{}{
+		"type":    "order_status",
+		"order_id": orderID,
+		"status":  req.Status,
+		"driver_id": req.DriverID,
+	})
+	if req.DriverID != "" {
+		wsHub.BroadcastToDriver(req.DriverID, event)
+	}
+	sseBroker.Broadcast("order_status", string(event))
+
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(`{"status":"updated"}`))
 }
@@ -310,6 +507,11 @@ func estimateRoute(lat1, lon1, lat2, lon2 float64) (distM, durSec float64) {
 	distM = R * c
 	durSec = distM / 8.0 // assume ~8 m/s (~29 km/h) average urban speed
 	return
+}
+
+func haversine(lat1, lon1, lat2, lon2 float64) float64 {
+	dist, _ := estimateRoute(lat1, lon1, lat2, lon2)
+	return dist
 }
 
 var rustHTTP = &http.Client{Timeout: 3 * time.Second}
@@ -457,7 +659,78 @@ var (
 	})
 )
 
-// ─── Init: attach logistics routes to the gateway mux ────────────────────────
+// ─── WebSocket handler (upgrade HTTP to WS) ──────────────────────────────────
+
+func handleWSDriver(w http.ResponseWriter, r *http.Request) {
+	driverID := r.URL.Query().Get("driver_id")
+	if driverID == "" {
+		http.Error(w, `{"error":"driver_id required"}`, http.StatusBadRequest)
+		return
+	}
+
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Printf("[ws] upgrade error: %v", err)
+		return
+	}
+
+	client := &WSClient{
+		ID:       fmt.Sprintf("ws-%d", time.Now().UnixNano()),
+		DriverID: driverID,
+		conn:     conn,
+		done:     make(chan struct{}),
+	}
+	wsHub.Register(client)
+
+	// Read pump: handle incoming messages (pings, status updates)
+	go func() {
+		defer func() {
+			wsHub.Unregister(driverID)
+			conn.Close()
+		}()
+		for {
+			_, msg, err := conn.ReadMessage()
+			if err != nil {
+				return
+			}
+			// Handle incoming messages from driver app
+			var evt struct {
+				Type    string `json:"type"`
+				OrderID string `json:"order_id,omitempty"`
+				Status  string `json:"status,omitempty"`
+			}
+			if json.Unmarshal(msg, &evt) == nil && evt.Type == "status_update" && evt.OrderID != "" {
+				// Driver app reports status change
+				orderStore.UpdateStatus(evt.OrderID, OrderStatus(evt.Status), driverID)
+				// Update driver destination if needed
+				if os.Getenv("NYC_DEMO") == "1" && nycDriverManager != nil {
+					order := orderStore.Get(evt.OrderID)
+					if order != nil {
+						switch OrderStatus(evt.Status) {
+						case OrderPickedUp:
+							nycDriverManager.AssignDestination(driverID, &Destination{
+								Lat: order.DropoffLat,
+								Lng: order.DropoffLon,
+							})
+						case OrderDelivered, OrderCancelled:
+							nycDriverManager.MarkAvailable(driverID)
+						}
+					}
+				}
+				// Acknowledge
+				ack, _ := json.Marshal(map[string]string{
+					"type":    "ack",
+					"order_id": evt.OrderID,
+					"status":  evt.Status,
+				})
+				client.mu.Lock()
+				conn.SetWriteDeadline(time.Now().Add(5 * time.Second))
+				conn.WriteMessage(websocket.TextMessage, ack)
+				client.mu.Unlock()
+			}
+		}
+	}()
+}
 
 func initLogistics() {
 	initAuth()
@@ -489,6 +762,12 @@ func initLogistics() {
 		http.Error(w, `{"error":"method_not_allowed"}`, http.StatusMethodNotAllowed)
 	}), rateLimiter)))
 	mux.Handle("/api/stats", authMiddleware(rateLimitMiddleware(http.HandlerFunc(handleStats), rateLimiter)))
+
+	// WebSocket endpoint for driver app (no auth via WS, driver_id in query)
+	mux.HandleFunc("/ws/driver", handleWSDriver)
+
+	// SSE endpoint for web client fallback
+	mux.HandleFunc("/events", handleSSE)
 
 	// Start API server on port 8082 (separate from gateway 8080 and route-engine 8081)
 	go func() {

@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mission Control - Fleet Interface</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Load Tailwind Configuration -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-container": "#2ecc71",
+                    "surface-container-lowest": "#0c0e12",
+                    "outline-variant": "#5c3f41",
+                    "background": "#111317",
+                    "surface-bright": "#37393e",
+                    "on-secondary": "#003919",
+                    "surface-tint": "#ffb2b7",
+                    "on-secondary-fixed-variant": "#005228",
+                    "tertiary-fixed": "#f0dbff",
+                    "primary": "#ff375f",
+                    "surface-dim": "#111317",
+                    "on-primary-fixed-variant": "#91002b",
+                    "on-error-container": "#ffdad6",
+                    "on-background": "#e2e2e8",
+                    "on-tertiary": "#490080",
+                    "secondary-fixed": "#6bfe9c",
+                    "outline": "#ac888a",
+                    "on-error": "#690005",
+                    "tertiary": "#ddb7ff",
+                    "inverse-on-surface": "#2f3035",
+                    "surface-container-low": "#1a1c20",
+                    "tertiary-container": "#2ecc71",
+                    "on-primary": "#ffffff",
+                    "on-surface-variant": "#e5bdbe",
+                    "secondary": "#2ecc71",
+                    "surface-container-highest": "#333539",
+                    "inverse-primary": "#be003b",
+                    "primary-fixed": "#ffdadb",
+                    "on-primary-fixed": "#40000e",
+                    "on-tertiary-fixed": "#2c0051",
+                    "tertiary-fixed-dim": "#ddb7ff",
+                    "error-container": "#93000a",
+                    "on-secondary-container": "#00431f",
+                    "on-secondary-fixed": "#00210c",
+                    "on-primary-container": "#5b0017",
+                    "surface": "#111317",
+                    "on-surface": "#e2e2e8",
+                    "on-tertiary-container": "#400071",
+                    "primary-fixed-dim": "#ffb2b7",
+                    "surface-container": "#1e2024",
+                    "error": "#ffb4ab",
+                    "surface-container-high": "#282a2e",
+                    "primary-container": "#ff375f",
+                    "inverse-surface": "#e2e2e8",
+                    "surface-variant": "#333539",
+                    "secondary-fixed-dim": "#2ecc71",
+                    "on-tertiary-fixed-variant": "#6900b3"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "base": "8px",
+                    "stack-lg": "24px",
+                    "gutter": "12px",
+                    "stack-sm": "4px",
+                    "container-padding": "16px",
+                    "stack-md": "12px"
+            },
+            "fontFamily": {
+                    "body-md": ["Inter"],
+                    "data-mono": ["JetBrains Mono"],
+                    "hud-timer": ["JetBrains Mono"],
+                    "headline-md": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "hud-display": ["JetBrains Mono"],
+                    "label-caps": ["Inter"],
+                    "headline-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "data-mono": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                    "hud-timer": ["18px", {"lineHeight": "24px", "fontWeight": "500"}],
+                    "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "hud-display": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "headline-lg": ["24px", {"lineHeight": "32px", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(26, 29, 35, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .pulse-marker {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.9); opacity: 1; box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); }
+            70% { transform: scale(1.1); opacity: 0.8; box-shadow: 0 0 0 15px rgba(46, 204, 113, 0); }
+            100% { transform: scale(0.9); opacity: 1; box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
+        }
+
+        .route-line {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: draw 5s linear forwards;
+        }
+
+        @keyframes draw {
+            to { stroke-dashoffset: 0; }
+        }
+
+        .map-bg {
+            background-color: #0c0e12;
+            background-image: 
+                radial-gradient(circle at 2px 2px, rgba(255,255,255,0.03) 1px, transparent 0);
+            background-size: 40px 40px;
+        }
+
+        .telemetry-stream {
+            mask-image: linear-gradient(to bottom, transparent, black, transparent);
+            opacity: 0.3;
+        }
+
+        .connected-glow {
+            text-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
+        }
+        
+        .disconnected-glow {
+            text-shadow: 0 0 10px rgba(255, 55, 95, 0.5);
+        }
+
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background h-screen w-screen overflow-hidden font-body-md selection:bg-primary-container selection:text-on-primary-container">
+<!-- Base Map Layer -->
+<div class="fixed inset-0 z-0 map-bg" id="simulatedMap">
+<img class="w-full h-full object-cover opacity-30 grayscale contrast-125" data-alt="A dark-themed high-contrast satellite map view of Tokyo at night, featuring glowing intricate road networks and neon blue transit lines." data-location="Tokyo, JP" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAhHC0sCmSQcd9g3RQYtC7QdsyUgUPlDlm1j5Ou3f3NMMTazCAtK3tGLxM29_dO9N6Nobdf4pJkvqoh9gw2U7B8ioOA6i1kgH2Lkxk70u-9iuFN0cDFAnMJK_4Mwjn3LMewDGv31u9o3ceBUY8KKLtiU2VWhGGJTxJOlngDyhFBkDzlcayT8gZBV9Zb8PBZiQMI_xzDcvSolPSER4NWhSj6RaNUMjVVkcebiI_VVyoPWtH4A0m30iKuXbQg1G2Sa7lF_Lnbag-XQprO"/>
+<!-- Simulated Route Overlay -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none" preserveaspectratio="none" viewbox="0 0 1000 1000">
+<defs>
+<lineargradient id="routeGradient" x1="0%" x2="100%" y1="0%" y2="100%">
+<stop offset="0%" style="stop-color:#00e5ff;stop-opacity:1"></stop>
+<stop offset="100%" style="stop-color:#007bff;stop-opacity:1"></stop>
+</lineargradient>
+</defs>
+<path class="route-line" d="M 200 800 Q 400 750 500 500 T 800 200" fill="none" id="mapRoute" stroke="url(#routeGradient)" stroke-width="4"></path>
+</svg>
+<!-- Pulsing Driver Marker -->
+<div class="absolute top-[20%] left-[80%] -translate-x-1/2 -translate-y-1/2 z-10" id="driverMarker">
+<div class="relative">
+<div class="w-6 h-6 bg-secondary rounded-full border-2 border-white pulse-marker flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px] text-on-secondary" style="font-variation-settings: 'FILL' 1;">local_shipping</span>
+</div>
+<div class="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 glass-panel rounded-lg whitespace-nowrap">
+<span class="font-data-mono text-[10px] text-secondary">UNIT-704</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Telemetry Stream Background Overlay -->
+<div class="fixed inset-y-0 left-4 w-32 z-10 telemetry-stream pointer-events-none flex flex-col gap-1 py-20 font-data-mono text-[8px] text-on-surface-variant overflow-hidden" id="telemetryBox">
+<!-- Populated by JS -->
+</div>
+<!-- Top App Bar -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-container-padding h-14 bg-background/85 backdrop-blur-md border-b border-white/15">
+<div class="flex items-center gap-gutter">
+<button class="w-8 h-8 rounded-full overflow-hidden border border-white/20 bg-surface-container active:scale-95 transition-transform" id="profileBtn">
+<img alt="Driver Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAIMHd0aPY3PxKy8-3s9CJtPzlNcGeMX2_mzH6pO1UeL99mV3T7rpgZ56bMiDInlKuuHgntKZk3xBmpcxFV16WXHq_MHcZtozZ-FeTrl0fvqGg7rDF1qUXEoEVbP6ks5oAwUtTworrq9x-zQ1DB7FYnpy4HvbNxO0pFWxR3jjXtu3OqTub3-tnqjDRAmQnd1fs_W8VZRgGtuRmd-DcK0rLaEmzwkE1SqCF9cZtzklpD4Da8qiNIvdFW7hlWaITvtcTmD6cE0p6vRkIQ"/>
+</button>
+<h1 class="text-headline-md font-headline-md text-primary tracking-widest uppercase">MISSION CONTROL</h1>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-bright/20 transition-colors active:scale-95 duration-100" id="settingsBtn">
+<span class="material-symbols-outlined text-primary" data-icon="settings">settings</span>
+</button>
+</header>
+<!-- Right HUD Telemetry -->
+<aside class="fixed top-20 right-container-padding z-40 flex flex-col gap-stack-md">
+<div class="glass-panel p-stack-md rounded-xl flex flex-col gap-stack-sm min-w-[180px]">
+<div class="flex justify-between items-center">
+<span class="text-label-caps font-label-caps text-on-surface-variant">SIGNAL</span>
+<div class="flex items-center gap-1" id="signalStrength">
+<div class="w-1 h-3 bg-secondary rounded-full"></div>
+<div class="w-1 h-4 bg-secondary rounded-full"></div>
+<div class="w-1 h-5 bg-secondary rounded-full"></div>
+<div class="w-1 h-2 bg-white/20 rounded-full"></div>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary shadow-[0_0_8px_rgba(46,204,113,0.8)]" id="statusDot"></span>
+<span class="font-hud-display text-[16px] text-secondary connected-glow" id="statusText">CONNECTED</span>
+</div>
+</div>
+<div class="glass-panel p-stack-md rounded-xl flex flex-col gap-1">
+<span class="text-label-caps font-label-caps text-on-surface-variant">ACTIVE MISSION TIME</span>
+<span class="font-hud-timer text-hud-timer text-on-surface" id="mission-timer">00:00:00</span>
+</div>
+</aside>
+<!-- Left Location HUD -->
+<aside class="fixed top-20 left-container-padding z-40 flex flex-col gap-stack-md">
+<div class="glass-panel p-stack-md rounded-xl w-[220px]">
+<div class="flex items-start gap-3">
+<div class="mt-1">
+<span class="material-symbols-outlined text-primary" data-icon="location_on">location_on</span>
+</div>
+<div>
+<span class="text-label-caps font-label-caps text-on-surface-variant block mb-1">CURRENT SECTOR</span>
+<p class="font-body-md text-on-surface font-semibold">Tokyo, JP</p>
+<p class="font-data-mono text-[12px] text-on-surface-variant">Shuto Expressway</p>
+</div>
+</div>
+</div>
+<!-- Mini Stats Grid -->
+<div class="grid grid-cols-2 gap-stack-sm w-[220px]">
+<div class="glass-panel p-stack-sm rounded-lg flex flex-col items-center">
+<span class="text-[10px] font-label-caps text-on-surface-variant uppercase">Speed</span>
+<span class="font-hud-display text-[18px] text-on-surface"><span id="speedVal">84</span><span class="text-[10px] ml-0.5">km/h</span></span>
+</div>
+<div class="glass-panel p-stack-sm rounded-lg flex flex-col items-center">
+<span class="text-[10px] font-label-caps text-on-surface-variant uppercase">Fuel</span>
+<span class="font-hud-display text-[18px] text-secondary">92<span class="text-[10px] ml-0.5">%</span></span>
+</div>
+</div>
+</aside>
+<!-- Bottom Status & Actions -->
+<div class="fixed bottom-0 left-0 w-full z-40 p-container-padding flex flex-col items-center pointer-events-none">
+<!-- Live Fleet Counter -->
+<div class="absolute bottom-6 left-container-padding pointer-events-auto">
+<div class="glass-panel px-4 py-2 rounded-full flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse" id="fleetDot"></span>
+<span class="text-label-caps font-label-caps text-on-surface">704 ACTIVE DRIVERS</span>
+</div>
+</div>
+<!-- Main Toggle Button -->
+<div class="pointer-events-auto mb-8">
+<button class="group relative flex items-center justify-center min-w-[240px] px-8 py-4 bg-primary text-on-primary font-headline-md tracking-widest rounded-xl shadow-2xl transition-all duration-300 active:scale-95 hover:shadow-[0_0_30px_rgba(255,55,95,0.4)]" id="toggleConnection">
+<div class="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl"></div>
+<span class="material-symbols-outlined mr-3" id="toggleIcon">power_settings_new</span>
+<span id="toggleText">DISCONNECT</span>
+</button>
+</div>
+<!-- Zoom Controls -->
+<div class="absolute bottom-6 right-container-padding flex flex-col gap-2 pointer-events-auto">
+<button class="glass-panel w-10 h-10 flex items-center justify-center rounded-lg hover:bg-surface-bright/40 transition-colors">
+<span class="material-symbols-outlined text-on-surface">add</span>
+</button>
+<button class="glass-panel w-10 h-10 flex items-center justify-center rounded-lg hover:bg-surface-bright/40 transition-colors">
+<span class="material-symbols-outlined text-on-surface">remove</span>
+</button>
+</div>
+</div>
+<!-- Navigation Drawer (Shared Component) -->
+<nav class="fixed inset-y-0 left-0 z-[60] flex flex-col h-full w-80 bg-surface-container-lowest/95 backdrop-blur-xl border-r border-white/15 shadow-2xl transform -translate-x-full transition-transform duration-300 ease-in-out" id="navDrawer">
+<div class="p-6 border-b border-white/10 flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold text-xl">
+            704
+        </div>
+<div>
+<h3 class="text-headline-lg font-headline-lg text-primary">Unit 704</h3>
+<p class="text-body-md font-body-md text-on-surface-variant">Active Duty</p>
+</div>
+</div>
+<div class="flex-1 py-4 flex flex-col gap-1">
+<a class="bg-primary text-on-primary rounded-lg mx-2 flex items-center gap-4 px-4 py-3" href="#">
+<span class="material-symbols-outlined">local_shipping</span>
+<span class="font-body-md">Dispatch</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-variant/30 rounded-lg mx-2 flex items-center gap-4 px-4 py-3 transition-colors" href="#">
+<span class="material-symbols-outlined">assignment</span>
+<span class="font-body-md">Assignments</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-variant/30 rounded-lg mx-2 flex items-center gap-4 px-4 py-3 transition-colors" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-body-md">Vehicle Health</span>
+</a>
+</div>
+<div class="p-4 border-t border-white/10">
+<button class="w-full py-2 text-label-caps font-label-caps text-on-surface-variant hover:text-white transition-colors" id="closeDrawer">
+            CLOSE OVERLAY
+        </button>
+</div>
+</nav>
+<div class="fixed inset-0 bg-black/50 z-[55] hidden backdrop-blur-sm" id="drawerOverlay"></div>
+<script>
+    // State management
+    let isConnected = true;
+    let timerInterval = null;
+    let seconds = 0;
+    
+    const timerElement = document.getElementById('mission-timer');
+    const toggleBtn = document.getElementById('toggleConnection');
+    const toggleText = document.getElementById('toggleText');
+    const statusText = document.getElementById('statusText');
+    const statusDot = document.getElementById('statusDot');
+    const driverMarker = document.getElementById('driverMarker');
+    const fleetDot = document.getElementById('fleetDot');
+    const mapRoute = document.getElementById('mapRoute');
+    const telemetryBox = document.getElementById('telemetryBox');
+
+    // Timer Logic
+    function updateTimer() {
+        seconds++;
+        const hrs = Math.floor(seconds / 3600).toString().padStart(2, '0');
+        const mins = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+        const secs = (seconds % 60).toString().padStart(2, '0');
+        timerElement.textContent = `${hrs}:${mins}:${secs}`;
+    }
+
+    function startTimer() {
+        if (!timerInterval) {
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+    }
+
+    function stopTimer() {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+
+    // Toggle Logic
+    toggleBtn.addEventListener('click', () => {
+        isConnected = !isConnected;
+        
+        if (isConnected) {
+            // State: CONNECTED
+            toggleBtn.classList.remove('bg-secondary', 'hover:shadow-[0_0_30px_rgba(46,204,113,0.4)]');
+            toggleBtn.classList.add('bg-primary', 'hover:shadow-[0_0_30px_rgba(255,55,95,0.4)]');
+            toggleText.textContent = 'DISCONNECT';
+            statusText.textContent = 'CONNECTED';
+            statusText.className = 'font-hud-display text-[16px] text-secondary connected-glow';
+            statusDot.className = 'w-2 h-2 rounded-full bg-secondary shadow-[0_0_8px_rgba(46,204,113,0.8)]';
+            fleetDot.classList.add('animate-pulse');
+            fleetDot.classList.replace('bg-primary', 'bg-secondary');
+            driverMarker.style.opacity = '1';
+            mapRoute.style.opacity = '1';
+            startTimer();
+        } else {
+            // State: DISCONNECTED
+            toggleBtn.classList.remove('bg-primary', 'hover:shadow-[0_0_30px_rgba(255,55,95,0.4)]');
+            toggleBtn.classList.add('bg-secondary', 'hover:shadow-[0_0_30px_rgba(46,204,113,0.4)]');
+            toggleText.textContent = 'CONNECT';
+            statusText.textContent = 'DISCONNECTED';
+            statusText.className = 'font-hud-display text-[16px] text-primary disconnected-glow';
+            statusDot.className = 'w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(255,55,95,0.8)]';
+            fleetDot.classList.remove('animate-pulse');
+            fleetDot.classList.replace('bg-secondary', 'bg-primary');
+            driverMarker.style.opacity = '0.3';
+            mapRoute.style.opacity = '0.2';
+            stopTimer();
+        }
+    });
+
+    // Simulated Telemetry Stream
+    function addTelemetryRow() {
+        if (!isConnected) return;
+        const row = document.createElement('div');
+        const timestamp = new Date().toLocaleTimeString('en-GB', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const val = Math.floor(Math.random() * 1000).toString().padStart(4, '0');
+        row.textContent = `[${timestamp}] TRC_ID_${val} >> OK`;
+        telemetryBox.prepend(row);
+        if (telemetryBox.children.length > 20) {
+            telemetryBox.removeChild(telemetryBox.lastChild);
+        }
+    }
+    setInterval(addTelemetryRow, 800);
+
+    // Speed fluctuation
+    setInterval(() => {
+        if (isConnected) {
+            const currentSpeed = parseInt(document.getElementById('speedVal').textContent);
+            const delta = Math.floor(Math.random() * 5) - 2;
+            document.getElementById('speedVal').textContent = Math.max(60, Math.min(110, currentSpeed + delta));
+        }
+    }, 2000);
+
+    // Navigation Drawer Logic
+    const navDrawer = document.getElementById('navDrawer');
+    const drawerOverlay = document.getElementById('drawerOverlay');
+    const profileBtn = document.getElementById('profileBtn');
+    const settingsBtn = document.getElementById('settingsBtn');
+    const closeBtn = document.getElementById('closeDrawer');
+
+    const openDrawer = () => {
+        navDrawer.classList.remove('-translate-x-full');
+        drawerOverlay.classList.remove('hidden');
+    };
+
+    const closeDrawer = () => {
+        navDrawer.classList.add('-translate-x-full');
+        drawerOverlay.classList.add('hidden');
+    };
+
+    profileBtn.addEventListener('click', openDrawer);
+    settingsBtn.addEventListener('click', () => {
+        // Simulated navigation - just a visual cue
+        settingsBtn.classList.add('animate-spin');
+        setTimeout(() => settingsBtn.classList.remove('animate-spin'), 1000);
+    });
+    closeBtn.addEventListener('click', closeDrawer);
+    drawerOverlay.addEventListener('click', closeDrawer);
+
+    // Init
+    startTimer();
+</script>
+</body></html>

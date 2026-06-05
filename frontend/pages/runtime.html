@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mission Control - Runtime Settings</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "secondary-container": "#06bb63",
+                      "surface-container-lowest": "#0c0e12",
+                      "outline-variant": "#5c3f41",
+                      "background": "#111317",
+                      "surface-bright": "#37393e",
+                      "on-secondary": "#003919",
+                      "surface-tint": "#ffb2b7",
+                      "on-secondary-fixed-variant": "#005228",
+                      "tertiary-fixed": "#f0dbff",
+                      "primary": "#ffb2b7",
+                      "surface-dim": "#111317",
+                      "on-primary-fixed-variant": "#91002b",
+                      "on-error-container": "#ffdad6",
+                      "on-background": "#e2e2e8",
+                      "on-tertiary": "#490080",
+                      "secondary-fixed": "#6bfe9c",
+                      "outline": "#ac888a",
+                      "on-error": "#690005",
+                      "tertiary": "#ddb7ff",
+                      "inverse-on-surface": "#2f3035",
+                      "surface-container-low": "#1a1c20",
+                      "tertiary-container": "#b76dff",
+                      "on-primary": "#67001c",
+                      "on-surface-variant": "#e5bdbe",
+                      "secondary": "#4ae183",
+                      "surface-container-highest": "#333539",
+                      "inverse-primary": "#be003b",
+                      "primary-fixed": "#ffdadb",
+                      "on-primary-fixed": "#40000e",
+                      "on-tertiary-fixed": "#2c0051",
+                      "tertiary-fixed-dim": "#ddb7ff",
+                      "error-container": "#93000a",
+                      "on-secondary-container": "#00431f",
+                      "on-secondary-fixed": "#00210c",
+                      "on-primary-container": "#5b0017",
+                      "surface": "#111317",
+                      "on-surface": "#e2e2e8",
+                      "on-tertiary-container": "#400071",
+                      "primary-fixed-dim": "#ffb2b7",
+                      "surface-container": "#1e2024",
+                      "error": "#ffb4ab",
+                      "surface-container-high": "#282a2e",
+                      "primary-container": "#ff506c",
+                      "inverse-surface": "#e2e2e8",
+                      "surface-variant": "#333539",
+                      "secondary-fixed-dim": "#4ae183",
+                      "on-tertiary-fixed-variant": "#6900b3"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "base": "8px",
+                      "stack-lg": "24px",
+                      "gutter": "12px",
+                      "stack-sm": "4px",
+                      "container-padding": "16px",
+                      "stack-md": "12px"
+              },
+              "fontFamily": {
+                      "body-md": ["Inter"],
+                      "data-mono": ["JetBrains Mono"],
+                      "hud-timer": ["JetBrains Mono"],
+                      "headline-md": ["Inter"],
+                      "body-sm": ["Inter"],
+                      "hud-display": ["JetBrains Mono"],
+                      "label-caps": ["Inter"],
+                      "headline-lg": ["Inter"]
+              },
+              "fontSize": {
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "data-mono": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                      "hud-timer": ["18px", {"lineHeight": "24px", "fontWeight": "500"}],
+                      "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                      "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "hud-display": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                      "headline-lg": ["24px", {"lineHeight": "32px", "fontWeight": "600"}]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .glass-panel {
+            background-color: rgba(26, 29, 35, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #2d3139;
+            border-radius: 10px;
+        }
+        .pulse-secondary {
+            animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse-ring {
+            0%, 100% { opacity: 0.1; }
+            50% { opacity: 0.4; }
+        }
+        .bar-animate {
+            transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .loading-spin {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .progress-flow {
+            position: relative;
+            overflow: hidden;
+        }
+        .progress-flow::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background-image: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transform: translateX(-100%);
+            animation: flow 2s infinite;
+        }
+        @keyframes flow {
+            100% { transform: translateX(100%); }
+        }
+    </style>
+<style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md selection:bg-primary/30 min-h-screen overflow-x-hidden">
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-container-padding h-14 bg-background/85 backdrop-blur-md border-b border-white/15">
+<div class="flex items-center gap-4">
+<div class="w-8 h-8 rounded-full bg-surface-container-high border border-white/10 overflow-hidden">
+<img alt="Driver Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCTCbbrMUCJjtf8tJPQ5UjievzSqkQ2VIP4E933ZHK0mnA0l1SDelVGVtDQbHTvNqen0MPUBdpxKKnybZlmxmxEDhBytPhsIXFo74wOZizips992oCWEhEyO20HadxFBQoPKxa9mX-RcTrrc3g7i53IIDgcEILdDwvvOYOtHxkm9-zrXfLECB14pB7I8mKOaEG_osndQGosVja9aSJXBLsBxsC7FWTEWaKDh6ob4nWPjNwO6G6mCK1B3KmqloZGMJQ7SaP6F_jkJttP"/>
+</div>
+<h1 class="text-label-caps font-label-caps tracking-widest text-primary uppercase">MISSION CONTROL</h1>
+</div>
+<div class="flex items-center gap-2">
+<button class="material-symbols-outlined text-primary hover:bg-surface-bright/20 transition-colors p-2 rounded-full active:scale-95 duration-100">settings</button>
+</div>
+</header>
+<!-- Side Navigation Drawer -->
+<aside class="fixed inset-y-0 left-0 z-[60] flex flex-col h-full w-80 bg-surface-container-lowest/95 backdrop-blur-xl border-r border-white/15 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
+<div class="p-container-padding flex items-center gap-4 mb-stack-lg border-b border-white/5 pb-4 mt-14">
+<div class="w-12 h-12 rounded-lg bg-primary-container/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-headline-lg">local_shipping</span>
+</div>
+<div>
+<p class="text-headline-lg font-headline-lg text-primary">Unit 704</p>
+<p class="text-body-sm opacity-60">Active Duty • Signal: Strong</p>
+</div>
+</div>
+<nav class="flex-1 flex flex-col gap-1 px-2">
+<a class="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:bg-surface-variant/30 rounded-lg transition-all duration-300" href="#">
+<span class="material-symbols-outlined">assignment</span>
+<span class="text-body-md font-body-md">Assignments</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 bg-primary-container text-on-primary-container rounded-lg transition-all duration-300" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="text-body-md font-body-md">Runtime Settings</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:bg-surface-variant/30 rounded-lg transition-all duration-300" href="#">
+<span class="material-symbols-outlined">local_shipping</span>
+<span class="text-body-md font-body-md">Dispatch</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:bg-surface-variant/30 rounded-lg transition-all duration-300" href="#">
+<span class="material-symbols-outlined">forum</span>
+<span class="text-body-md font-body-md">Fleet Comms</span>
+</a>
+</nav>
+<div class="mt-auto p-4 border-t border-white/5">
+<div class="flex items-center justify-between text-body-sm mb-2">
+<span class="text-on-surface-variant">System Latency</span>
+<span class="font-data-mono text-secondary" id="latencyDisplay">24ms</span>
+</div>
+<div class="w-full bg-white/5 h-1 rounded-full overflow-hidden">
+<div class="bg-secondary h-full w-4/5 transition-all duration-500" id="latencyBar"></div>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="md:ml-80 pt-20 pb-24 px-container-padding min-h-screen">
+<div class="max-w-6xl mx-auto space-y-gutter">
+<!-- Hero / Map Backdrop -->
+<div class="relative w-full h-48 rounded-xl overflow-hidden glass-panel mb-gutter">
+<img alt="Control Backdrop" class="w-full h-full object-cover opacity-40" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBUp8EFJeh0s7dgFLdcA1kH3RktiV3JOpxPrFrZAQDeDmYjNzIGHop5P87eLuV0H1OndHlyfyEITULIWB4HkMi74QkbNAT5k0DKvdQGNHGV0lT01Nts6m7biN_Ss7zFIzNexY3Bcj9Bb3MRZf84Xfax5fuO8zE1bkEzAkGBSlzX82z_nmRLtq2HepT8tpt6jIG3-c4CfHdDex7mVh2ms4DON5Lhan9TcAGsFnF8Fjc1SobaQpviSeOQbAODq8sYPr5i6j9BmOjXez9S"/>
+<div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent"></div>
+<div class="absolute bottom-4 left-4">
+<h2 class="text-headline-lg font-headline-lg text-on-surface">System Telemetry Control</h2>
+<p class="text-body-sm text-on-surface-variant">Engine Cluster: 04-B / Runtime Environment: Production-Edge</p>
+</div>
+<div class="absolute top-4 right-4 flex gap-4">
+<div class="flex flex-col items-end">
+<span class="text-label-caps text-secondary">LIVE UPTIME</span>
+<span class="text-hud-display font-hud-display text-on-surface" id="uptimeDisplay">142:22:04</span>
+</div>
+</div>
+</div>
+<!-- Bento Grid Config -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+<!-- Runtime Parameters -->
+<div class="lg:col-span-2 glass-panel p-6 rounded-xl space-y-6">
+<div class="flex items-center gap-2 border-b border-white/10 pb-4">
+<span class="material-symbols-outlined text-primary">settings_remote</span>
+<h3 class="text-headline-md font-headline-md uppercase tracking-wider">Runtime Configuration</h3>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-stack-lg">
+<div class="space-y-2">
+<label class="text-label-caps text-on-surface-variant block">POLL INTERVAL (MS)</label>
+<div class="relative">
+<input class="w-full bg-[#111] border border-[#2D3139] rounded px-4 py-3 text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-data-mono" id="pollIntervalInput" type="number" value="500"/>
+<span class="absolute right-3 top-1/2 -translate-y-1/2 text-body-sm opacity-40">ms</span>
+</div>
+</div>
+<div class="space-y-2">
+<label class="text-label-caps text-on-surface-variant block">SIM BATCH SIZE</label>
+<input class="w-full bg-[#111] border border-[#2D3139] rounded px-4 py-3 text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-data-mono" id="batchSizeInput" type="number" value="128"/>
+</div>
+<div class="md:col-span-2 space-y-2">
+<label class="text-label-caps text-on-surface-variant block">SERVER ADDRESS</label>
+<div class="flex gap-2">
+<input class="flex-1 bg-[#111] border border-[#2D3139] rounded px-4 py-3 text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-data-mono" type="text" value="http://127.0.0.1:3030"/>
+<button class="px-4 bg-surface-container-high hover:bg-surface-bright text-on-surface rounded border border-white/10 transition-colors active:scale-95" onclick="reconnect()">
+<span class="material-symbols-outlined" id="reconnectIcon">sync</span>
+</button>
+</div>
+</div>
+</div>
+<div class="flex flex-wrap gap-4 pt-4">
+<button class="flex-1 min-w-[200px] bg-[#FF375F] hover:bg-[#FF375F]/90 text-white font-bold py-3 px-6 rounded-lg transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-primary/20" id="togglePolling" onclick="handleToggle()">
+<span class="material-symbols-outlined" id="pollIcon">stop_circle</span>
+<span id="pollText">Stop Polling</span>
+</button>
+<div class="flex gap-2 flex-1 min-w-[200px]">
+<button class="runtime-lang-btn flex-1 bg-surface-container-high hover:bg-surface-bright border border-white/10 text-on-surface py-3 px-4 rounded-lg transition-all flex items-center justify-center gap-2" onclick="showLangInfo('Rust')">
+<span class="material-symbols-outlined text-primary">terminal</span>
+                            Rust
+                        </button>
+<button class="runtime-lang-btn flex-1 bg-surface-container-high hover:bg-surface-bright border border-white/10 text-on-surface py-3 px-4 rounded-lg transition-all flex items-center justify-center gap-2" onclick="showLangInfo('Go')">
+<span class="material-symbols-outlined text-secondary">token</span>
+                            Go
+                        </button>
+</div>
+</div>
+</div>
+<!-- Live Indicators -->
+<div class="glass-panel p-6 rounded-xl space-y-6">
+<div class="flex items-center gap-2 border-b border-white/10 pb-4">
+<span class="material-symbols-outlined text-secondary">sensors</span>
+<h3 class="text-headline-md font-headline-md uppercase tracking-wider">Environment</h3>
+</div>
+<div class="space-y-4">
+<div class="p-3 bg-[#111] border border-white/5 rounded space-y-2">
+<div class="flex justify-between items-center">
+<span class="text-body-sm text-on-surface-variant">Worker Threads</span>
+<span class="font-data-mono text-secondary" id="threadValue">Active: 12</span>
+</div>
+<div class="w-full bg-white/5 h-1.5 rounded-full overflow-hidden progress-flow">
+<div class="bg-secondary h-full w-[40%] transition-all duration-1000" id="threadBar"></div>
+</div>
+</div>
+<div class="p-3 bg-[#111] border border-white/5 rounded space-y-2">
+<div class="flex justify-between items-center">
+<span class="text-body-sm text-on-surface-variant">Cache Hit Rate</span>
+<span class="font-data-mono text-primary" id="cacheValue">98.4%</span>
+</div>
+<div class="w-full bg-white/5 h-1.5 rounded-full overflow-hidden progress-flow">
+<div class="bg-primary h-full w-[98%] transition-all duration-1000" id="cacheBar"></div>
+</div>
+</div>
+<div class="p-3 bg-[#111] border border-white/5 rounded space-y-2">
+<div class="flex justify-between items-center">
+<span class="text-body-sm text-on-surface-variant">Memory Ceiling</span>
+<span class="font-data-mono text-tertiary">2.4 GB</span>
+</div>
+<div class="w-full bg-white/5 h-1.5 rounded-full overflow-hidden progress-flow">
+<div class="bg-tertiary h-full w-[65%]"></div>
+</div>
+</div>
+</div>
+<div class="mt-8">
+<p class="text-label-caps text-on-surface-variant mb-2">IO THROUGHPUT</p>
+<div class="h-16 flex items-end gap-1" id="ioChart">
+<!-- Dynamic bars -->
+<div class="flex-1 bg-secondary/40 rounded-t h-[30%] bar-animate"></div>
+<div class="flex-1 bg-secondary/60 rounded-t h-[60%] bar-animate"></div>
+<div class="flex-1 bg-secondary/40 rounded-t h-[45%] bar-animate"></div>
+<div class="flex-1 bg-secondary/80 rounded-t h-[85%] bar-animate"></div>
+<div class="flex-1 bg-primary/60 rounded-t h-[70%] bar-animate"></div>
+<div class="flex-1 bg-secondary/50 rounded-t h-[40%] bar-animate"></div>
+<div class="flex-1 bg-secondary/40 rounded-t h-[20%] bar-animate"></div>
+</div>
+</div>
+</div>
+<!-- Telemetry Log -->
+<div class="lg:col-span-3 glass-panel rounded-xl flex flex-col h-[400px]">
+<div class="flex items-center justify-between p-4 border-b border-white/10">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">list_alt</span>
+<span class="text-label-caps font-bold tracking-widest">LIVE TELEMETRY STREAM</span>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary pulse-secondary" id="connStatusDot"></span>
+<span class="text-label-caps text-secondary" id="connStatusText">CONNECTED</span>
+</div>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-on-surface transition-colors" onclick="clearLogs()">delete_sweep</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-on-surface transition-colors">content_copy</button>
+</div>
+</div>
+<div class="flex-1 bg-[#0c0e12] p-4 overflow-y-auto custom-scrollbar font-data-mono text-body-sm" id="telemetryStreamContainer">
+<div class="space-y-1" id="telemetryStream">
+<p class="text-[#06bb63] opacity-60">[14:02:11] INF - Handshake initialized with server: 127.0.0.1</p>
+<p class="text-on-surface-variant">{"cluster_id": "704", "status": "nominal", "buffer_size": 2048, "retry_count": 0}</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation (Mobile) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-8 pb-4 pt-2 bg-background/85 backdrop-blur-md border-t border-white/15 rounded-t-full shadow-lg">
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-3 hover:text-secondary active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full p-3 active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined">charging_station</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-3 hover:text-secondary active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined">history</span>
+</a>
+</nav>
+<!-- Modal Simulation -->
+<div class="fixed inset-0 bg-background/80 backdrop-blur-sm z-[100] flex items-center justify-center hidden" id="modalOverlay">
+<div class="glass-panel p-8 rounded-xl max-w-sm w-full mx-4 shadow-2xl border-primary/20">
+<h4 class="text-headline-md text-primary mb-2 flex items-center gap-2">
+<span class="material-symbols-outlined">info</span>
+            Runtime Info
+        </h4>
+<p class="text-body-md text-on-surface-variant mb-6" id="modalContent">System message content here...</p>
+<button class="w-full bg-primary text-on-primary py-3 rounded font-bold hover:brightness-110 active:scale-95 transition-all" onclick="closeModal()">CLOSE</button>
+</div>
+</div>
+<script>
+    let isPolling = true;
+    let pollInterval = 500;
+    let batchSize = 128;
+    let uptimeSeconds = 142 * 3600 + 22 * 60 + 4;
+
+    const toggleBtn = document.getElementById('togglePolling');
+    const pollText = document.getElementById('pollText');
+    const pollIcon = document.getElementById('pollIcon');
+    const stream = document.getElementById('telemetryStream');
+    const streamContainer = document.getElementById('telemetryStreamContainer');
+    const pollIntervalInput = document.getElementById('pollIntervalInput');
+    const batchSizeInput = document.getElementById('batchSizeInput');
+
+    // Input handlers
+    pollIntervalInput.addEventListener('change', (e) => {
+        pollInterval = Math.max(100, parseInt(e.target.value) || 500);
+        addLog('INF', `Poll interval updated to ${pollInterval}ms`, '#06bb63');
+    });
+
+    batchSizeInput.addEventListener('change', (e) => {
+        batchSize = Math.max(1, parseInt(e.target.value) || 128);
+        addLog('INF', `Sim batch size updated to ${batchSize}`, '#06bb63');
+    });
+
+    function handleToggle() {
+        isPolling = !isPolling;
+        if (isPolling) {
+            toggleBtn.classList.remove('bg-secondary', 'shadow-secondary/20');
+            toggleBtn.classList.add('bg-[#FF375F]', 'shadow-primary/20');
+            pollText.innerText = 'Stop Polling';
+            pollIcon.innerText = 'stop_circle';
+            addLog('INF', 'Polling resumed by operator.', '#06bb63');
+            document.getElementById('connStatusDot').classList.add('bg-secondary');
+            document.getElementById('connStatusDot').classList.remove('bg-error');
+            document.getElementById('connStatusText').innerText = 'CONNECTED';
+        } else {
+            toggleBtn.classList.remove('bg-[#FF375F]', 'shadow-primary/20');
+            toggleBtn.classList.add('bg-secondary', 'shadow-secondary/20');
+            pollText.innerText = 'Start Polling';
+            pollIcon.innerText = 'play_circle';
+            addLog('WRN', 'Polling suspended by operator.', '#ffb2b7');
+            document.getElementById('connStatusDot').classList.remove('bg-secondary');
+            document.getElementById('connStatusDot').classList.add('bg-error');
+            document.getElementById('connStatusText').innerText = 'PAUSED';
+        }
+    }
+
+    function addLog(type, msg, color) {
+        const time = new Date().toLocaleTimeString('en-GB', { hour12: false });
+        const p1 = document.createElement('p');
+        p1.className = `opacity-60 mt-2`;
+        p1.style.color = color;
+        p1.innerHTML = `[${time}] ${type} - ${msg}`;
+        
+        const p2 = document.createElement('p');
+        p2.className = 'text-on-surface-variant';
+        p2.innerHTML = `{"ts": ${Date.now()}, "b": ${batchSize}, "v": ${(Math.random() * 100).toFixed(2)}}`;
+        
+        stream.appendChild(p1);
+        stream.appendChild(p2);
+        
+        if (stream.children.length > 60) {
+            stream.removeChild(stream.children[0]);
+            stream.removeChild(stream.children[0]);
+        }
+        streamContainer.scrollTop = streamContainer.scrollHeight;
+    }
+
+    function clearLogs() {
+        stream.innerHTML = '';
+        addLog('INF', 'Telemetry stream buffer cleared.', '#06bb63');
+    }
+
+    function reconnect() {
+        const btnIcon = document.getElementById('reconnectIcon');
+        btnIcon.classList.add('loading-spin');
+        addLog('INF', 'Attempting connection handshake...', '#ddb7ff');
+        setTimeout(() => {
+            btnIcon.classList.remove('loading-spin');
+            addLog('INF', 'Handshake successful. Stream active.', '#06bb63');
+        }, 1200);
+    }
+
+    function showLangInfo(lang) {
+        const overlay = document.getElementById('modalOverlay');
+        const content = document.getElementById('modalContent');
+        overlay.classList.remove('hidden');
+        content.innerText = `Loading ${lang} micro-runtime metrics from production cluster edge... Authorization verified. Status: Nominal.`;
+    }
+
+    function closeModal() {
+        document.getElementById('modalOverlay').classList.add('hidden');
+    }
+
+    // Simulation Loops
+    setInterval(() => {
+        if (isPolling) {
+            const msgs = [
+                'Sync completed. Awaiting next cycle.',
+                'Poll successful. No delta detected.',
+                'Buffer verification passed.',
+                'Batch execution finalized.',
+                'Heartbeat verified with edge node.'
+            ];
+            const msg = msgs[Math.floor(Math.random() * msgs.length)];
+            addLog('INF', msg, '#06bb63');
+        }
+    }, 4500);
+
+    // Dynamic UI Updates
+    setInterval(() => {
+        if (isPolling) {
+            // Uptime
+            uptimeSeconds++;
+            const h = Math.floor(uptimeSeconds / 3600);
+            const m = Math.floor((uptimeSeconds % 3600) / 60);
+            const s = uptimeSeconds % 60;
+            document.getElementById('uptimeDisplay').innerText = `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+
+            // Metrics
+            const threads = Math.floor(Math.random() * 8) + 8;
+            document.getElementById('threadValue').innerText = `Active: ${threads}`;
+            document.getElementById('threadBar').style.width = `${(threads / 24) * 100}%`;
+
+            const cache = (97 + Math.random() * 2).toFixed(1);
+            document.getElementById('cacheValue').innerText = `${cache}%`;
+            document.getElementById('cacheBar').style.width = `${cache}%`;
+
+            // IO Chart
+            const bars = document.querySelectorAll('#ioChart div');
+            bars.forEach(bar => {
+                const height = Math.floor(Math.random() * 70) + 10;
+                bar.style.height = `${height}%`;
+            });
+
+            // Latency
+            const lat = Math.floor(Math.random() * 15) + 18;
+            document.getElementById('latencyDisplay').innerText = `${lat}ms`;
+            document.getElementById('latencyBar').style.width = `${(lat/100) * 100}%`;
+        }
+    }, 1500);
+</script>
+</body></html>

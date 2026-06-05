@@ -40,6 +40,7 @@ services:
       - "8080:8080"
       - "8081:8081"
       - "8082:8082"
+      - "8083:8083"
     environment:
       - RUST_INSTANCES=http://rust-tracker:3030
       - MAX_DRIVERS=5000
@@ -49,6 +50,7 @@ services:
       - GATEWAY_PORT=8080
     volumes:
       - queue_store:/app/queue_store
+      - gpx_data:/app/gpx_store
     depends_on:
       rust-tracker:
         condition: service_healthy
@@ -138,6 +140,7 @@ services:
 
 volumes:
   queue_store:
+  gpx_data:
   viz_data:
   caddy_data:
   caddy_config:

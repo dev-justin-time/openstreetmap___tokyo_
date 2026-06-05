@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-container": "#06bb63",
+                    "surface-container-lowest": "#0c0e12",
+                    "outline-variant": "#5c3f41",
+                    "background": "#111317",
+                    "surface-bright": "#37393e",
+                    "on-secondary": "#003919",
+                    "surface-tint": "#ffb2b7",
+                    "on-secondary-fixed-variant": "#005228",
+                    "tertiary-fixed": "#f0dbff",
+                    "primary": "#ffb2b7",
+                    "surface-dim": "#111317",
+                    "on-primary-fixed-variant": "#91002b",
+                    "on-error-container": "#ffdad6",
+                    "on-background": "#e2e2e8",
+                    "on-tertiary": "#490080",
+                    "secondary-fixed": "#6bfe9c",
+                    "outline": "#ac888a",
+                    "on-error": "#690005",
+                    "tertiary": "#ddb7ff",
+                    "inverse-on-surface": "#2f3035",
+                    "surface-container-low": "#1a1c20",
+                    "tertiary-container": "#b76dff",
+                    "on-primary": "#67001c",
+                    "on-surface-variant": "#e5bdbe",
+                    "secondary": "#4ae183",
+                    "surface-container-highest": "#333539",
+                    "inverse-primary": "#be003b",
+                    "primary-fixed": "#ffdadb",
+                    "on-primary-fixed": "#40000e",
+                    "on-tertiary-fixed": "#2c0051",
+                    "tertiary-fixed-dim": "#ddb7ff",
+                    "error-container": "#93000a",
+                    "on-secondary-container": "#00431f",
+                    "on-secondary-fixed": "#00210c",
+                    "on-primary-container": "#5b0017",
+                    "surface": "#111317",
+                    "on-surface": "#e2e2e8",
+                    "on-tertiary-container": "#400071",
+                    "primary-fixed-dim": "#ffb2b7",
+                    "surface-container": "#1e2024",
+                    "error": "#ffb4ab",
+                    "surface-container-high": "#282a2e",
+                    "primary-container": "#ff506c",
+                    "inverse-surface": "#e2e2e8",
+                    "surface-variant": "#333539",
+                    "secondary-fixed-dim": "#4ae183",
+                    "on-tertiary-fixed-variant": "#6900b3"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "base": "8px",
+                    "stack-lg": "24px",
+                    "gutter": "12px",
+                    "stack-sm": "4px",
+                    "container-padding": "16px",
+                    "stack-md": "12px"
+            },
+            "fontFamily": {
+                    "body-md": ["Inter"],
+                    "data-mono": ["JetBrains Mono"],
+                    "hud-timer": ["JetBrains Mono"],
+                    "headline-md": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "hud-display": ["JetBrains Mono"],
+                    "label-caps": ["Inter"],
+                    "headline-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "data-mono": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                    "hud-timer": ["18px", {"lineHeight": "24px", "fontWeight": "500"}],
+                    "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "hud-display": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "headline-lg": ["24px", {"lineHeight": "32px", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+      .glass-panel {
+        background: rgba(26, 29, 35, 0.85);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+      }
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #2d3139;
+        border-radius: 10px;
+      }
+      .status-pulse {
+        animation: pulse 2s infinite;
+      }
+      @keyframes pulse {
+        0% { opacity: 0.1; }
+        50% { opacity: 0.4; }
+        100% { opacity: 0.1; }
+      }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface-dim text-on-surface font-body-md overflow-hidden">
+<!-- Background Layer (Simulated Map) -->
+<div class="fixed inset-0 z-0 grayscale contrast-125 opacity-40">
+<img class="w-full h-full object-cover" data-alt="A detailed, dark-themed satellite map of a metropolitan city grid at night. The view shows intricate glowing arteries of traffic and complex industrial zones with a technical, high-contrast aesthetic. The color palette is dominated by deep charcoal and obsidian blacks, with thin technical lines in cyan and primary pink highlighting logistical routes. The atmosphere is clinical, high-performance, and precise, resembling a mission control interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBELLNQyrs8QUDKAqIQhHbtFQae49u0CbTJE2pXIIXHkRicOZTVtp5UNQiBRJ9ecRluiIiKsWhcbNYV5_tx8vCQUa3jJSdrO_GWPggIFit8zEEuAG7614b5ykLXYiS4jRU6GlE8ybfwiwC1q-hkiwXruO-Ru9ttGN8X-j_fbZL62rNGFgeJzi664Ys_69B88oKaR2CMEIdYjXGvkX0TeGKqH21S_UJSeGKXNJ5zUE8dlbNzbyFbKIHg4xTgL9_1nky_IgGpOhNy6REX"/>
+<div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/50"></div>
+</div>
+<!-- Top AppBar -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-container-padding h-14 bg-background/85 backdrop-blur-md border-b border-white/15">
+<div class="flex items-center gap-stack-md">
+<div class="w-8 h-8 rounded-full bg-surface-variant overflow-hidden border border-primary/30">
+<img class="w-full h-full object-cover" data-alt="A professional portrait of a tech-focused fleet driver in his thirties. He is wearing a dark, technical tactical jacket with subtle branding. The lighting is dramatic and cinematic, featuring sharp side-lighting with a cool blue and magenta tint that matches the high-performance mission control UI aesthetic. The background is a soft-focus industrial interior." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDqu9LdPWiaP717Qg-nLLmOOUhHqWkRl6bfn23NBhiobROhTRL8f2nfBausMMQFJFMCxBkGPJjVoqbyFWOb9c2oAMLzjQrrfcXomCcw8LFRXjxqqQYnWsfQakh5bGnpOylQ4jVaoQjdNPu7mwQA2beoGSZ5NyzPsldOSOampBArYDAPU4QmSm_bo74utkP26oxLTIIxtih-LUoWnPgUeHMDWyWTkNwnBTDbtWmdTyZZF9H4ITQG8SpJnGgKidoa1ml5CXo3jynZjW16"/>
+</div>
+<span class="text-label-caps font-label-caps tracking-widest text-primary">MISSION CONTROL</span>
+</div>
+<div class="flex items-center gap-4">
+<span class="text-secondary font-hud-timer text-hud-timer flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">signal_cellular_alt</span>
+                LTE
+            </span>
+<button class="material-symbols-outlined text-on-surface-variant hover:bg-surface-bright/20 p-2 transition-colors duration-100 active:scale-95">settings</button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="relative z-10 pt-14 pb-20 h-screen overflow-hidden flex flex-col md:flex-row gap-gutter px-container-padding">
+<!-- Left Column: Profile Card (Bento Style) -->
+<section class="flex-1 max-w-md flex flex-col gap-gutter py-stack-lg">
+<!-- Profile Overview Panel -->
+<div class="glass-panel p-stack-lg rounded-xl border border-white/15 shadow-2xl">
+<div class="flex items-start justify-between mb-stack-lg">
+<div class="flex flex-col">
+<h1 class="font-headline-lg text-headline-lg text-primary">Unit 704</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Driver Alpha</p>
+</div>
+<div class="px-3 py-1 bg-secondary-container/20 border border-secondary/30 rounded-full flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary status-pulse"></span>
+<span class="text-label-caps font-label-caps text-secondary">Active Duty</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-stack-md">
+<div class="bg-surface-container-low p-stack-md rounded-lg border border-white/5">
+<p class="text-label-caps font-label-caps text-on-surface-variant mb-1">SIGNAL</p>
+<p class="font-data-mono text-hud-display text-secondary">Strong</p>
+</div>
+<div class="bg-surface-container-low p-stack-md rounded-lg border border-white/5">
+<p class="text-label-caps font-label-caps text-on-surface-variant mb-1">LATENCY</p>
+<p class="font-data-mono text-hud-display text-primary">24ms</p>
+</div>
+</div>
+<div class="mt-stack-lg space-y-stack-sm">
+<button class="w-full bg-primary text-on-primary py-3 rounded-lg font-label-caps text-label-caps hover:brightness-110 transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">logout</span>
+                        Logout
+                    </button>
+<button class="w-full bg-transparent text-on-surface-variant border border-outline/30 py-3 rounded-lg font-label-caps text-label-caps hover:bg-surface-bright/20 transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">delete_sweep</span>
+                        Clear History
+                    </button>
+</div>
+</div>
+<!-- Real-time HUD Telemetry (Secondary Bento) -->
+<div class="glass-panel p-stack-md rounded-xl border border-white/15 flex flex-col gap-2">
+<div class="flex justify-between items-center border-b border-white/5 pb-2">
+<span class="text-label-caps font-label-caps text-on-surface-variant">TELEMETRY DATA</span>
+<span class="material-symbols-outlined text-primary text-sm">analytics</span>
+</div>
+<div class="flex justify-around items-center py-2">
+<div class="text-center">
+<p class="text-label-caps font-label-caps text-on-surface-variant">FUEL</p>
+<p class="font-data-mono text-hud-timer text-on-surface">82%</p>
+</div>
+<div class="w-px h-8 bg-white/10"></div>
+<div class="text-center">
+<p class="text-label-caps font-label-caps text-on-surface-variant">TEMP</p>
+<p class="font-data-mono text-hud-timer text-on-surface">190°F</p>
+</div>
+<div class="w-px h-8 bg-white/10"></div>
+<div class="text-center">
+<p class="text-label-caps font-label-caps text-on-surface-variant">RPM</p>
+<p class="font-data-mono text-hud-timer text-secondary">2.4k</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Right Column: Sliding Panel for Connection History -->
+<section class="flex-1 md:max-w-xl h-full py-stack-lg">
+<div class="glass-panel h-full rounded-xl border border-white/15 flex flex-col overflow-hidden">
+<!-- Panel Header -->
+<div class="p-container-padding border-b border-white/15 bg-surface-container-low/50 flex justify-between items-center">
+<h2 class="font-headline-md text-headline-md tracking-tight flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">history</span>
+                        CONNECTION HISTORY
+                    </h2>
+<span class="text-label-caps font-label-caps px-2 py-0.5 bg-surface-variant rounded border border-white/10 text-on-surface-variant">42 SESSIONS</span>
+</div>
+<!-- History List -->
+<div class="flex-1 overflow-y-auto custom-scrollbar p-gutter space-y-2">
+<!-- Entry 1 -->
+<div class="group flex items-center justify-between p-stack-lg rounded-lg border border-transparent hover:border-white/10 hover:bg-surface-bright/10 transition-all cursor-default">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-secondary-container/10 flex items-center justify-center text-secondary border border-secondary/20">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">router</span>
+</div>
+<div>
+<h3 class="font-body-md text-on-surface font-semibold">Oct 24 - 14:20</h3>
+<p class="font-data-mono text-body-sm text-on-surface-variant">Session Duration: 04h 12m</p>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<span class="text-label-caps font-label-caps text-secondary">SECURE</span>
+<span class="text-body-sm font-data-mono text-on-surface-variant opacity-60">ID: #9928-XA</span>
+</div>
+</div>
+<!-- Divider -->
+<div class="h-px bg-white/5 mx-4"></div>
+<!-- Entry 2 -->
+<div class="group flex items-center justify-between p-stack-lg rounded-lg border border-transparent hover:border-white/10 hover:bg-surface-bright/10 transition-all cursor-default">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center text-on-surface-variant border border-white/5">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">router</span>
+</div>
+<div>
+<h3 class="font-body-md text-on-surface font-semibold">Oct 23 - 09:15</h3>
+<p class="font-data-mono text-body-sm text-on-surface-variant">Session Duration: 02h 45m</p>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<span class="text-label-caps font-label-caps text-on-surface-variant">ARCHIVED</span>
+<span class="text-body-sm font-data-mono text-on-surface-variant opacity-60">ID: #9927-ZY</span>
+</div>
+</div>
+<!-- Additional Mock Entries for Scroll -->
+<div class="h-px bg-white/5 mx-4"></div>
+<div class="group flex items-center justify-between p-stack-lg rounded-lg border border-transparent hover:border-white/10 hover:bg-surface-bright/10 transition-all cursor-default opacity-80">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center text-on-surface-variant border border-white/5">
+<span class="material-symbols-outlined">router</span>
+</div>
+<div>
+<h3 class="font-body-md text-on-surface font-semibold">Oct 22 - 18:05</h3>
+<p class="font-data-mono text-body-sm text-on-surface-variant">Session Duration: 08h 22m</p>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<span class="text-label-caps font-label-caps text-on-surface-variant">ARCHIVED</span>
+<span class="text-body-sm font-data-mono text-on-surface-variant opacity-60">ID: #9926-BC</span>
+</div>
+</div>
+<div class="h-px bg-white/5 mx-4"></div>
+<div class="group flex items-center justify-between p-stack-lg rounded-lg border border-transparent hover:border-white/10 hover:bg-surface-bright/10 transition-all cursor-default opacity-60">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center text-on-surface-variant border border-white/5">
+<span class="material-symbols-outlined">router</span>
+</div>
+<div>
+<h3 class="font-body-md text-on-surface font-semibold">Oct 22 - 07:30</h3>
+<p class="font-data-mono text-body-sm text-on-surface-variant">Session Duration: 01h 55m</p>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<span class="text-label-caps font-label-caps text-on-surface-variant">ARCHIVED</span>
+<span class="text-body-sm font-data-mono text-on-surface-variant opacity-60">ID: #9925-KM</span>
+</div>
+</div>
+</div>
+<!-- Footer Context -->
+<div class="p-stack-md bg-surface-container-lowest/80 text-center border-t border-white/5">
+<p class="text-label-caps font-label-caps text-on-surface-variant opacity-40">ENCRYPTED LOG STORAGE • AES-256</p>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-8 pb-4 pt-2 bg-background/85 backdrop-blur-md border-t border-white/15 shadow-lg">
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-3 hover:text-secondary transition-colors duration-200 active:scale-90" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-3 hover:text-secondary transition-colors duration-200 active:scale-90" href="#">
+<span class="material-symbols-outlined">charging_station</span>
+</a>
+<!-- History Tab Active -->
+<a class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full p-3 transition-all active:scale-90" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">history</span>
+</a>
+</nav>
+<!-- UI Atmosphere Script -->
+<script>
+        // Micro-interaction: Subtle hover glow on bento cards
+        document.querySelectorAll('.glass-panel').forEach(panel => {
+            panel.addEventListener('mousemove', e => {
+                const rect = panel.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                panel.style.setProperty('--mouse-x', `${x}px`);
+                panel.style.setProperty('--mouse-y', `${y}px`);
+            });
+        });
+
+        // Simple Logout Interaction
+        const logoutBtn = document.querySelector('button.bg-primary');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                logoutBtn.innerHTML = '<span class="material-symbols-outlined animate-spin">refresh</span> SIGNOUT...';
+                setTimeout(() => {
+                    alert('Terminating session...');
+                    window.location.reload();
+                }, 1000);
+            });
+        }
+    </script>
+</body></html>

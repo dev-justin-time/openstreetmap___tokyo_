@@ -81,14 +81,27 @@ func main() {
 		rustAddrs = append(rustAddrs, "http://127.0.0.1:3030")
 	}
 
-	// Start simulator in background
-	go startSimulator(1000, time.Second*1, rustAddrs)
+	// Start simulator in background (NYC DriverManager or basic)
+	if os.Getenv("NYC_DEMO") == "1" {
+		go startNYCSimulator(rustAddrs)
+	} else {
+		go startSimulator(1000, time.Second*1, rustAddrs)
+	}
 
 	// Start route-engine on port 8081 in background
 	go startRouteEngine(":8081")
 
-	// Start logistics API (orders, dispatch, WebSocket) on port 8082
+	// Start logistics API (orders, dispatch) on port 8082
 	initLogistics()
+
+	// Start GPX Store (parse, persist, export GPX files) on port 8083
+	initGPXStore()
+
+	// NYC DriverManager HTTP endpoints on gateway
+	if os.Getenv("NYC_DEMO") == "1" {
+		mux.HandleFunc("/nyc/drivers", handleNYCDrivers)
+		mux.HandleFunc("/nyc/stats", handleNYCStats)
+	}
 
 	// Start gateway on port 8080
 	addr := ":8080"
