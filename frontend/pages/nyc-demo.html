@@ -31,7 +31,8 @@ body { color: #e2e2e8; font-family: 'Inter', sans-serif; }
 #header .brand { display: flex; align-items: center; gap: 10px; }
 #header .brand h1 { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700; color: #ffb2b7; letter-spacing: 0.15em; text-transform: uppercase; }
 
-#controlPanel { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 1000; padding: 12px 20px; border-radius: 14px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; justify-content: center; }
+#controlPanel { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 1000; padding: 12px 20px; border-radius: 14px; display: none; align-items: center; gap: 16px; flex-wrap: wrap; justify-content: center; }
+#controlPanel.show { display: flex; }
 #controlPanel .stat { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-family: 'JetBrains Mono', monospace; }
 #controlPanel .stat .num { font-size: 18px; font-weight: 700; }
 #controlPanel button { padding: 8px 18px; border: none; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0.05em; cursor: pointer; text-transform: uppercase; transition: all 0.15s; display: flex; align-items: center; gap: 6px; }
@@ -41,7 +42,12 @@ body { color: #e2e2e8; font-family: 'Inter', sans-serif; }
 #controlPanel button.secondary { background: rgba(255,255,255,0.08); color: #e2e2e8; }
 #controlPanel button.secondary:hover { background: rgba(255,255,255,0.14); }
 
-#statsPanel { position: fixed; top: 68px; right: 16px; z-index: 1000; padding: 14px 16px; border-radius: 12px; min-width: 160px; }
+/* Right Sidebar — flex column, panels stack without overlap */
+#rightSidebar { position: fixed; top: 68px; right: 16px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; max-height: calc(100vh - 84px); overflow-y: auto; }
+#rightSidebar::-webkit-scrollbar { width: 3px; }
+#rightSidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+
+#statsPanel { position: relative; right: auto; top: auto; z-index: auto; padding: 14px 16px; border-radius: 12px; min-width: 220px; }
 #statsPanel .title { font-size: 10px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,178,183,0.6); margin-bottom: 10px; }
 #statsPanel .row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 12px; }
 #statsPanel .row .label { color: rgba(226,226,232,0.6); }
@@ -50,7 +56,8 @@ body { color: #e2e2e8; font-family: 'Inter', sans-serif; }
 #statsPanel .status-row { display: flex; align-items: center; gap: 6px; font-size: 11px; margin-top: 8px; }
 #statsPanel .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
 
-#telemetryPanel { position: fixed; top: 68px; left: 16px; z-index: 1000; padding: 10px 14px; border-radius: 12px; max-height: 320px; width: 200px; overflow: hidden; display: block; }
+#telemetryPanel { position: fixed; top: 68px; left: 16px; z-index: 1000; padding: 10px 14px; border-radius: 12px; max-height: 320px; width: 200px; overflow: hidden; display: none; }
+#telemetryPanel.show { display: block; }
 #telemetryPanel .title { font-size: 10px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,178,183,0.6); margin-bottom: 8px; }
 #telemetryPanel .title { font-size: 10px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,178,183,0.6); margin-bottom: 8px; }
 #telemetryLog { display: flex; flex-direction: column; gap: 2px; overflow-y: auto; max-height: 260px; padding-right: 4px; }
@@ -69,7 +76,7 @@ body { color: #e2e2e8; font-family: 'Inter', sans-serif; }
 #driverPopup .actions button:active { transform: scale(0.95); }
 
 /* ─── Game Features ───────────────────────────────────────────────────── */
-#gamePanel { position: fixed; top: 68px; right: 250px; z-index: 999; padding: 0; border-radius: 12px; min-width: 220px; overflow: hidden; display: none; }
+#gamePanel { display: none; position: relative; border-radius: 12px; min-width: 220px; overflow: hidden; }
 #gamePanel.show { display: block; }
 #gamePanel .header { padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: space-between; }
 #gamePanel .header .rank { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,178,183,0.5); }
@@ -94,7 +101,8 @@ body { color: #e2e2e8; font-family: 'Inter', sans-serif; }
 #toastContainer { position: fixed; top: 64px; left: 50%; transform: translateX(-50%); z-index: 2000; display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; }
 
 /* NVIDIA API Panel */
-#apiPanel { display: none; position: fixed; top: 340px; right: 16px; width: 290px; z-index: 1100; border-color: rgba(108,195,255,0.3); max-height: calc(100vh - 400px); overflow-y: auto; border-radius: 12px; }
+#apiPanel { display: none; position: relative; width: 290px; border-color: rgba(108,195,255,0.3); max-height: 360px; overflow-y: auto; border-radius: 12px; }
+#apiPanel.show { display: block; }
 #apiPanel .header { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; background: rgba(108,195,255,0.06); border-bottom: 1px solid rgba(108,195,255,0.1); }
 #apiPanel .body { padding: 10px 14px; }
 #apiPanel input[type=range] { -webkit-appearance: none; height: 3px; background: rgba(108,195,255,0.2); border-radius: 2px; outline: none; }
@@ -107,7 +115,8 @@ body { color: #e2e2e8; font-family: 'Inter', sans-serif; }
 @keyframes pulse { 0%,100% { opacity: 0.3; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } }
 
 /* Settings Panel */
-#settingsPanel { display: none; position: fixed; top: 340px; right: 250px; width: 230px; z-index: 1100; max-height: calc(100vh - 400px); overflow-y: auto; border-radius: 12px; }
+#settingsPanel { display: none; position: relative; width: 230px; max-height: 360px; overflow-y: auto; border-radius: 12px; }
+#settingsPanel.show { display: block; }
 #settingsPanel .header { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; border-bottom: 1px solid rgba(255,255,255,0.06); }
 #settingsPanel .body { padding: 10px 14px; }
 #settingsPanel .section-title { font-size: 9px; text-transform: uppercase; letter-spacing: 0.12em; color: rgba(226,226,232,0.3); margin-bottom: 6px; }
@@ -133,7 +142,7 @@ body { color: #e2e2e8; font-family: 'Inter', sans-serif; }
 .maplibregl-popup { z-index: 1002; }
 
 @media (max-width: 640px) {
-  #telemetryPanel { display: none; }
+  #telemetryPanel, #telemetryPanel.show { display: none; }
   #statsPanel { right: 8px; min-width: 120px; }
   #controlPanel { bottom: 12px; padding: 10px 14px; gap: 8px; }
   #controlPanel .stat .num { font-size: 14px; }
@@ -176,6 +185,9 @@ body { color: #e2e2e8; font-family: 'Inter', sans-serif; }
     </span>
   </div>
 </header>
+
+<!-- Right Sidebar (flex column, no overlap) -->
+<div id="rightSidebar">
 
 <!-- Stats Panel -->
 <div id="statsPanel" class="glass-light">
@@ -277,7 +289,7 @@ body { color: #e2e2e8; font-family: 'Inter', sans-serif; }
 </div>
 
 <!-- Telemetry Panel -->
-<div id="telemetryPanel" class="glass-light">
+<div id="telemetryPanel" class="glass-light show">
   <div class="title">TELEMETRY STREAM</div>
   <div id="telemetryLog"></div>
 </div>
@@ -329,10 +341,11 @@ body { color: #e2e2e8; font-family: 'Inter', sans-serif; }
       </div>
     </div>
   </div>
-</div>
+</div> <!-- /settingsPanel -->
+</div> <!-- /rightSidebar -->
 
 <!-- Control Panel -->
-<div id="controlPanel" class="glass">
+<div id="controlPanel" class="glass show">
   <div class="stat" style="background:rgba(74,225,131,0.1)"><span class="num" style="color:#4ae183" id="ctrlAvail">0</span><span style="color:rgba(226,226,232,0.5)">available</span></div>
   <div class="stat" style="background:rgba(255,209,102,0.1)"><span class="num" style="color:#ffd166" id="ctrlEnRoute">0</span><span style="color:rgba(226,226,232,0.5)">en route</span></div>
   <div class="stat" style="background:rgba(108,195,255,0.1)"><span class="num" style="color:#6cc3ff" id="ctrlDelivering">0</span><span style="color:rgba(226,226,232,0.5)">delivering</span></div>
@@ -943,11 +956,15 @@ document.querySelectorAll('.pnl-toggle input').forEach(cb => {
 
 // ─── Connection State Updates ────────────────────────────────────────────
 function updateConnectionUI() {
-  const vals = Object.values(driverData);
-  document.getElementById('settingsDriverCount').textContent = vals.length;
-  document.getElementById('settingsOrderCount').textContent = orderCount;
-  document.getElementById('settingsMapStatus').textContent = mapReady ? 'READY' : 'LOADING';
-  document.getElementById('settingsMapStatus').style.color = mapReady ? '#4ae183' : '#ffd166';
+  try {
+    const vals = Object.values(driverData);
+    const dc = document.getElementById('settingsDriverCount');
+    const oc = document.getElementById('settingsOrderCount');
+    const ms = document.getElementById('settingsMapStatus');
+    if (dc) dc.textContent = vals.length;
+    if (oc) oc.textContent = orderCount;
+    if (ms) { ms.textContent = mapReady ? 'READY' : 'LOADING'; ms.style.color = mapReady ? '#4ae183' : '#ffd166'; }
+  } catch (e) { /* UI update best-effort */ }
 }
 
 // Override connectWS to update settings UI
