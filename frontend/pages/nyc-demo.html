@@ -91,6 +91,30 @@ body { color: #e2e2e8; font-family: 'Inter', sans-serif; }
 
 /* Toast notifications */
 #toastContainer { position: fixed; top: 64px; left: 50%; transform: translateX(-50%); z-index: 2000; display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; }
+
+/* NVIDIA API Panel */
+#apiPanel { display: none; position: fixed; top: 52px; right: 8px; width: 290px; z-index: 1100; border-color: rgba(108,195,255,0.3); max-height: calc(100vh - 64px); overflow-y: auto; }
+#apiPanel .header { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; background: rgba(108,195,255,0.06); border-bottom: 1px solid rgba(108,195,255,0.1); }
+#apiPanel .body { padding: 10px 14px; }
+#apiPanel input[type=range] { -webkit-appearance: none; height: 3px; background: rgba(108,195,255,0.2); border-radius: 2px; outline: none; }
+#apiPanel input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: #6cc3ff; border-radius: 50%; cursor: pointer; }
+#apiPanel select:hover, #apiPanel input:hover, #apiPanel textarea:hover { border-color: rgba(108,195,255,0.25); }
+#apiPanel select:focus, #apiPanel input:focus, #apiPanel textarea:focus { border-color: rgba(108,195,255,0.4); }
+#apiPanel button#btnAPISend:hover { background: #5bb5f0; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(108,195,255,0.3); }
+#apiPanel button#btnAPISend:active { transform: translateY(0); }
+
+@keyframes pulse { 0%,100% { opacity: 0.3; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } }
+
+/* Settings Panel */
+#settingsPanel { display: none; position: fixed; top: 52px; right: 8px; width: 230px; z-index: 1100; max-height: calc(100vh - 64px); overflow-y: auto; }
+#settingsPanel .header { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+#settingsPanel .body { padding: 10px 14px; }
+#settingsPanel .section-title { font-size: 9px; text-transform: uppercase; letter-spacing: 0.12em; color: rgba(226,226,232,0.3); margin-bottom: 6px; }
+#settingsPanel .mode-btn { transition: all 0.15s; }
+#settingsPanel .mode-btn:hover { background: rgba(255,178,183,0.15) !important; color: #ffb2b7 !important; }
+.pnl-toggle { display: flex; align-items: center; gap: 6px; padding: 4px 0; font-size: 11px; color: rgba(226,226,232,0.6); cursor: pointer; }
+.pnl-toggle input[type=checkbox] { accent-color: #ffb2b7; width: 14px; height: 14px; cursor: pointer; }
+.pnl-toggle:hover { color: #e2e2e8; }
 .toast { padding: 10px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; animation: toastIn 0.3s ease, toastOut 0.3s ease 3.7s forwards; display: flex; align-items: center; gap: 8px; pointer-events: auto; max-width: 360px; text-align: center; }
 .toast.achieve { background: linear-gradient(135deg, rgba(255,55,95,0.25), rgba(255,178,183,0.15)); border: 1px solid rgba(255,55,95,0.3); color: #ffb2b7; }
 .toast.levelup { background: linear-gradient(135deg, rgba(255,209,102,0.2), rgba(255,178,183,0.15)); border: 1px solid rgba(255,209,102,0.3); color: #ffd166; }
@@ -143,6 +167,8 @@ body { color: #e2e2e8; font-family: 'Inter', sans-serif; }
   </div>
   <div style="display:flex;align-items:center;gap:8px">
     <span class="material-symbols-outlined" style="color:#ffd166;cursor:pointer;font-size:20px" id="btnGameToggle" title="Game Panel">stadia_controller</span>
+    <span class="material-symbols-outlined" style="color:#6cc3ff;cursor:pointer;font-size:20px" id="btnAPIToggle" title="NVIDIA API (N)">terminal</span>
+    <span class="material-symbols-outlined" style="color:rgba(226,226,232,0.5);cursor:pointer;font-size:20px" id="btnSettingsToggle" title="Settings (S)">settings</span>
     <span style="font-family:'JetBrains Mono',monospace;font-size:11px;display:flex;align-items:center;gap:4px" id="connStatus">
       <span class="dot" style="background:#4ae183" id="statusDot"></span>
       <span style="color:#4ae183" id="statusText">CONNECTED</span>
@@ -195,6 +221,60 @@ body { color: #e2e2e8; font-family: 'Inter', sans-serif; }
   </div>
 </div>
 
+<!-- NVIDIA API Panel -->
+<div id="apiPanel" class="glass-light">
+  <div class="header">
+    <span style="display:flex;align-items:center;gap:6px"><span class="material-symbols-outlined" style="font-size:16px;color:#6cc3ff">terminal</span> <span style="font-size:12px;font-weight:600;color:#6cc3ff">NVIDIA API</span></span>
+    <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(108,195,255,0.5)" id="apiModelLabel">nemotron-3-nano</span>
+  </div>
+  <div class="body">
+    <div style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+        <span style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:rgba(226,226,232,0.4)">API Key</span>
+        <span class="material-symbols-outlined" id="apiKeyToggle" style="font-size:14px;cursor:pointer;color:rgba(226,226,232,0.3);font-variation-settings:'FILL' 1">visibility_off</span>
+      </div>
+      <input type="password" id="apiKeyInput" placeholder="nvapi-..." style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);background:rgba(0,0,0,0.3);color:#e2e2e8;font-family:'JetBrains Mono',monospace;font-size:11px;outline:none">
+    </div>
+    <div style="margin-bottom:8px">
+      <span style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:rgba(226,226,232,0.4)">Model</span>
+      <select id="apiModelSelect" style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);background:rgba(0,0,0,0.3);color:#e2e2e8;font-family:'Inter',sans-serif;font-size:11px;outline:none;margin-top:3px">
+        <option value="nvidia/nemotron-3-nano-omni-30b-a3b-reasoning">Nemotron-3 Nano OMNI (reasoning)</option>
+        <option value="nvidia/nemotron-3-nano-30b-a3b">Nemotron-3 Nano 30B</option>
+        <option value="nvidia/nemotron-3-super-120b-a12b">Nemotron-3 Super 120B</option>
+        <option value="meta/llama-3.3-70b-instruct">Llama 3.3 70B</option>
+        <option value="mistralai/mistral-nemotron">Mistral Nemotron</option>
+        <option value="deepseek-ai/deepseek-v4-flash">DeepSeek V4 Flash</option>
+      </select>
+    </div>
+    <div style="margin-bottom:8px">
+      <span style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:rgba(226,226,232,0.4)">Prompt</span>
+      <textarea id="apiPromptInput" rows="3" placeholder="Ask the model..." style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);background:rgba(0,0,0,0.3);color:#e2e2e8;font-family:'Inter',sans-serif;font-size:11px;outline:none;resize:vertical;margin-top:3px"></textarea>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <div style="flex:1">
+        <span style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:rgba(226,226,232,0.4)">Temp</span>
+        <input type="range" id="apiTemp" min="0" max="2" step="0.1" value="0.6" style="width:100%;margin-top:3px">
+      </div>
+      <div style="flex:1;text-align:right">
+        <span style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:rgba(226,226,232,0.4)">Max Tokens</span>
+        <input type="number" id="apiMaxTokens" value="2048" min="64" max="65536" style="width:100%;padding:4px 6px;border-radius:4px;border:1px solid rgba(255,255,255,0.08);background:rgba(0,0,0,0.3);color:#e2e2e8;font-family:'JetBrains Mono',monospace;font-size:11px;outline:none;margin-top:3px">
+      </div>
+    </div>
+    <button id="btnAPISend" style="width:100%;padding:8px;border:none;border-radius:6px;background:#6cc3ff;color:#0c0e12;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s">Send</button>
+    <div id="apiLoading" style="display:none;text-align:center;padding:12px;font-size:11px;color:rgba(108,195,255,0.6)">
+      <span style="display:inline-block;width:6px;height:6px;background:#6cc3ff;border-radius:50%;animation:pulse 1s ease infinite;margin:0 2px"></span>
+      <span style="display:inline-block;width:6px;height:6px;background:#6cc3ff;border-radius:50%;animation:pulse 1s ease 0.2s infinite;margin:0 2px"></span>
+      <span style="display:inline-block;width:6px;height:6px;background:#6cc3ff;border-radius:50%;animation:pulse 1s ease 0.4s infinite;margin:0 2px"></span>
+      <span style="margin-left:6px">Processing...</span>
+    </div>
+    <div id="apiResponse" style="display:none;margin-top:8px">
+      <div id="apiReasoning" style="padding:8px;border-radius:6px;background:rgba(255,209,102,0.06);border:1px solid rgba(255,209,102,0.15);margin-bottom:6px;font-size:10px;color:#ffd166;font-family:'JetBrains Mono',monospace;line-height:1.4;max-height:120px;overflow-y:auto;white-space:pre-wrap"></div>
+      <div id="apiContent" style="padding:8px;border-radius:6px;background:rgba(108,195,255,0.04);border:1px solid rgba(108,195,255,0.1);font-size:11px;color:#e2e2e8;line-height:1.4;max-height:200px;overflow-y:auto;white-space:pre-wrap"></div>
+    </div>
+    <div id="apiError" style="display:none;margin-top:6px;padding:6px 10px;border-radius:4px;background:rgba(255,55,95,0.1);border:1px solid rgba(255,55,95,0.2);font-size:10px;color:#ff375f;font-family:'JetBrains Mono',monospace"></div>
+  </div>
+</div>
+
 <!-- Telemetry Panel -->
 <div id="telemetryPanel" class="glass-light">
   <div class="title">TELEMETRY STREAM</div>
@@ -206,6 +286,48 @@ body { color: #e2e2e8; font-family: 'Inter', sans-serif; }
 
 <!-- Driver Popup -->
 <div id="driverPopup" class="glass-light"></div>
+
+<!-- Settings Panel -->
+<div id="settingsPanel" class="glass-light">
+  <div class="header">
+    <span style="display:flex;align-items:center;gap:6px"><span class="material-symbols-outlined" style="font-size:16px;color:rgba(226,226,232,0.5)">settings</span> <span style="font-size:12px;font-weight:600;color:rgba(226,226,232,0.7)">SETTINGS</span></span>
+  </div>
+  <div class="body">
+    <div class="section-title">MODE</div>
+    <div style="display:flex;gap:4px;margin-bottom:10px">
+      <button id="modeDemo" class="mode-btn active" style="flex:1;padding:6px;border:none;border-radius:6px;background:#ffb2b7;color:#0c0e12;font-size:10px;font-weight:700;letter-spacing:0.05em;cursor:pointer;text-transform:uppercase">Demo</button>
+      <button id="modeLive" class="mode-btn" style="flex:1;padding:6px;border:none;border-radius:6px;background:rgba(255,255,255,0.06);color:rgba(226,226,232,0.4);font-size:10px;font-weight:700;letter-spacing:0.05em;cursor:pointer;text-transform:uppercase">Live</button>
+    </div>
+    <div id="modeInfo" style="margin-bottom:10px;padding:6px 8px;border-radius:4px;font-size:9px;line-height:1.4;color:rgba(226,226,232,0.5);background:rgba(255,178,183,0.06);border:1px solid rgba(255,178,183,0.1)">nyc-app-server 1000-driver simulation on :8080</div>
+    <div class="section-title">PANELS</div>
+    <div style="margin-bottom:10px">
+      <label class="pnl-toggle"><input type="checkbox" checked data-panel="statsPanel"><span>Fleet Status</span></label>
+      <label class="pnl-toggle"><input type="checkbox" checked data-panel="telemetryPanel"><span>Telemetry</span></label>
+      <label class="pnl-toggle"><input type="checkbox" checked data-panel="gamePanel"><span>Game HUD</span></label>
+      <label class="pnl-toggle"><input type="checkbox" checked data-panel="controlPanel"><span>Controls</span></label>
+      <label class="pnl-toggle"><input type="checkbox" data-panel="apiPanel"><span>NVIDIA API</span></label>
+    </div>
+    <div class="section-title">CONNECTION</div>
+    <div style="margin-bottom:6px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+        <span style="font-size:10px;color:rgba(226,226,232,0.5)">WebSocket</span>
+        <span id="settingsWSStatus" style="font-size:10px;font-family:'JetBrains Mono',monospace;color:#4ae183">LIVE</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+        <span style="font-size:10px;color:rgba(226,226,232,0.5)">Drivers</span>
+        <span id="settingsDriverCount" style="font-size:10px;font-family:'JetBrains Mono',monospace;color:#e2e2e8">0</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+        <span style="font-size:10px;color:rgba(226,226,232,0.5)">Orders</span>
+        <span id="settingsOrderCount" style="font-size:10px;font-family:'JetBrains Mono',monospace;color:#e2e2e8">0</span>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <span style="font-size:10px;color:rgba(226,226,232,0.5)">Map</span>
+        <span id="settingsMapStatus" style="font-size:10px;font-family:'JetBrains Mono',monospace;color:#ffd166">LOADING</span>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- Control Panel -->
 <div id="controlPanel" class="glass">
@@ -394,6 +516,7 @@ function updateStats() {
   document.getElementById('ctrlAvail').textContent = avail;
   document.getElementById('ctrlEnRoute').textContent = enRoute;
   document.getElementById('ctrlDelivering').textContent = delivering;
+  updateConnectionUI();
 }
 
 // ─── ThrottledRAF ──────────────────────────────────────────────────────────
@@ -515,6 +638,7 @@ map.on('load', () => {
     }
   });
   mapReady = true;
+  updateConnectionUI();
   if (pendingGeoJSON !== null) { map.getSource('drivers').setData(pendingGeoJSON); pendingGeoJSON = null; }
   map.on('click', 'driver-clusters', (e) => {
     const f = e.features[0];
@@ -558,8 +682,9 @@ const mapUpdater = new ThrottledRAF((geoJSON) => {
 // ─── API Calls ──────────────────────────────────────────────────────────────
 async function assignToDriver(driverId) {
   hideDriverPopup();
+  const base = window.API_BASE || API_BASE;
   try {
-    const resp = await fetch(API_BASE + '/api/assign', {
+    const resp = await fetch(base + '/api/assign', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ driver_id: driverId })
     });
@@ -592,8 +717,9 @@ async function assignRandomOrder() {
 }
 
 async function fetchDrivers() {
+  const base = window.API_BASE || API_BASE;
   try {
-    const resp = await fetch(API_BASE + '/api/drivers');
+    const resp = await fetch(base + '/api/drivers');
     if (!resp.ok) return;
     const data = await resp.json();
     if (data.drivers) {
@@ -694,10 +820,204 @@ document.getElementById('btnGameToggle').addEventListener('click', () => {
   if (panel.classList.contains('show')) logTelemetry('GAME', 'Game HUD opened');
 });
 
+// ─── NVIDIA API Panel ────────────────────────────────────────────────────
+document.getElementById('btnAPIToggle').addEventListener('click', () => {
+  document.getElementById('apiPanel').classList.toggle('show');
+});
+document.getElementById('apiKeyToggle').addEventListener('click', () => {
+  const input = document.getElementById('apiKeyInput');
+  const icon = document.getElementById('apiKeyToggle');
+  if (input.type === 'password') {
+    input.type = 'text';
+    icon.textContent = 'visibility';
+  } else {
+    input.type = 'password';
+    icon.textContent = 'visibility_off';
+  }
+});
+document.getElementById('apiModelSelect').addEventListener('change', () => {
+  const model = document.getElementById('apiModelSelect').value;
+  const label = model.split('/').pop().replace(/-(\d)/g, '-$1').substring(0, 24);
+  document.getElementById('apiModelLabel').textContent = label;
+});
+document.getElementById('btnAPISend').addEventListener('click', async () => {
+  const key = document.getElementById('apiKeyInput').value.trim() || undefined;
+  const model = document.getElementById('apiModelSelect').value;
+  const prompt = document.getElementById('apiPromptInput').value.trim();
+  const temp = parseFloat(document.getElementById('apiTemp').value);
+  const maxTokens = parseInt(document.getElementById('apiMaxTokens').value) || 2048;
+  if (!prompt) { document.getElementById('apiError').textContent = 'Enter a prompt'; document.getElementById('apiError').style.display = 'block'; return; }
+  const isReasoning = model.includes('reasoning');
+  const body = {
+    model, max_tokens: maxTokens, temperature: temp,
+    messages: [{ role: 'user', content: prompt }],
+    ...(isReasoning ? { extra_body: { chat_template_kwargs: { enable_thinking: true }, reasoning_budget: 16384 } } : {})
+  };
+  const headers = { 'Content-Type': 'application/json' };
+  if (key) headers['X-NVIDIA-Key'] = key;
+  const loading = document.getElementById('apiLoading');
+  const respDiv = document.getElementById('apiResponse');
+  const reasoningDiv = document.getElementById('apiReasoning');
+  const contentDiv = document.getElementById('apiContent');
+  const errorDiv = document.getElementById('apiError');
+  errorDiv.style.display = 'none';
+  respDiv.style.display = 'none';
+  loading.style.display = 'block';
+  try {
+    const resp = await fetch((window.API_BASE || API_BASE) + '/api/nvidia/chat', {
+      method: 'POST', headers, body: JSON.stringify(body)
+    });
+    const data = await resp.json();
+    loading.style.display = 'none';
+    if (!resp.ok) { errorDiv.textContent = data.error || 'HTTP ' + resp.status; errorDiv.style.display = 'block'; return; }
+    if (data.error) { errorDiv.textContent = data.error; errorDiv.style.display = 'block'; return; }
+    const choice = data.choices && data.choices[0];
+    if (!choice) { errorDiv.textContent = 'No response from model'; errorDiv.style.display = 'block'; return; }
+    const msg = choice.message || {};
+    if (msg.reasoning_content) {
+      reasoningDiv.textContent = msg.reasoning_content;
+      reasoningDiv.style.display = 'block';
+    } else {
+      reasoningDiv.style.display = 'none';
+    }
+    contentDiv.textContent = msg.content || '';
+    respDiv.style.display = 'block';
+    logTelemetry('NVIDIA', 'Response from ' + model.split('/').pop().substring(0, 30));
+  } catch (e) {
+    loading.style.display = 'none';
+    errorDiv.textContent = 'Network error: ' + e.message;
+    errorDiv.style.display = 'block';
+  }
+});
+
+// ─── Settings Panel ──────────────────────────────────────────────────────
+document.getElementById('btnSettingsToggle').addEventListener('click', () => {
+  document.getElementById('settingsPanel').classList.toggle('show');
+});
+
+let isDemoMode = true;
+
+function switchMode(demo) {
+  isDemoMode = demo;
+  const modeBtn = demo ? 'modeDemo' : 'modeLive';
+  const otherBtn = demo ? 'modeLive' : 'modeDemo';
+  document.getElementById(modeBtn).style.background = '#ffb2b7';
+  document.getElementById(modeBtn).style.color = '#0c0e12';
+  document.getElementById(otherBtn).style.background = 'rgba(255,255,255,0.06)';
+  document.getElementById(otherBtn).style.color = 'rgba(226,226,232,0.4)';
+  const info = document.getElementById('modeInfo');
+  if (demo) {
+    info.textContent = 'nyc-app-server 1000-driver simulation on :8080';
+    info.style.borderColor = 'rgba(255,178,183,0.1)';
+    info.style.color = 'rgba(226,226,232,0.5)';
+    info.style.background = 'rgba(255,178,183,0.06)';
+  } else {
+    info.textContent = 'gateway + Rust spatial tracker on :8081';
+    info.style.borderColor = 'rgba(74,225,131,0.15)';
+    info.style.color = 'rgba(74,225,131,0.5)';
+    info.style.background = 'rgba(74,225,131,0.06)';
+  }
+  // Reconnect with new URL
+  const newWsUrl = demo ? 'ws://127.0.0.1:8080/ws' : 'ws://127.0.0.1:8081/ws';
+  const newApiUrl = demo ? 'http://127.0.0.1:8080' : 'http://127.0.0.1:8081';
+  window.WS_URL = newWsUrl;
+  window.API_BASE = newApiUrl;
+  if (ws) { ws.close(); ws = null; }
+  logTelemetry('MODE', 'Switched to ' + (demo ? 'Demo' : 'Live') + ' mode');
+  connectWS();
+}
+
+document.getElementById('modeDemo').addEventListener('click', () => switchMode(true));
+document.getElementById('modeLive').addEventListener('click', () => switchMode(false));
+
+document.querySelectorAll('.pnl-toggle input').forEach(cb => {
+  cb.addEventListener('change', function() {
+    const panel = document.getElementById(this.dataset.panel);
+    if (panel) {
+      if (this.checked) { panel.classList.add('show'); } else { panel.classList.remove('show'); }
+    }
+  });
+});
+
+// ─── Connection State Updates ────────────────────────────────────────────
+function updateConnectionUI() {
+  const vals = Object.values(driverData);
+  document.getElementById('settingsDriverCount').textContent = vals.length;
+  document.getElementById('settingsOrderCount').textContent = orderCount;
+  document.getElementById('settingsMapStatus').textContent = mapReady ? 'READY' : 'LOADING';
+  document.getElementById('settingsMapStatus').style.color = mapReady ? '#4ae183' : '#ffd166';
+}
+
+// Override connectWS to update settings UI
+const origConnectWS = connectWS;
+connectWS = function() {
+  const origOpen = ws && ws.onopen;
+  const origClose = ws && ws.onclose;
+  const wsUrl = window.WS_URL || WS_URL;
+  document.getElementById('settingsWSStatus').textContent = 'CONNECTING';
+  document.getElementById('settingsWSStatus').style.color = '#ffd166';
+  try {
+    ws = new WebSocket(wsUrl);
+  } catch (e) {
+    document.getElementById('settingsWSStatus').textContent = 'ERROR';
+    document.getElementById('settingsWSStatus').style.color = '#ff375f';
+    scheduleReconnect();
+    return;
+  }
+  ws.onopen = () => {
+    document.getElementById('statusDot').style.background = '#4ae183';
+    document.getElementById('statusText').textContent = 'CONNECTED';
+    document.getElementById('wsDot').style.background = '#4ae183';
+    document.getElementById('wsStatus').textContent = 'WebSocket LIVE';
+    document.getElementById('settingsWSStatus').textContent = 'LIVE';
+    document.getElementById('settingsWSStatus').style.color = '#4ae183';
+    logTelemetry('WS', 'Connected to ' + wsUrl);
+    fetchDrivers();
+  };
+  ws.onmessage = (e) => {
+    try {
+      const data = JSON.parse(e.data);
+      if (data.type === 'init' && data.drivers) {
+        for (const d of data.drivers) { driverData[d.id] = { id: d.id, lat: d.lat, lng: d.lng, status: d.status || 'available' }; }
+        mapUpdater.update(driversToGeoJSON(Object.values(driverData)));
+        updateStats();
+        updateConnectionUI();
+        logTelemetry('INIT', data.drivers.length + ' drivers loaded');
+      } else if (data.type === 'update' && data.drivers) {
+        for (const d of data.drivers) { driverData[d.id] = { id: d.id, lat: d.lat, lng: d.lng, status: d.status || 'available' }; }
+        mapUpdater.update(driversToGeoJSON(Object.values(driverData)));
+        updateStats();
+        updateConnectionUI();
+      } else if (data.type === 'assignment' && data.driver) {
+        const d = data.driver;
+        if (driverData[d.id]) driverData[d.id].status = d.status || 'en_route';
+        mapUpdater.update(driversToGeoJSON(Object.values(driverData)));
+        logTelemetry('ASSIGN', d.id + ' → ' + (d.status || 'en_route'));
+        updateStats();
+        updateConnectionUI();
+      }
+    } catch (err) { /* ignore */ }
+  };
+  ws.onclose = () => {
+    document.getElementById('statusDot').style.background = '#ff375f';
+    document.getElementById('statusText').textContent = 'DISCONNECTED';
+    document.getElementById('wsDot').style.background = '#ff375f';
+    document.getElementById('wsStatus').textContent = 'WebSocket OFFLINE';
+    document.getElementById('settingsWSStatus').textContent = 'OFFLINE';
+    document.getElementById('settingsWSStatus').style.color = '#ff375f';
+    logTelemetry('WS', 'Disconnected');
+    scheduleReconnect();
+  };
+  ws.onerror = () => { ws.close(); };
+};
+
+// Patch existing connectWS usage: call our new version
 document.addEventListener('keydown', (e) => {
   if (e.key === 'a' || e.key === 'A') assignRandomOrder();
   if (e.key === 'r' || e.key === 'R') map.flyTo({ center: NYC_LNG_LAT, zoom: ZOOM, duration: 1000 });
   if (e.key === 'g' || e.key === 'G') document.getElementById('gamePanel').classList.toggle('show');
+  if (e.key === 'n' || e.key === 'N') document.getElementById('apiPanel').classList.toggle('show');
+  if (e.key === 's' || e.key === 'S') document.getElementById('settingsPanel').classList.toggle('show');
 });
 
 // ─── Init ─────────────────────────────────────────────────────────────────

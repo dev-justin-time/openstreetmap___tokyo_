@@ -1,12 +1,15 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"math"
 	"math/rand"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 
@@ -363,6 +366,86 @@ func (s *Server) startDriverSimulation() {
 	}
 }
 
+// ─── NVIDIA API Proxy ──────────────────────────────────────────────────────────
+
+func handleNVIDIAProxy(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	// Use frontend-provided key first, fall back to env var
+	apiKey := r.Header.Get("X-NVIDIA-Key")
+	if apiKey == "" {
+		apiKey = os.Getenv("NVIDIA_API_KEY")
+	}
+	if apiKey == "" {
+		http.Error(w, `{"error":"NVIDIA_API_KEY not set"}`, http.StatusInternalServerError)
+		return
+	}
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, `{"error":"read error"}`, http.StatusBadRequest)
+		return
+	}
+
+	nvidiaURL := "https://integrate.api.nvidia.com/v1/chat/completions"
+	req, err := http.NewRequest("POST", nvidiaURL, bytes.NewReader(body))
+	if err != nil {
+		http.Error(w, `{"error":"create request failed"}`, http.StatusInternalServerError)
+		return
+	}
+	req.Header.Set("Authorization", "Bearer "+apiKey)
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{Timeout: 120 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		http.Error(w, fmt.Sprintf(`{"error":"%s"}`, err.Error()), http.StatusBadGateway)
+		return
+	}
+	defer resp.Body.Close()
+
+	// Handle NVIDIA async pattern: POST returns 202 with Location header
+	if resp.StatusCode == http.StatusAccepted {
+		location := resp.Header.Get("Location")
+		if location == "" {
+			http.Error(w, `{"error":"202 without Location header"}`, http.StatusBadGateway)
+			return
+		}
+		pollReq, _ := http.NewRequest("GET", location, nil)
+		pollReq.Header.Set("Authorization", "Bearer "+apiKey)
+		pollClient := &http.Client{Timeout: 120 * time.Second}
+		for i := 0; i < 120; i++ {
+			time.Sleep(500 * time.Millisecond)
+			pollResp, err := pollClient.Do(pollReq)
+			if err != nil {
+				http.Error(w, fmt.Sprintf(`{"error":"poll error: %s"}`, err.Error()), http.StatusBadGateway)
+				return
+			}
+			if pollResp.StatusCode == http.StatusOK {
+				pollBody, _ := io.ReadAll(pollResp.Body)
+				pollResp.Body.Close()
+				w.Header().Set("Content-Type", "application/json")
+				w.Write(pollBody)
+				return
+			}
+			pollResp.Body.Close()
+		}
+		http.Error(w, `{"error":"poll timeout"}`, http.StatusGatewayTimeout)
+		return
+	}
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		http.Error(w, `{"error":"read response failed"}`, http.StatusBadGateway)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(resp.StatusCode)
+	w.Write(respBody)
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 func main() {
@@ -377,6 +460,7 @@ func main() {
 	http.HandleFunc("/api/assign", server.handleAssignOrder)
 	http.HandleFunc("/api/stats", server.handleNYCStats)
 	http.HandleFunc("/api/drivers", server.handleListDrivers)
+	http.HandleFunc("/api/nvidia/chat", handleNVIDIAProxy)
 	log.Println("NYC Driver App starting on http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
