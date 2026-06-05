@@ -1,4 +1,4 @@
-# Production Caddy reverse proxy with auto TLS via Let's Encrypt
+cd# Production Caddy reverse proxy with auto TLS via Let's Encrypt
 # Set DOMAIN env var in docker-compose.yml for production certificates
 
 {$DOMAIN:localhost} {

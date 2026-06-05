@@ -19,7 +19,7 @@ viewer.imageryLayers.get(0).brightness = 0.6;
 viewer.imageryLayers.get(0).contrast = 1.2;
 
 // 2. Load Local PLATEAU 3D Tiles
-const tilesetUrl = 'http://localhost:8080/tileset.json'; // From Part 2 pipeline
+const tilesetUrl = '/tiles/tileset.json'; // Served by nyc-app-server from plateau_3dtiles/
 
 const tileset = viewer.scene.primitives.add(
     new Cesium.Cesium3DTileset({

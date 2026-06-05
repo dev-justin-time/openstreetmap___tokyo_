@@ -456,6 +456,7 @@ func main() {
 	log.Printf("Loaded %d NYC destinations", server.destDB.Count())
 	go server.startDriverSimulation()
 	http.Handle("/", http.FileServer(http.Dir("../../frontend")))
+	http.Handle("/tiles/", http.StripPrefix("/tiles/", http.FileServer(http.Dir("../plateau-server/plateau_3dtiles"))))
 	http.HandleFunc("/ws", server.handleWebSocket)
 	http.HandleFunc("/api/assign", server.handleAssignOrder)
 	http.HandleFunc("/api/stats", server.handleNYCStats)

@@ -24,7 +24,7 @@ Node.js   PLATEAU 3D Tiles server            ✅ npm deps installed
 | `nyc-app-server` | `:8080` | 1000 simulated NYC drivers, WebSocket `/ws`, REST `/api/assign`, `/api/drivers`, `/api/stats`, `/api/nvidia/chat` |
 | `bin/gateway.exe` | `:8081` | Go API gateway with WebSocket hub, SSE broker, SQLite queue, order dispatch |
 | Rust tracker | `:3030` | In-memory sharded R-tree spatial index, SSE events, `/track`, `/nearby`, `/dispatch` |
-| `plateau-server` | `:8080` | CORS-enabled Node.js server for 3D Tiles (`.b3dm`, `.pnts`) |
+| `plateau-server` | `:8082` | CORS-enabled Node.js server for 3D Tiles (`.b3dm`, `.pnts`); also served via nyc-app-server at `/tiles/` |
 
 ## Frontend Pages
 

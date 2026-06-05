@@ -3,7 +3,7 @@ const cors = require('cors');
 const path = require('path');
 
 const app = express();
-const PORT = 8080;
+const PORT = 8082;
 const TILE_DIR = path.join(__dirname, 'plateau_3dtiles');
 
 const mimeTypes = {

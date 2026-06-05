@@ -1,0 +1,6 @@
+{
+  "asset": { "version": "1.0" },
+  "geometricError": 500,
+  "root": { "geometricError": 500, "refine": "ADD", "boundingVolume": { "region": [-180, -90, 180, 90, 0, 1000] } },
+  "notice": "No 3D tiles generated yet. Run: cjio input.gml export buildings.city.json && py3dtiles tileset --srs_in EPSG:6697 --srs_out EPSG:4326 --out ./tiles buildings.city.json"
+}
