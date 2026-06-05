@@ -64,9 +64,44 @@ body { background: #0c0e12; color: #e2e2e8; font-family: 'Inter', sans-serif; ov
 #driverPopup .actions button { padding: 6px 16px; border: none; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.15s; text-transform: uppercase; letter-spacing: 0.05em; }
 #driverPopup .actions button:active { transform: scale(0.95); }
 
+/* ─── Game Features ───────────────────────────────────────────────────── */
+#gamePanel { position: fixed; top: 68px; right: 16px; z-index: 999; padding: 0; border-radius: 12px; min-width: 220px; overflow: hidden; display: none; }
+#gamePanel.show { display: block; }
+#gamePanel .header { padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: space-between; }
+#gamePanel .header .rank { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,178,183,0.5); }
+#gamePanel .body { padding: 10px 14px; }
+#gamePanel .score-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+#gamePanel .score-row .label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(226,226,232,0.5); }
+#gamePanel .score-row .value { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 700; }
+#gamePanel .xp-bar-wrap { height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; margin: 6px 0 10px 0; overflow: hidden; }
+#gamePanel .xp-bar { height: 100%; background: linear-gradient(90deg, #ffb2b7, #ff375f); border-radius: 2px; transition: width 0.3s ease; width: 0%; }
+#gamePanel .xp-label { font-size: 9px; color: rgba(226,226,232,0.4); font-family: 'JetBrains Mono', monospace; text-align: right; margin-bottom: 8px; }
+#gamePanel .game-stat { display: flex; justify-content: space-between; padding: 4px 0; font-size: 11px; }
+#gamePanel .game-stat .lbl { color: rgba(226,226,232,0.5); }
+#gamePanel .game-stat .val { font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+#gamePanel .divider { height: 1px; background: rgba(255,255,255,0.06); margin: 6px 0; }
+#gamePanel .achieve-title { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,178,183,0.5); margin: 8px 0 4px 0; }
+.achieve-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 6px; font-size: 10px; background: rgba(255,55,95,0.15); color: #ffb2b7; margin: 2px; white-space: nowrap; }
+.achieve-badge .icon { font-size: 14px; }
+.achieve-badge.locked { opacity: 0.3; background: rgba(255,255,255,0.04); color: rgba(226,226,232,0.4); }
+#gamePanel .achieve-grid { display: flex; flex-wrap: wrap; gap: 2px; }
+
+/* Toast notifications */
+#toastContainer { position: fixed; top: 64px; left: 50%; transform: translateX(-50%); z-index: 2000; display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; }
+.toast { padding: 10px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; animation: toastIn 0.3s ease, toastOut 0.3s ease 3.7s forwards; display: flex; align-items: center; gap: 8px; pointer-events: auto; max-width: 360px; text-align: center; }
+.toast.achieve { background: linear-gradient(135deg, rgba(255,55,95,0.25), rgba(255,178,183,0.15)); border: 1px solid rgba(255,55,95,0.3); color: #ffb2b7; }
+.toast.levelup { background: linear-gradient(135deg, rgba(255,209,102,0.2), rgba(255,178,183,0.15)); border: 1px solid rgba(255,209,102,0.3); color: #ffd166; }
+.toast.combo { background: linear-gradient(135deg, rgba(74,225,131,0.2), rgba(108,195,255,0.15)); border: 1px solid rgba(74,225,131,0.3); color: #4ae183; }
+.toast .icon { font-size: 20px; }
+@keyframes toastIn { from { opacity: 0; transform: translateY(-12px) scale(0.9); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes toastOut { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(-12px) scale(0.9); } }
+
+/* XP Float */
+.xp-float { position: fixed; font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: #ffb2b7; pointer-events: none; z-index: 3000; animation: xpFloat 1.2s ease forwards; }
+@keyframes xpFloat { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-40px) scale(1.3); } }
+
 @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 #driverPopup.show { animation: fadeIn 0.2s ease; }
-
 .maplibregl-popup { z-index: 1002; }
 
 @media (max-width: 640px) {
@@ -74,6 +109,7 @@ body { background: #0c0e12; color: #e2e2e8; font-family: 'Inter', sans-serif; ov
   #statsPanel { right: 8px; min-width: 120px; }
   #controlPanel { bottom: 12px; padding: 10px 14px; gap: 8px; }
   #controlPanel .stat .num { font-size: 14px; }
+  #gamePanel { right: 8px; min-width: 180px; }
 }
 </style>
 </head>
@@ -102,7 +138,8 @@ body { background: #0c0e12; color: #e2e2e8; font-family: 'Inter', sans-serif; ov
     <h1>KINETIC_FLEET</h1>
     <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:rgba(255,178,183,0.5);letter-spacing:0.1em;margin-left:4px">NYC DEMO</span>
   </div>
-  <div style="display:flex;align-items:center;gap:12px">
+  <div style="display:flex;align-items:center;gap:8px">
+    <span class="material-symbols-outlined" style="color:#ffd166;cursor:pointer;font-size:20px" id="btnGameToggle" title="Game Panel">stadia_controller</span>
     <span style="font-family:'JetBrains Mono',monospace;font-size:11px;display:flex;align-items:center;gap:4px" id="connStatus">
       <span class="dot" style="background:#4ae183" id="statusDot"></span>
       <span style="color:#4ae183" id="statusText">CONNECTED</span>
@@ -122,11 +159,47 @@ body { background: #0c0e12; color: #e2e2e8; font-family: 'Inter', sans-serif; ov
   <div class="status-row"><span class="dot" style="background:#4ae183" id="wsDot"></span><span id="wsStatus" style="color:rgba(226,226,232,0.6)">WebSocket LIVE</span></div>
 </div>
 
+<!-- Game Panel -->
+<div id="gamePanel" class="glass-light">
+  <div class="header">
+    <span style="display:flex;align-items:center;gap:6px"><span class="material-symbols-outlined" style="font-size:16px;color:#ffd166">stadia_controller</span> <span style="font-size:12px;font-weight:600;color:#ffd166">GAME HUD</span></span>
+    <span class="rank" id="gameLevelTitle">DISPATCH CADET</span>
+  </div>
+  <div class="body">
+    <div class="score-row">
+      <span class="label">Score</span>
+      <span class="value" id="gameScore" style="color:#ffb2b7">0</span>
+    </div>
+    <div class="score-row">
+      <span class="label">Level</span>
+      <span class="value" id="gameLevel" style="color:#ffd166;font-size:14px">1</span>
+    </div>
+    <div class="xp-bar-wrap">
+      <div class="xp-bar" id="xpBar"></div>
+    </div>
+    <div class="xp-label">
+      <span id="xpCurrent">0</span> / <span id="xpNext">100</span> XP
+    </div>
+    <div class="game-stat"><span class="lbl">Streak</span><span class="val" id="gameStreak" style="color:#4ae183">0</span></div>
+    <div class="game-stat"><span class="lbl">Best Streak</span><span class="val" id="gameMaxStreak" style="color:#4ae183">0</span></div>
+    <div class="game-stat"><span class="lbl">Combo</span><span class="val" id="gameCombo" style="color:#ffd166">1.0x</span></div>
+    <div class="divider"></div>
+    <div class="game-stat"><span class="lbl">Orders</span><span class="val" id="gameOrders" style="color:#ffb2b7">0</span></div>
+    <div class="game-stat"><span class="lbl">Drivers Used</span><span class="val" id="gameDriversUsed" style="color:#6cc3ff">0</span></div>
+    <div class="divider"></div>
+    <div class="achieve-title">Achievements</div>
+    <div class="achieve-grid" id="achieveGrid"></div>
+  </div>
+</div>
+
 <!-- Telemetry Panel -->
 <div id="telemetryPanel" class="glass-light">
   <div class="title">TELEMETRY STREAM</div>
   <div id="telemetryLog"></div>
 </div>
+
+<!-- Toast Container -->
+<div id="toastContainer"></div>
 
 <!-- Driver Popup -->
 <div id="driverPopup" class="glass-light"></div>
@@ -149,13 +222,148 @@ const ZOOM = 12;
 const TARGET_FPS = 30;
 
 // ─── State ───────────────────────────────────────────────────────────────────
-let driverData = {};       // id -> {id, lat, lng, status}
+let driverData = {};
 let orderCount = 0;
 let ws = null;
 let wsReconnectTimer = null;
 let telemetryEntries = 0;
 let mapReady = false;
 let pendingGeoJSON = null;
+
+// ─── Game State ──────────────────────────────────────────────────────────────
+const LEVEL_TITLES = [
+  '', 'Dispatch Cadet', 'Fleet Operator', 'Logistics Specialist', 'Route Commander',
+  'Fleet Captain', 'Operations Director', 'Supply Chain General', 'Logistics Magnate',
+  'Fleet Admiral', 'NYC Legend'
+];
+function getLevelTitle(lvl) { return lvl <= 10 ? LEVEL_TITLES[lvl] : 'Fleet God'; }
+function xpForLevel(lvl) { return lvl * 100 + (lvl - 1) * 50; }
+
+const ACHIEVEMENT_DEFS = [
+  { id: 'first_dispatch', title: 'First Dispatch', desc: 'Complete your first order', icon: 'send', check: s => s.totalOrders >= 1 },
+  { id: 'delivery_spree', title: 'Delivery Spree', desc: 'Complete 10 orders', icon: 'inventory', check: s => s.totalOrders >= 10 },
+  { id: 'century', title: 'Century', desc: 'Complete 100 orders', icon: 'military_tech', check: s => s.totalOrders >= 100 },
+  { id: 'speed_demon', title: 'Speed Demon', desc: 'Reach 3x combo', icon: 'bolt', check: s => s.combo >= 3 },
+  { id: 'on_fire', title: 'On Fire', desc: 'Reach 5x combo', icon: 'whatshot', check: s => s.combo >= 5 },
+  { id: 'fleet_master', title: 'Fleet Master', desc: 'Reach level 10', icon: 'stars', check: s => s.level >= 10 },
+  { id: 'perfect_streak', title: 'Perfect Streak', desc: 'Reach 20 streak', icon: 'trending_up', check: s => s.streak >= 20 },
+  { id: 'precision', title: 'Precision Dispatch', desc: 'Assign to 50 drivers', icon: 'ads_click', check: s => Object.keys(s.driverDeliveries).length >= 50 },
+  { id: 'nyc_legend', title: 'NYC Legend', desc: 'Complete 500 orders', icon: 'emoji_events', check: s => s.totalOrders >= 500 },
+];
+
+let game = {
+  score: 0,
+  xp: 0,
+  level: 1,
+  streak: 0,
+  maxStreak: 0,
+  combo: 1,
+  lastOrderTime: 0,
+  unlocked: new Set(),
+  driverDeliveries: {},
+  totalOrders: 0
+};
+
+function xpForCurrentLevel() { return xpForLevel(game.level); }
+
+function updateGameUI() {
+  document.getElementById('gameScore').textContent = game.score.toLocaleString();
+  document.getElementById('gameLevel').textContent = game.level;
+  document.getElementById('gameLevelTitle').textContent = getLevelTitle(game.level).toUpperCase();
+  document.getElementById('gameStreak').textContent = game.streak;
+  document.getElementById('gameMaxStreak').textContent = game.maxStreak;
+  document.getElementById('gameCombo').textContent = game.combo.toFixed(1) + 'x';
+  document.getElementById('gameOrders').textContent = game.totalOrders;
+  document.getElementById('gameDriversUsed').textContent = Object.keys(game.driverDeliveries).length;
+  const xpCur = game.xp;
+  const xpMax = xpForCurrentLevel();
+  document.getElementById('xpCurrent').textContent = xpCur;
+  document.getElementById('xpNext').textContent = xpMax;
+  const pct = Math.min(100, (xpCur / xpMax) * 100);
+  document.getElementById('xpBar').style.width = pct + '%';
+  renderAchievements();
+}
+
+function renderAchievements() {
+  const grid = document.getElementById('achieveGrid');
+  grid.innerHTML = '';
+  for (const def of ACHIEVEMENT_DEFS) {
+    const unlocked = game.unlocked.has(def.id);
+    const b = document.createElement('span');
+    b.className = 'achieve-badge' + (unlocked ? '' : ' locked');
+    b.title = def.desc;
+    b.innerHTML = '<span class="icon material-symbols-outlined">' + def.icon + '</span> ' + def.title;
+    grid.appendChild(b);
+  }
+}
+
+function checkAchievements() {
+  for (const def of ACHIEVEMENT_DEFS) {
+    if (!game.unlocked.has(def.id) && def.check(game)) {
+      game.unlocked.add(def.id);
+      showToast(def.icon, def.title + ' — ' + def.desc, 'achieve');
+      logTelemetry('ACHIEVE', def.title);
+    }
+  }
+}
+
+function showToast(icon, msg, type) {
+  const container = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.innerHTML = '<span class="icon material-symbols-outlined">' + icon + '</span> ' + msg;
+  container.appendChild(t);
+  setTimeout(() => { if (t.parentNode) t.remove(); }, 4200);
+}
+
+function showXPFloat(xpGain) {
+  const el = document.createElement('div');
+  el.className = 'xp-float';
+  el.textContent = '+' + xpGain + ' XP';
+  el.style.left = '50%';
+  el.style.top = '50%';
+  el.style.transform = 'translateX(-50%)';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1300);
+}
+
+function addXP(amount) {
+  const oldLevel = game.level;
+  game.xp += amount;
+  while (game.xp >= xpForCurrentLevel()) {
+    game.xp -= xpForCurrentLevel();
+    game.level++;
+  }
+  showXPFloat(amount);
+  if (game.level > oldLevel) {
+    showToast('arrow_upward', 'LEVEL UP! You are now ' + getLevelTitle(game.level) + ' (Level ' + game.level + ')', 'levelup');
+  }
+  updateGameUI();
+}
+
+function processGameOrder() {
+  const now = Date.now();
+  if (game.lastOrderTime > 0) {
+    const delta = now - game.lastOrderTime;
+    if (delta < 5000) {
+      game.combo = Math.min(5, game.combo + 0.5);
+      showToast('local_fire_department', 'COMBO x' + game.combo.toFixed(1) + '!', 'combo');
+    } else if (delta >= 10000) {
+      game.combo = 1;
+    }
+  }
+  game.lastOrderTime = now;
+  game.streak++;
+  if (game.streak > game.maxStreak) game.maxStreak = game.streak;
+
+  const scoreGain = Math.round(100 * game.combo);
+  const xpGain = Math.round(20 * game.combo);
+  game.score += scoreGain;
+  game.totalOrders++;
+  addXP(xpGain);
+  checkAchievements();
+  updateGameUI();
+}
 
 // ─── GeoJSON Conversion ────────────────────────────────────────────────────
 function driversToGeoJSON(driversArray) {
@@ -175,7 +383,6 @@ function updateStats() {
   const avail = vals.filter(d => d.status === 'available').length;
   const enRoute = vals.filter(d => d.status === 'en_route').length;
   const delivering = vals.filter(d => d.status === 'delivering').length;
-
   document.getElementById('statTotal').textContent = total;
   document.getElementById('statAvail').textContent = avail;
   document.getElementById('statEnRoute').textContent = enRoute;
@@ -212,9 +419,7 @@ class ThrottledRAF {
     }
     requestAnimationFrame(() => this.loop());
   }
-  stop() {
-    this.isRunning = false;
-  }
+  stop() { this.isRunning = false; }
 }
 
 // ─── Telemetry Log ─────────────────────────────────────────────────────────
@@ -235,8 +440,7 @@ function logTelemetry(type, msg) {
 const map = new maplibregl.Map({
   container: 'map',
   style: {
-    version: 8,
-    name: 'NYC Dark',
+    version: 8, name: 'NYC Dark',
     sources: {
       'carto-dark': {
         type: 'raster',
@@ -245,146 +449,80 @@ const map = new maplibregl.Map({
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>'
       }
     },
-    layers: [{
-      id: 'carto-dark-layer',
-      type: 'raster',
-      source: 'carto-dark',
-      minzoom: 0,
-      maxzoom: 22
-    }],
+    layers: [{ id: 'carto-dark-layer', type: 'raster', source: 'carto-dark', minzoom: 0, maxzoom: 22 }],
     glyphs: 'https://fonts.openmaptiles.org/{fontstack}/{range}.pbf'
   },
-  center: NYC_LNG_LAT,
-  zoom: ZOOM,
-  attributionControl: false
+  center: NYC_LNG_LAT, zoom: ZOOM, attributionControl: false
 });
-
 map.addControl(new maplibregl.NavigationControl(), 'top-right');
 
-// ─── Source & Layers (on load) ────────────────────────────────────────────
+// ─── Source & Layers ───────────────────────────────────────────────────────
 map.on('load', () => {
   map.addSource('drivers', {
-    type: 'geojson',
-    data: { type: 'FeatureCollection', features: [] },
-    promoteId: 'id',
-    cluster: true,
-    clusterMaxZoom: 14,
-    clusterRadius: 50
+    type: 'geojson', data: { type: 'FeatureCollection', features: [] },
+    promoteId: 'id', cluster: true, clusterMaxZoom: 14, clusterRadius: 50
   });
-
-  // Cluster circles
   map.addLayer({
-    id: 'driver-clusters',
-    type: 'circle',
-    source: 'drivers',
+    id: 'driver-clusters', type: 'circle', source: 'drivers',
     filter: ['has', 'point_count'],
     paint: {
       'circle-color': ['step', ['get', 'point_count'], '#51bbd6', 10, '#f1f075', 50, '#f28cb1'],
       'circle-radius': ['step', ['get', 'point_count'], 20, 10, 30, 50, 40],
-      'circle-opacity': 0.85,
-      'circle-stroke-width': 2,
-      'circle-stroke-color': 'rgba(255,255,255,0.15)'
+      'circle-opacity': 0.85, 'circle-stroke-width': 2, 'circle-stroke-color': 'rgba(255,255,255,0.15)'
     }
   });
-
-  // Cluster count labels
   map.addLayer({
-    id: 'driver-cluster-count',
-    type: 'symbol',
-    source: 'drivers',
+    id: 'driver-cluster-count', type: 'symbol', source: 'drivers',
     filter: ['has', 'point_count'],
-    layout: {
-      'text-field': '{point_count_abbreviated}',
-      'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
-      'text-size': 12
-    },
-    paint: {
-      'text-color': '#fff',
-      'text-halo-color': 'rgba(0,0,0,0.6)',
-      'text-halo-width': 1.5
-    }
+    layout: { 'text-field': '{point_count_abbreviated}', 'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'], 'text-size': 12 },
+    paint: { 'text-color': '#fff', 'text-halo-color': 'rgba(0,0,0,0.6)', 'text-halo-width': 1.5 }
   });
-
-  // Unclustered driver points
   map.addLayer({
-    id: 'driver-unclustered',
-    type: 'circle',
-    source: 'drivers',
+    id: 'driver-unclustered', type: 'circle', source: 'drivers',
     filter: ['!', ['has', 'point_count']],
     paint: {
       'circle-radius': 6,
-      'circle-color': [
-        'match', ['get', 'status'],
-        'available', '#4ae183',
-        'en_route', '#ffd166',
-        'delivering', '#6cc3ff',
-        '#9e9e9e'
-      ],
-      'circle-stroke-width': 2,
-      'circle-stroke-color': 'rgba(255,255,255,0.3)',
-      'circle-opacity': 0.9
+      'circle-color': ['match', ['get', 'status'], 'available', '#4ae183', 'en_route', '#ffd166', 'delivering', '#6cc3ff', '#9e9e9e'],
+      'circle-stroke-width': 2, 'circle-stroke-color': 'rgba(255,255,255,0.3)', 'circle-opacity': 0.9
     }
   });
-
   mapReady = true;
-
-  // Apply any data that arrived before map loaded
-  if (pendingGeoJSON !== null) {
-    map.getSource('drivers').setData(pendingGeoJSON);
-    pendingGeoJSON = null;
-  }
-
-  // ─── Click: cluster → zoom in ──────────────────────────────────────────
+  if (pendingGeoJSON !== null) { map.getSource('drivers').setData(pendingGeoJSON); pendingGeoJSON = null; }
   map.on('click', 'driver-clusters', (e) => {
-    const feature = e.features[0];
-    const clusterId = feature.properties.cluster_id;
-    map.getSource('drivers').getClusterExpansionZoom(clusterId, (err, zoom) => {
-      if (err) return;
-      map.easeTo({ center: feature.geometry.coordinates, zoom, duration: 500 });
-    });
+    const f = e.features[0];
+    map.getSource('drivers').getClusterExpansionZoom(f.properties.cluster_id, (err, z) => { if (!err) map.easeTo({ center: f.geometry.coordinates, zoom: z, duration: 500 }); });
   });
-
-  // ─── Click: unclustered → popup ───────────────────────────────────────
   map.on('click', 'driver-unclustered', (e) => {
-    const feature = e.features[0];
-    const coords = feature.geometry.coordinates.slice();
-    const props = feature.properties;
-    const status = props.status || 'available';
-    const id = props.id;
-    const colorMap = { available: '#4ae183', en_route: '#ffd166', delivering: '#6cc3ff' };
-    const color = colorMap[status] || '#4ae183';
-
-    new maplibregl.Popup({ closeButton: true, closeOnClick: true, maxWidth: '240px' })
+    const f = e.features[0]; const coords = f.geometry.coordinates.slice(); const props = f.properties;
+    const status = props.status || 'available'; const id = props.id;
+    const cm = { available: '#4ae183', en_route: '#ffd166', delivering: '#6cc3ff' };
+    const c = cm[status] || '#4ae183';
+    const deliveries = game.driverDeliveries[id] || 0;
+    new maplibregl.Popup({ closeButton: true, closeOnClick: true, maxWidth: '260px' })
       .setLngLat(coords)
       .setHTML(
         '<div style="font-family:Inter,sans-serif;min-width:160px">' +
         '<div style="font-weight:600;font-size:13px;margin-bottom:2px;color:#e2e2e8">' + id + '</div>' +
-        '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">' +
-        '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + color + '"></span>' +
-        '<span style="font-size:11px;text-transform:capitalize;color:' + color + '">' + status + '</span></div>' +
+        '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">' +
+        '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + c + '"></span>' +
+        '<span style="font-size:11px;text-transform:capitalize;color:' + c + '">' + status + '</span>' +
+        '<span style="margin-left:auto;font-size:10px;color:rgba(226,226,232,0.4)">' + deliveries + ' deliveries</span></div>' +
         '<div style="font-size:10px;color:rgba(226,226,232,0.4);font-family:JetBrains Mono,monospace">' +
         coords[1].toFixed(4) + ', ' + coords[0].toFixed(4) + '</div>' +
         '<button onclick="assignToDriver(\'' + id + '\')" style="margin-top:8px;padding:4px 12px;background:#ff375f;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;width:100%">Assign Order</button>' +
         '</div>'
-      )
-      .addTo(map);
-
+      ).addTo(map);
     showDriverPopup(id);
   });
-
-  // ─── Hover cursor ─────────────────────────────────────────────────────
   map.on('mouseenter', 'driver-unclustered', () => { map.getCanvas().style.cursor = 'pointer'; });
   map.on('mouseleave', 'driver-unclustered', () => { map.getCanvas().style.cursor = ''; });
   map.on('mouseenter', 'driver-clusters', () => { map.getCanvas().style.cursor = 'pointer'; });
   map.on('mouseleave', 'driver-clusters', () => { map.getCanvas().style.cursor = ''; });
 });
 
-// ─── Map Updater (ThrottledRAF) ─────────────────────────────────────────
+// ─── Map Updater ──────────────────────────────────────────────────────────
 const mapUpdater = new ThrottledRAF((geoJSON) => {
-  if (!mapReady) {
-    pendingGeoJSON = geoJSON;
-    return;
-  }
+  if (!mapReady) { pendingGeoJSON = geoJSON; return; }
   const source = map.getSource('drivers');
   if (source) source.setData(geoJSON);
 }, TARGET_FPS);
@@ -394,20 +532,23 @@ async function assignToDriver(driverId) {
   hideDriverPopup();
   try {
     const resp = await fetch(API_BASE + '/api/assign', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ driver_id: driverId })
     });
     if (resp.ok) {
       orderCount++;
+      if (!game.driverDeliveries[driverId]) game.driverDeliveries[driverId] = 0;
+      game.driverDeliveries[driverId]++;
+      processGameOrder();
       updateStats();
       logTelemetry('ORDER', 'Assigned to ' + driverId);
       if (driverData[driverId]) {
         driverData[driverId].status = 'en_route';
-        const gj = driversToGeoJSON(Object.values(driverData));
-        mapUpdater.update(gj);
+        mapUpdater.update(driversToGeoJSON(Object.values(driverData)));
       }
     } else {
+      game.streak = 0;
+      updateGameUI();
       logTelemetry('FAIL', 'Assign failed for ' + driverId + ': ' + resp.status);
     }
   } catch (e) {
@@ -428,11 +569,8 @@ async function fetchDrivers() {
     if (!resp.ok) return;
     const data = await resp.json();
     if (data.drivers) {
-      for (const d of data.drivers) {
-        driverData[d.id] = { id: d.id, lat: d.lat, lng: d.lng, status: d.status || 'available' };
-      }
-      const gj = driversToGeoJSON(Object.values(driverData));
-      mapUpdater.update(gj);
+      for (const d of data.drivers) { driverData[d.id] = { id: d.id, lat: d.lat, lng: d.lng, status: d.status || 'available' }; }
+      mapUpdater.update(driversToGeoJSON(Object.values(driverData)));
       updateStats();
     }
   } catch (e) { /* ignore */ }
@@ -442,7 +580,6 @@ async function fetchDrivers() {
 function connectWS() {
   if (ws && ws.readyState === WebSocket.OPEN) return;
   try { ws = new WebSocket(WS_URL); } catch (e) { scheduleReconnect(); return; }
-
   ws.onopen = () => {
     document.getElementById('statusDot').style.background = '#4ae183';
     document.getElementById('statusText').textContent = 'CONNECTED';
@@ -451,36 +588,27 @@ function connectWS() {
     logTelemetry('WS', 'Connected');
     fetchDrivers();
   };
-
   ws.onmessage = (e) => {
     try {
       const data = JSON.parse(e.data);
       if (data.type === 'init' && data.drivers) {
-        for (const d of data.drivers) {
-          driverData[d.id] = { id: d.id, lat: d.lat, lng: d.lng, status: d.status || 'available' };
-        }
-        const gj = driversToGeoJSON(Object.values(driverData));
-        mapUpdater.update(gj);
+        for (const d of data.drivers) { driverData[d.id] = { id: d.id, lat: d.lat, lng: d.lng, status: d.status || 'available' }; }
+        mapUpdater.update(driversToGeoJSON(Object.values(driverData)));
         updateStats();
         logTelemetry('INIT', data.drivers.length + ' drivers loaded');
       } else if (data.type === 'update' && data.drivers) {
-        for (const d of data.drivers) {
-          driverData[d.id] = { id: d.id, lat: d.lat, lng: d.lng, status: d.status || 'available' };
-        }
-        const gj = driversToGeoJSON(Object.values(driverData));
-        mapUpdater.update(gj);
+        for (const d of data.drivers) { driverData[d.id] = { id: d.id, lat: d.lat, lng: d.lng, status: d.status || 'available' }; }
+        mapUpdater.update(driversToGeoJSON(Object.values(driverData)));
         updateStats();
       } else if (data.type === 'assignment' && data.driver) {
         const d = data.driver;
         if (driverData[d.id]) driverData[d.id].status = d.status || 'en_route';
-        const gj = driversToGeoJSON(Object.values(driverData));
-        mapUpdater.update(gj);
+        mapUpdater.update(driversToGeoJSON(Object.values(driverData)));
         logTelemetry('ASSIGN', d.id + ' → ' + (d.status || 'en_route'));
         updateStats();
       }
-    } catch (err) { /* ignore parse errors */ }
+    } catch (err) { /* ignore */ }
   };
-
   ws.onclose = () => {
     document.getElementById('statusDot').style.background = '#ff375f';
     document.getElementById('statusText').textContent = 'DISCONNECTED';
@@ -489,7 +617,6 @@ function connectWS() {
     logTelemetry('WS', 'Disconnected');
     scheduleReconnect();
   };
-
   ws.onerror = () => { ws.close(); };
 }
 
@@ -503,23 +630,21 @@ function showDriverPopup(id) {
   const el = document.getElementById('driverPopup');
   const d = driverData[id] || {};
   const status = d.status || 'unknown';
-  const colorMap = { available: '#4ae183', en_route: '#ffd166', delivering: '#6cc3ff' };
-  const color = colorMap[status] || '#4ae183';
+  const cm = { available: '#4ae183', en_route: '#ffd166', delivering: '#6cc3ff' };
+  const c = cm[status] || '#4ae183';
+  const deliveries = game.driverDeliveries[id] || 0;
   el.innerHTML =
     '<h3 style="color:#e2e2e8">' + id + '</h3>' +
-    '<div class="info"><span style="display:inline-flex;align-items:center;gap:4px;color:' + color + '">' +
-    '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:' + color + '"></span> ' + status +
-    '</span></div>' +
+    '<div class="info"><span style="display:inline-flex;align-items:center;gap:4px;color:' + c + '">' +
+    '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:' + c + '"></span> ' + status +
+    '</span> <span style="margin-left:8px;color:rgba(226,226,232,0.4);font-size:10px">' + deliveries + ' deliveries</span></div>' +
     '<div class="actions">' +
     '<button onclick="assignToDriver(\'' + id + '\')" style="background:#ff375f;color:#fff">Assign Order</button>' +
     '<button onclick="document.getElementById(\'driverPopup\').classList.remove(\'show\')" style="background:rgba(255,255,255,0.08);color:#e2e2e8">Close</button>' +
     '</div>';
   el.classList.add('show');
 }
-
-function hideDriverPopup() {
-  document.getElementById('driverPopup').classList.remove('show');
-}
+function hideDriverPopup() { document.getElementById('driverPopup').classList.remove('show'); }
 
 // ─── Nav Dropdown ─────────────────────────────────────────────────────────
 (function() {
@@ -534,16 +659,22 @@ function hideDriverPopup() {
 
 // ─── UI Events ───────────────────────────────────────────────────────────
 document.getElementById('btnAssign').addEventListener('click', assignRandomOrder);
-document.getElementById('btnRecenter').addEventListener('click', () => {
-  map.flyTo({ center: NYC_LNG_LAT, zoom: ZOOM, duration: 1000 });
+document.getElementById('btnRecenter').addEventListener('click', () => { map.flyTo({ center: NYC_LNG_LAT, zoom: ZOOM, duration: 1000 }); });
+document.getElementById('btnGameToggle').addEventListener('click', () => {
+  const panel = document.getElementById('gamePanel');
+  panel.classList.toggle('show');
+  if (panel.classList.contains('show')) logTelemetry('GAME', 'Game HUD opened');
 });
+
 document.addEventListener('keydown', (e) => {
   if (e.key === 'a' || e.key === 'A') assignRandomOrder();
   if (e.key === 'r' || e.key === 'R') map.flyTo({ center: NYC_LNG_LAT, zoom: ZOOM, duration: 1000 });
+  if (e.key === 'g' || e.key === 'G') document.getElementById('gamePanel').classList.toggle('show');
 });
 
 // ─── Init ─────────────────────────────────────────────────────────────────
-logTelemetry('SYS', 'NYC Demo initializing (MapLibre)');
+logTelemetry('SYS', 'NYC Demo initializing (MapLibre + Game HUD)');
+updateGameUI();
 connectWS();
 setInterval(fetchDrivers, 10000);
 setTimeout(() => { if (map) map.flyTo({ center: NYC_LNG_LAT, zoom: ZOOM, duration: 500 }); }, 300);
