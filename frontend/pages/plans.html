@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>KINETIC_FLEET | Subscription Plans</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "background": "#111317",
+                      "on-secondary-fixed-variant": "#005228",
+                      "on-tertiary": "#490080",
+                      "error-container": "#93000a",
+                      "surface-container-low": "#1a1c20",
+                      "on-primary": "#67001c",
+                      "primary-container": "#ff506c",
+                      "secondary-container": "#06bb63",
+                      "inverse-primary": "#be003b",
+                      "on-primary-fixed-variant": "#91002b",
+                      "secondary-fixed": "#6bfe9c",
+                      "outline-variant": "#5c3f41",
+                      "inverse-on-surface": "#2f3035",
+                      "primary-fixed-dim": "#ffb2b7",
+                      "on-surface": "#e2e2e8",
+                      "on-background": "#e2e2e8",
+                      "on-tertiary-fixed": "#2c0051",
+                      "tertiary-container": "#b76dff",
+                      "surface-bright": "#37393e",
+                      "surface-variant": "#333539",
+                      "tertiary-fixed-dim": "#ddb7ff",
+                      "inverse-surface": "#e2e2e8",
+                      "on-tertiary-container": "#400071",
+                      "on-surface-variant": "#e5bdbe",
+                      "secondary-fixed-dim": "#4ae183",
+                      "secondary": "#4ae183",
+                      "on-secondary-container": "#00431f",
+                      "on-primary-container": "#5b0017",
+                      "surface-container-lowest": "#0c0e12",
+                      "primary-fixed": "#ffdadb",
+                      "on-secondary": "#003919",
+                      "surface": "#111317",
+                      "surface-container-highest": "#333539",
+                      "surface-container-high": "#282a2e",
+                      "primary": "#ffb2b7",
+                      "error": "#ffb4ab",
+                      "surface-tint": "#ffb2b7",
+                      "on-tertiary-fixed-variant": "#6900b3",
+                      "on-secondary-fixed": "#00210c",
+                      "on-error": "#690005",
+                      "tertiary": "#ddb7ff",
+                      "surface-dim": "#111317",
+                      "on-primary-fixed": "#40000e",
+                      "tertiary-fixed": "#f0dbff",
+                      "outline": "#ac888a",
+                      "surface-container": "#1e2024",
+                      "on-error-container": "#ffdad6"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "stack-sm": "4px",
+                      "stack-md": "12px",
+                      "stack-lg": "24px",
+                      "base": "8px",
+                      "container-padding": "16px",
+                      "gutter": "12px"
+              },
+              "fontFamily": {
+                      "label-caps": ["Inter"],
+                      "data-mono": ["JetBrains Mono"],
+                      "hud-timer": ["JetBrains Mono"],
+                      "headline-md": ["Inter"],
+                      "hud-display": ["JetBrains Mono"],
+                      "body-sm": ["Inter"],
+                      "headline-lg": ["Inter"],
+                      "body-md": ["Inter"]
+              },
+              "fontSize": {
+                      "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                      "data-mono": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                      "hud-timer": ["18px", {"lineHeight": "24px", "fontWeight": "500"}],
+                      "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                      "hud-display": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "headline-lg": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .glass-panel {
+            background: rgba(26, 29, 35, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        .active-ring {
+            box-shadow: 0 0 0 2px #ff375f;
+        }
+        body {
+            background-color: #111317;
+            background-image: radial-gradient(circle at 50% 50%, #1a1c20 0%, #111317 100%);
+            min-height: 100vh;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="text-on-surface font-body-md overflow-x-hidden">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface-container-low/85 dark:bg-surface-container-low/85 backdrop-blur-xl border-b border-outline-variant/15 shadow-sm flex justify-between items-center px-container-padding h-14">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="monitoring">monitoring</span>
+<span class="font-hud-display text-hud-display text-primary uppercase tracking-widest">KINETIC_FLEET</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:text-secondary transition-colors active:scale-95">
+<span class="material-symbols-outlined" data-icon="sensors">sensors</span>
+</button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="pt-24 pb-32 px-container-padding max-w-7xl mx-auto">
+<!-- Header Section -->
+<section class="text-center mb-12">
+<h1 class="font-headline-lg text-headline-lg text-primary mb-2">OPERATIONAL_TIERS</h1>
+<p class="text-on-surface-variant font-body-sm tracking-wide opacity-80">SELECT MISSION-CRITICAL INFRASTRUCTURE LEVEL</p>
+</section>
+<!-- Bento Grid Plans -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Tier 1: Lite -->
+<div class="glass-panel rounded-xl p-8 flex flex-col group cursor-pointer hover:border-primary/50 transition-all duration-300" onclick="selectTier(this)">
+<div class="flex justify-between items-start mb-6">
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase block mb-1">Standard Unit</span>
+<h2 class="font-hud-display text-hud-display">Lite</h2>
+</div>
+<span class="material-symbols-outlined text-primary-fixed-dim" data-icon="terminal">terminal</span>
+</div>
+<div class="mb-8">
+<span class="font-hud-timer text-hud-timer text-primary">$49</span>
+<span class="text-on-surface-variant font-body-sm">/mo per node</span>
+</div>
+<ul class="space-y-4 mb-10 flex-grow">
+<li class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary text-[18px]" data-icon="check_circle">check_circle</span>
+<span class="font-data-mono text-data-mono">5 Active Drivers</span>
+</li>
+<li class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary text-[18px]" data-icon="check_circle">check_circle</span>
+<span class="font-data-mono text-data-mono">Standard Telemetry</span>
+</li>
+<li class="flex items-center gap-3 opacity-40">
+<span class="material-symbols-outlined text-[18px]" data-icon="cancel">cancel</span>
+<span class="font-data-mono text-data-mono line-through">Real-time SSE Tracking</span>
+</li>
+</ul>
+<button class="w-full py-3 bg-surface-variant text-on-surface font-label-caps text-label-caps rounded uppercase hover:bg-surface-bright transition-colors">Initiate</button>
+</div>
+<!-- Tier 2: Tactical (Active/Recommended) -->
+<div class="glass-panel rounded-xl p-8 flex flex-col relative active-ring scale-105 z-10 border-primary/40 group cursor-pointer transition-all duration-300" onclick="selectTier(this)">
+<div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary-container px-4 py-1 rounded-full text-on-primary-container font-label-caps text-label-caps shadow-lg">
+                    RECOMMENDED_PATH
+                </div>
+<div class="flex justify-between items-start mb-6">
+<div>
+<span class="font-label-caps text-label-caps text-primary uppercase block mb-1">Advanced Tactical</span>
+<h2 class="font-hud-display text-hud-display">Tactical</h2>
+</div>
+<span class="material-symbols-outlined text-primary" data-icon="radar">radar</span>
+</div>
+<div class="mb-8">
+<span class="font-hud-timer text-hud-timer text-primary-container">$199</span>
+<span class="text-on-surface-variant font-body-sm">/mo per node</span>
+</div>
+<ul class="space-y-4 mb-10 flex-grow">
+<li class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary text-[18px]" data-icon="check_circle">check_circle</span>
+<span class="font-data-mono text-data-mono">Real-time SSE Tracking</span>
+</li>
+<li class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary text-[18px]" data-icon="check_circle">check_circle</span>
+<span class="font-data-mono text-data-mono">Up to 50 Drivers</span>
+</li>
+<li class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary text-[18px]" data-icon="check_circle">check_circle</span>
+<span class="font-data-mono text-data-mono">Advanced Telemetry</span>
+</li>
+<li class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary text-[18px]" data-icon="check_circle">check_circle</span>
+<span class="font-data-mono text-data-mono">API Access V2.4</span>
+</li>
+</ul>
+<button class="w-full py-4 bg-primary-container text-on-primary-container font-label-caps text-label-caps rounded uppercase hover:brightness-110 active:scale-95 transition-all shadow-md">Deploy System</button>
+</div>
+<!-- Tier 3: Enterprise -->
+<div class="glass-panel rounded-xl p-8 flex flex-col group cursor-pointer hover:border-primary/50 transition-all duration-300" onclick="selectTier(this)">
+<div class="flex justify-between items-start mb-6">
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase block mb-1">Global Scale</span>
+<h2 class="font-hud-display text-hud-display">Enterprise</h2>
+</div>
+<span class="material-symbols-outlined text-tertiary" data-icon="hub">hub</span>
+</div>
+<div class="mb-8">
+<span class="font-hud-timer text-hud-timer text-primary">Custom</span>
+<span class="text-on-surface-variant font-body-sm">/annual billing</span>
+</div>
+<ul class="space-y-4 mb-10 flex-grow">
+<li class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary text-[18px]" data-icon="check_circle">check_circle</span>
+<span class="font-data-mono text-data-mono">Unlimited Drivers</span>
+</li>
+<li class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary text-[18px]" data-icon="check_circle">check_circle</span>
+<span class="font-data-mono text-data-mono">Predictive Fleet AI</span>
+</li>
+<li class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary text-[18px]" data-icon="check_circle">check_circle</span>
+<span class="font-data-mono text-data-mono">Dedicated Data Pipeline</span>
+</li>
+</ul>
+<button class="w-full py-3 border border-outline text-on-surface font-label-caps text-label-caps rounded uppercase hover:bg-surface-variant transition-colors">Contact Command</button>
+</div>
+</div>
+<!-- Comparative Backdrop Decor -->
+<div class="mt-20 glass-panel rounded-xl overflow-hidden">
+<div class="bg-surface-container-high px-6 py-4 border-b border-outline-variant/20 flex items-center justify-between">
+<span class="font-label-caps text-label-caps tracking-widest text-secondary">TELEMETRY_ENGINE_COMPARISON</span>
+<span class="font-data-mono text-[10px] text-on-surface-variant">LOGS_CHANNEL_01</span>
+</div>
+<div class="p-6 overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-outline-variant/20 font-label-caps text-label-caps text-primary opacity-70">
+<th class="pb-4">Feature Vector</th>
+<th class="pb-4">Lite</th>
+<th class="pb-4">Tactical</th>
+<th class="pb-4">Enterprise</th>
+</tr>
+</thead>
+<tbody class="font-data-mono text-data-mono">
+<tr class="border-b border-outline-variant/10 hover:bg-surface-variant/10">
+<td class="py-4">Real-time Latency</td>
+<td class="py-4">5000ms</td>
+<td class="py-4 text-secondary">100ms</td>
+<td class="py-4 text-secondary">&lt;50ms</td>
+</tr>
+<tr class="border-b border-outline-variant/10 hover:bg-surface-variant/10">
+<td class="py-4">Geo-fencing Nodes</td>
+<td class="py-4">10</td>
+<td class="py-4">500</td>
+<td class="py-4">Unlimited</td>
+</tr>
+<tr class="hover:bg-surface-variant/10">
+<td class="py-4">Support Response</td>
+<td class="py-4">24h</td>
+<td class="py-4">1h Priority</td>
+<td class="py-4 text-primary">Direct Comms</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-4 pt-2 bg-surface-container-lowest/80 dark:bg-surface-container-lowest/80 backdrop-blur-2xl border-t border-outline-variant/10 shadow-[0px_-8px_24px_rgba(0,0,0,0.5)] z-50 rounded-t-full md:hidden">
+<div class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 transition-all duration-300 active:scale-90">
+<span class="material-symbols-outlined" data-icon="explore">explore</span>
+<span class="font-label-caps text-label-caps uppercase">Mission</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 transition-all duration-300 active:scale-90">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="font-label-caps text-label-caps uppercase">Telemetry</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 transition-all duration-300 active:scale-90">
+<span class="material-symbols-outlined" data-icon="hub">hub</span>
+<span class="font-label-caps text-label-caps uppercase">Fleet</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-on-secondary-fixed-variant text-secondary rounded-full px-4 py-1 transition-all duration-300 active:scale-90">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+<span class="font-label-caps text-label-caps uppercase">Profile</span>
+</div>
+</nav>
+<script>
+        function selectTier(element) {
+            // Clear existing active states
+            document.querySelectorAll('.glass-panel').forEach(card => {
+                card.classList.remove('active-ring', 'scale-105', 'z-10', 'border-primary/40');
+                card.classList.add('hover:border-primary/50');
+            });
+            
+            // Set new active state
+            element.classList.add('active-ring', 'scale-105', 'z-10', 'border-primary/40');
+            element.classList.remove('hover:border-primary/50');
+        }
+
+        // Simple parallax or movement effect for cards
+        document.addEventListener('mousemove', (e) => {
+            const cards = document.querySelectorAll('.glass-panel');
+            const x = (window.innerWidth / 2 - e.pageX) / 50;
+            const y = (window.innerHeight / 2 - e.pageY) / 50;
+            
+            cards.forEach(card => {
+                card.style.transform = `translate(${x}px, ${y}px) ${card.classList.contains('active-ring') ? 'scale(1.05)' : ''}`;
+            });
+        });
+    </script>
+</body></html>

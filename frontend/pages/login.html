@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(26, 29, 35, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .map-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.4;
+            filter: grayscale(1) invert(1) brightness(0.2);
+        }
+        .pulse-ring {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        .scanline {
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #ffb2b7, transparent);
+            position: absolute;
+            top: 0;
+            animation: scan 4s linear infinite;
+        }
+        @keyframes scan {
+            0% { top: 0%; opacity: 0; }
+            50% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+    </style>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "background": "#111317",
+                    "on-secondary-fixed-variant": "#005228",
+                    "on-tertiary": "#490080",
+                    "error-container": "#93000a",
+                    "surface-container-low": "#1a1c20",
+                    "on-primary": "#67001c",
+                    "primary-container": "#ff506c",
+                    "secondary-container": "#06bb63",
+                    "inverse-primary": "#be003b",
+                    "on-primary-fixed-variant": "#91002b",
+                    "secondary-fixed": "#6bfe9c",
+                    "outline-variant": "#5c3f41",
+                    "inverse-on-surface": "#2f3035",
+                    "primary-fixed-dim": "#ffb2b7",
+                    "on-surface": "#e2e2e8",
+                    "on-background": "#e2e2e8",
+                    "on-tertiary-fixed": "#2c0051",
+                    "tertiary-container": "#b76dff",
+                    "surface-bright": "#37393e",
+                    "surface-variant": "#333539",
+                    "tertiary-fixed-dim": "#ddb7ff",
+                    "inverse-surface": "#e2e2e8",
+                    "on-tertiary-container": "#400071",
+                    "on-surface-variant": "#e5bdbe",
+                    "secondary-fixed-dim": "#4ae183",
+                    "secondary": "#4ae183",
+                    "on-secondary-container": "#00431f",
+                    "on-primary-container": "#5b0017",
+                    "surface-container-lowest": "#0c0e12",
+                    "primary-fixed": "#ffdadb",
+                    "on-secondary": "#003919",
+                    "surface": "#111317",
+                    "surface-container-highest": "#333539",
+                    "surface-container-high": "#282a2e",
+                    "primary": "#ffb2b7",
+                    "error": "#ffb4ab",
+                    "surface-tint": "#ffb2b7",
+                    "on-tertiary-fixed-variant": "#6900b3",
+                    "on-secondary-fixed": "#00210c",
+                    "on-error": "#690005",
+                    "tertiary": "#ddb7ff",
+                    "surface-dim": "#111317",
+                    "on-primary-fixed": "#40000e",
+                    "tertiary-fixed": "#f0dbff",
+                    "outline": "#ac888a",
+                    "surface-container": "#1e2024",
+                    "on-error-container": "#ffdad6"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "stack-sm": "4px",
+                    "stack-md": "12px",
+                    "stack-lg": "24px",
+                    "base": "8px",
+                    "container-padding": "16px",
+                    "gutter": "12px"
+            },
+            "fontFamily": {
+                    "label-caps": ["Inter"],
+                    "data-mono": ["JetBrains Mono"],
+                    "hud-timer": ["JetBrains Mono"],
+                    "headline-md": ["Inter"],
+                    "hud-display": ["JetBrains Mono"],
+                    "body-sm": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "body-md": ["Inter"]
+            },
+            "fontSize": {
+                    "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "data-mono": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                    "hud-timer": ["18px", {"lineHeight": "24px", "fontWeight": "500"}],
+                    "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "hud-display": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-lg": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen flex flex-col overflow-hidden">
+<!-- Background Map Texture (Faded/Technical) -->
+<div class="map-bg" data-location="New York City" style="">
+<img class="w-full h-full object-cover" data-alt="A detailed, technical dark-themed satellite map of a major metropolitan area. The image features glowing transit arteries and intricate street grids in deep charcoal and muted grey tones. The lighting is low-key, evoking a mission control or high-end logistics dashboard aesthetic. The mood is clinical, authoritative, and perpetually in motion, with subtle data overlays suggesting real-time tracking." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBGldmN1WA5gZ_e-m2_8jF4QLkRb8l6cRjMmlLtLhvL63Ysf4xO6HkAJ2pm1yKsL-Gz2X385npMebVkv31U2x5LFkbuvFnvtmyfYQyUB_NCnZ6V3Ez43aRHdWQvW5qthyvj1LuvbAYbKBhzz9uLziEkThtzNcY0Aiz83aePxwY1HOl4yRVlgfCjKlvxI0G5FYdc2VMrqszj6opYC12pL7rz1zMAfXtD4wAHulKARelkc0COQJjMH1DyBNVe7A9tU7vIYj0LbjHi_ZZY"/>
+</div>
+<!-- Top AppBar (From Shared Components Guide) -->
+<header class="fixed top-0 w-full z-50 bg-surface-container-low/85 backdrop-blur-xl border-b border-outline-variant/15 flex justify-between items-center px-container-padding h-14 shadow-sm">
+<div class="flex items-center gap-base">
+<span class="material-symbols-outlined text-primary" data-icon="monitoring">monitoring</span>
+<span class="font-hud-display text-hud-display text-primary uppercase tracking-widest">KINETIC_FLEET</span>
+</div>
+<div class="flex items-center gap-gutter">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="sensors">sensors</span>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow flex items-center justify-center p-container-padding relative">
+<!-- Login Card -->
+<div class="glass-panel w-full max-w-[420px] rounded-xl p-stack-lg relative overflow-hidden">
+<div class="scanline"></div>
+<!-- Technical Status Header -->
+<div class="flex justify-between items-start mb-stack-lg">
+<div class="space-y-1">
+<h1 class="font-headline-lg text-headline-lg text-primary uppercase tracking-tight">Access Control</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Fleet Management Protocol 4.0</p>
+</div>
+<div class="bg-secondary/10 px-3 py-1 rounded-full flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-secondary pulse-ring"></div>
+<span class="font-data-mono text-data-mono text-secondary uppercase">Secure</span>
+</div>
+</div>
+<!-- Login Section -->
+<div class="space-y-stack-md py-4">
+<p class="font-body-md text-body-md text-on-surface">Please authenticate using your verified enterprise account.</p>
+<!-- Google Branding Button -->
+<button class="w-full h-14 bg-white hover:bg-neutral-100 text-neutral-900 rounded-lg flex items-center justify-center gap-3 transition-all active:scale-95 shadow-lg group">
+<svg class="w-6 h-6" viewbox="0 0 24 24">
+<path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
+<path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
+<path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"></path>
+<path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 12-4.53z" fill="#EA4335"></path>
+</svg>
+<span class="font-semibold text-[16px]">Sign in with Google</span>
+</button>
+<div class="relative py-4 flex items-center gap-4">
+<div class="flex-grow h-[1px] bg-outline-variant/30"></div>
+<span class="font-data-mono text-data-mono text-on-surface-variant opacity-50 uppercase">Fleet Node Auth</span>
+<div class="flex-grow h-[1px] bg-outline-variant/30"></div>
+</div>
+<div class="space-y-stack-sm">
+<button class="w-full py-3 border border-outline-variant/40 hover:bg-surface-variant/20 rounded-lg text-on-surface font-label-caps uppercase tracking-wider transition-colors">
+                        Enterprise ID Login
+                    </button>
+</div>
+</div>
+<!-- Security Indicators -->
+<div class="mt-stack-lg pt-stack-md border-t border-outline-variant/15 grid grid-cols-2 gap-stack-md">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]" data-icon="lock">lock</span>
+<span class="font-data-mono text-data-mono text-on-surface-variant text-[11px] uppercase">AES-256 Encrypted</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]" data-icon="verified_user">verified_user</span>
+<span class="font-data-mono text-data-mono text-on-surface-variant text-[11px] uppercase">SOC2 Compliant</span>
+</div>
+</div>
+</div>
+<!-- Floating HUD Elements -->
+<div class="absolute top-20 right-8 hidden lg:block">
+<div class="glass-panel p-container-padding rounded-lg flex flex-col gap-2">
+<div class="flex justify-between gap-8">
+<span class="font-data-mono text-data-mono text-on-surface-variant uppercase">Uplink Status</span>
+<span class="font-data-mono text-data-mono text-secondary">ACTIVE</span>
+</div>
+<div class="flex justify-between">
+<span class="font-data-mono text-data-mono text-on-surface-variant uppercase">Latency</span>
+<span class="font-data-mono text-data-mono text-primary">12ms</span>
+</div>
+<div class="w-full bg-surface-variant h-1 mt-2">
+<div class="bg-primary h-full w-[85%]"></div>
+</div>
+</div>
+</div>
+<div class="absolute bottom-10 left-8 hidden lg:block">
+<div class="font-data-mono text-data-mono text-on-surface-variant/30 space-y-1">
+<div>SYSTEM_VERSION: 2.4.0_STABLE</div>
+<div>TERMINAL_ID: KINETIC_ALPHA_09</div>
+<div id="clock">00:00:00 UTC</div>
+</div>
+</div>
+</main>
+<!-- Navigation Suppressed for Transactional Page as per 'Shell Visibility & Relevance' rule -->
+<script>
+        // Micro-interaction: Update HUD clock
+        function updateClock() {
+            const now = new Date();
+            const timeStr = now.toISOString().split('T')[1].split('.')[0] + ' UTC';
+            const clockEl = document.getElementById('clock');
+            if(clockEl) clockEl.innerText = timeStr;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Hover animation on login card
+        const card = document.querySelector('.glass-panel');
+        document.addEventListener('mousemove', (e) => {
+            const xAxis = (window.innerWidth / 2 - e.pageX) / 50;
+            const yAxis = (window.innerHeight / 2 - e.pageY) / 50;
+            if (card) {
+                card.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+            }
+        });
+    </script>
+</body></html>

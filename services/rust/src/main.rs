@@ -61,7 +61,7 @@ struct RouteETAResult {
 
 // ─── R-tree spatial index ───────────────────────────────────────────────────
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 struct SpatialPoint {
     id: String,
     lat: f64,
@@ -74,6 +74,14 @@ impl RTreeObject for SpatialPoint {
 
     fn envelope(&self) -> Self::Envelope {
         AABB::from_point([self.lon, self.lat])
+    }
+}
+
+impl rstar::PointDistance for SpatialPoint {
+    fn distance_2(&self, point: &[f64; 2]) -> f64 {
+        let dx = self.lon - point[0];
+        let dy = self.lat - point[1];
+        dx * dx + dy * dy
     }
 }
 
@@ -110,7 +118,6 @@ impl Shard {
     }
 
     fn nearest(&self, lat: f64, lon: f64, radius_m: f64) -> Vec<DispatchResult> {
-        let point = rstar::primitives::GeomWithData::new(rstar::Point::from([lon, lat]), ());
         let radius_deg = radius_m / 111_320.0;
         let results: Vec<DispatchResult> = self.rtree
             .locate_within_distance([lon, lat], radius_deg * radius_deg)
@@ -216,17 +223,17 @@ async fn main() {
     let state = Arc::new(ShardedState::new(shard_count.max(1), per_shard_capacity.max(16)));
 
     // Prometheus metrics
-    let req_counter: CounterVec = register_counter_vec!(
+    let _req_counter: CounterVec = register_counter_vec!(
         "rust_tracker_http_requests_total",
         "Total HTTP requests handled by rust tracker",
         &["endpoint", "status"]
     ).unwrap();
-    let req_latency: HistogramVec = register_histogram_vec!(
+    let _req_latency: HistogramVec = register_histogram_vec!(
         "rust_tracker_request_duration_seconds",
         "Request duration in seconds by endpoint",
         &["endpoint"]
     ).unwrap();
-    let drivers_count: IntGauge = register_int_gauge!(
+    let _drivers_count: IntGauge = register_int_gauge!(
         "rust_tracker_driver_count",
         "Approx number of drivers currently held"
     ).unwrap();
@@ -399,10 +406,7 @@ async fn handle_dispatch(req: OrderDispatchRequest, state: SharedState, counter:
         }
         None => {
             counter.with_label_values(&["no_driver"]).inc();
-            Ok(warp::reply::with_status(
-                warp::reply::json(&serde_json::json!({"error": "no_nearby_driver"})),
-                warp::http::StatusCode::NOT_FOUND,
-            ))
+            Ok(warp::reply::json(&serde_json::json!({"error": "no_nearby_driver", "code": 404})))
         }
     }
 }

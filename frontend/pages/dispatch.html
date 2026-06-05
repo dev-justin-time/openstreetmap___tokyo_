@@ -110,6 +110,22 @@
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.15);
         }
+        .settings-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            min-width: 220px;
+            z-index: 70;
+            opacity: 0;
+            transform: translateY(-8px) scale(0.95);
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+        .settings-dropdown.open {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
+        }
         .custom-scrollbar::-webkit-scrollbar {
             width: 4px;
         }
@@ -168,8 +184,39 @@
 </div>
 <h1 class="text-label-caps font-label-caps tracking-widest text-primary uppercase">MISSION CONTROL</h1>
 </div>
-<div class="flex items-center gap-2">
-<button class="material-symbols-outlined text-primary hover:bg-surface-bright/20 transition-colors p-2 rounded-full active:scale-95 duration-100">settings</button>
+<div class="flex items-center gap-2 relative" id="settingsContainer">
+<button class="material-symbols-outlined text-primary hover:bg-surface-bright/20 transition-colors p-2 rounded-full active:scale-95 duration-100" id="settingsGear">settings</button>
+<!-- Settings Dropdown -->
+<div class="settings-dropdown glass-panel rounded-xl border border-white/15 shadow-2xl overflow-hidden" id="settingsDropdown">
+<div class="p-3 border-b border-white/10 bg-surface-container-low">
+<p class="text-label-caps font-label-caps text-on-surface-variant tracking-widest text-center">QUICK SETTINGS</p>
+</div>
+<div class="p-2 space-y-1">
+<button class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface" onclick="toggleTheme()">
+<span class="material-symbols-outlined text-primary" id="themeIcon">dark_mode</span>
+<span id="themeLabel">Dark Mode</span>
+</button>
+<div class="px-3 py-2.5 flex items-center justify-between">
+<span class="text-body-sm text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">signal_cellular_alt</span> Status
+</span>
+<span class="flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary" id="dropdownStatusDot"></span>
+<span class="text-label-caps text-secondary" id="dropdownStatusText">LIVE</span>
+</span>
+</div>
+<div class="px-3 py-2 text-body-sm text-on-surface-variant border-t border-white/5 flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">dns</span>
+<input class="flex-1 bg-transparent border-none outline-none text-on-surface text-body-sm font-data-mono" id="dropdownServerInput" type="text" value="127.0.0.1:3030" placeholder="server:port"/>
+</div>
+</div>
+<div class="p-2 border-t border-white/10">
+<button class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-error-container/20 transition-colors text-body-sm text-error" onclick="handleLogout()">
+<span class="material-symbols-outlined">logout</span>
+Logout
+</button>
+</div>
+</div>
 </div>
 </header>
 <!-- Side Navigation Drawer -->
@@ -516,5 +563,34 @@
             document.getElementById('latencyBar').style.width = `${(lat/100) * 100}%`;
         }
     }, 1500);
+    // Settings Dropdown
+    const gearBtn = document.getElementById('settingsGear');
+    const dropdown = document.getElementById('settingsDropdown');
+
+    if (gearBtn && dropdown) {
+        gearBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdown.classList.toggle('open');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!dropdown.contains(e.target) && e.target !== gearBtn) {
+                dropdown.classList.remove('open');
+            }
+        });
+    }
+
+    function toggleTheme() {
+        const html = document.documentElement;
+        const isDark = html.classList.toggle('dark');
+        document.getElementById('themeIcon').textContent = isDark ? 'dark_mode' : 'light_mode';
+        document.getElementById('themeLabel').textContent = isDark ? 'Dark Mode' : 'Light Mode';
+    }
+
+    function handleLogout() {
+        if (confirm('Terminate session?')) {
+            window.location.reload();
+        }
+    }
 </script>
 </body></html>
