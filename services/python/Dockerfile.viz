@@ -1,0 +1,19 @@
+FROM python:3.11-slim AS builder
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc libgeos-dev libproj-dev && \
+    rm -rf /var/lib/apt/lists/*
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+FROM python:3.11-slim
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgeos-c1v5 libproj25 && \
+    rm -rf /var/lib/apt/lists/*
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
+WORKDIR /app
+COPY viz.py .
+RUN mkdir -p analysis
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=2 \
+  CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:9090/ops_map.png')" || exit 1
+ENTRYPOINT ["python", "viz.py", "--serve", "9090"]

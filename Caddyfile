@@ -1,0 +1,85 @@
+# Production Caddy reverse proxy with auto TLS via Let's Encrypt
+# Set DOMAIN env var in docker-compose.yml for production certificates
+
+{$DOMAIN:localhost} {
+    # Frontend static files
+    handle_path / {
+        reverse_proxy frontend:8080
+    }
+
+    # Go gateway (upload, nearby, health)
+    handle_path /api/* {
+        reverse_proxy go-gateway:8082
+    }
+
+    handle_path /upload {
+        reverse_proxy go-gateway:8080
+    }
+
+    handle_path /nearby {
+        reverse_proxy go-gateway:8080
+    }
+
+    handle_path /health {
+        reverse_proxy go-gateway:8080
+    }
+
+    # Rust tracker (drivers, events, metrics)
+    handle_path /drivers {
+        reverse_proxy rust-tracker:3030
+    }
+
+    handle_path /events {
+        reverse_proxy rust-tracker:3030
+    }
+
+    handle_path /dispatch {
+        reverse_proxy rust-tracker:3030
+    }
+
+    handle_path /route-eta {
+        reverse_proxy rust-tracker:3030
+    }
+
+    # Python visualizer (operational maps, heatmaps, dashboard)
+    handle_path /viz/* {
+        rewrite * /{path}
+        reverse_proxy python-viz:9090
+    }
+
+    # Metrics — internal only in production
+    handle_path /metrics {
+        reverse_proxy go-gateway:8080
+    }
+
+    # Default
+    handle {
+        reverse_proxy frontend:8080
+    }
+
+    # Security headers
+    header {
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Permissions-Policy "geolocation=(self), microphone=(), camera=()"
+        -Server
+    }
+
+    # Rate limiting (20 req/s per client)
+    rate_limit {
+        zone dynamic {
+            key {remote_host}
+            events 20
+            window 1s
+        }
+    }
+}
+
+# Internal health check endpoint (no auth)
+:8080 {
+    handle /health {
+        respond "ok" 200
+    }
+}

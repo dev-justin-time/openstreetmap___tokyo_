@@ -87,6 +87,9 @@ func main() {
 	// Start route-engine on port 8081 in background
 	go startRouteEngine(":8081")
 
+	// Start logistics API (orders, dispatch, WebSocket) on port 8082
+	initLogistics()
+
 	// Start gateway on port 8080
 	addr := ":8080"
 	fmt.Println("Go API gateway running on http://127.0.0.1" + addr)

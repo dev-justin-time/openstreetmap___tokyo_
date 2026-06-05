@@ -1,0 +1,143 @@
+version: "3.8"
+
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  # ─── Rust tracker (sharded, scalable) ──────────────────────────────────────
+  rust-tracker:
+    build:
+      context: ./services/rust
+      dockerfile: Dockerfile
+    image: osm-rust-tracker:latest
+    ports:
+      - "3030:3030"
+    environment:
+      - INSTANCE_INDEX=0
+      - INSTANCE_COUNT=1
+      - SHARD_COUNT=4
+      - SHARD_CAPACITY=250
+      - RUST_LOG=info
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3030/metrics"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    logging: *default-logging
+    restart: unless-stopped
+
+  # ─── Go gateway (API, upload, queue) ───────────────────────────────────────
+  go-gateway:
+    build:
+      context: ./services/go
+      dockerfile: Dockerfile
+    image: osm-go-gateway:latest
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+      - "8082:8082"
+    environment:
+      - RUST_INSTANCES=http://rust-tracker:3030
+      - MAX_DRIVERS=5000
+      - API_KEYS=${API_KEYS:-dev-key-change-in-prod}
+      - TLS_CERT=${TLS_CERT:-}
+      - TLS_KEY=${TLS_KEY:-}
+      - GATEWAY_PORT=8080
+    volumes:
+      - queue_store:/app/queue_store
+    depends_on:
+      rust-tracker:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    logging: *default-logging
+    restart: unless-stopped
+
+  # ─── Python worker (secondary analysis) ────────────────────────────────────
+  python-worker:
+    build:
+      context: ./services/python
+      dockerfile: Dockerfile
+    image: osm-python-worker:latest
+    volumes:
+      - queue_store:/app/queue_store
+      - ./services/python/analysis:/app/services/python/analysis
+    depends_on:
+      go-gateway:
+        condition: service_healthy
+    logging: *default-logging
+    restart: unless-stopped
+
+  # ─── Frontend static server ────────────────────────────────────────────────
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: osm-frontend:latest
+    ports:
+      - "8080"
+    environment:
+      - API_KEYS=${API_KEYS:-dev-key-change-in-prod}
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/"]
+      interval: 30s
+      timeout: 5s
+      retries: 2
+    logging: *default-logging
+    restart: unless-stopped
+
+  # ─── Python visualizer (operational maps + heatmaps) ──────────────────────
+  python-viz:
+    build:
+      context: ./services/python
+      dockerfile: Dockerfile.viz
+    image: osm-python-viz:latest
+    ports:
+      - "9090:9090"
+    environment:
+      - RUST_API=http://rust-tracker:3030
+      - GO_API=http://go-gateway:8082
+      - API_KEYS=${API_KEYS:-dev-key-change-in-prod}
+      - VIZ_OUTPUT_DIR=/app/analysis
+    volumes:
+      - viz_data:/app/analysis
+    depends_on:
+      rust-tracker:
+        condition: service_healthy
+      go-gateway:
+        condition: service_healthy
+    logging: *default-logging
+    restart: unless-stopped
+
+  # ─── Reverse proxy (Caddy) with auto TLS ───────────────────────────────────
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      - DOMAIN=${DOMAIN:-localhost}
+      - API_KEYS=${API_KEYS:-dev-key-change-in-prod}
+    depends_on:
+      - frontend
+      - go-gateway
+    logging: *default-logging
+    restart: unless-stopped
+
+volumes:
+  queue_store:
+  viz_data:
+  caddy_data:
+  caddy_config:

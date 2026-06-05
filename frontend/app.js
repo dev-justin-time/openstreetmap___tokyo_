@@ -22,6 +22,7 @@ import { initGUI } from "./gui.js";
 import { showConfirmModal } from "./confirmModal.js";
 import { initBetaBanner } from "./betaBanner.js";
 import { APP_STATE, getDriverIds, registerMarker, removeMarker, setDriversLayerGroup, getDriversLayerGroup, loadRuntimeSettingsFromStorage, persistRuntimeSettingsToStorage } from './app-state.js';
+import { startSSE, initDispatchPanel } from "./logistics.js";
 import * as L from "leaflet";
 
 let marker;
@@ -98,6 +99,9 @@ export const GUI_INVERT_TURN_DIRECTIONS = appConfig.GUI_INVERT_TURN_DIRECTIONS;
   addMarker(appConfig.TOKYO.lat, appConfig.TOKYO.lng, "Tokyo (approx center)");
   driverMarker.setLatLng([appConfig.TOKYO.lat, appConfig.TOKYO.lng]);
   updateCountryDisplay(driverMarker.getLatLng());
+  // Start real-time driver updates from Rust SSE
+  startSSE();
+  // Press 'o' to open dispatch panel
 })();
 
 map.on("click", async (e) => {

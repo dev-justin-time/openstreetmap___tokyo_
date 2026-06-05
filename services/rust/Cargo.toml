@@ -11,7 +11,5 @@ gpx = "0.10"
 tokio = { version = "1", features = ["full"] }
 prometheus = { version = "0.13", features = ["process"] }
 async-stream = "0.3"
-
-# spatial index and lightweight on-disk cache
 rstar = "0.11"
-sled = "0.34"
+reqwest = { version = "0.11", features = ["json"] }
