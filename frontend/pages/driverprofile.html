@@ -139,6 +139,22 @@
         transform: translateY(0) scale(1);
         pointer-events: auto;
       }
+      .nav-dropdown {
+          position: absolute;
+          top: calc(100% + 8px);
+          left: 0;
+          min-width: 200px;
+          z-index: 70;
+          opacity: 0;
+          transform: translateY(-8px) scale(0.95);
+          pointer-events: none;
+          transition: opacity 0.2s ease, transform 0.2s ease;
+      }
+      .nav-dropdown.open {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+          pointer-events: auto;
+      }
     </style>
 <style>
     body {
@@ -158,7 +174,23 @@
 <div class="w-8 h-8 rounded-full bg-surface-variant overflow-hidden border border-primary/30">
 <img class="w-full h-full object-cover" data-alt="A professional portrait of a tech-focused fleet driver in his thirties. He is wearing a dark, technical tactical jacket with subtle branding. The lighting is dramatic and cinematic, featuring sharp side-lighting with a cool blue and magenta tint that matches the high-performance mission control UI aesthetic. The background is a soft-focus industrial interior." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDqu9LdPWiaP717Qg-nLLmOOUhHqWkRl6bfn23NBhiobROhTRL8f2nfBausMMQFJFMCxBkGPJjVoqbyFWOb9c2oAMLzjQrrfcXomCcw8LFRXjxqqQYnWsfQakh5bGnpOylQ4jVaoQjdNPu7mwQA2beoGSZ5NyzPsldOSOampBArYDAPU4QmSm_bo74utkP26oxLTIIxtih-LUoWnPgUeHMDWyWTkNwnBTDbtWmdTyZZF9H4ITQG8SpJnGgKidoa1ml5CXo3jynZjW16"/>
 </div>
-<span class="text-label-caps font-label-caps tracking-widest text-primary">MISSION CONTROL</span>
+<div class="relative" id="navDropdownWrap">
+<span class="text-label-caps font-label-caps tracking-widest text-primary cursor-pointer" id="navDropdownBtn">MISSION CONTROL</span>
+<div class="nav-dropdown glass-panel rounded-xl border border-white/15 shadow-2xl overflow-hidden" id="navDropdown">
+<div class="p-2 space-y-1">
+<a href="onboarding.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]">flight_takeoff</span> Onboarding</a>
+<a href="command_center.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]">dashboard</span> Command Center</a>
+<a href="missioncontroll.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]">explore</span> Mission Control</a>
+<a href="dispatch.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]">send</span> Dispatch</a>
+<a href="runtime.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]">tune</span> Runtime</a>
+<a href="driverprofile.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]">person</span> Driver Profile</a>
+        <a href="plans.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]">workspace_premium</span> Plans</a>
+        <a href="nyc-demo.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]">map</span> NYC Demo</a>
+        <div class="border-t border-white/10 my-1"></div>
+        <a href="login.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface"><span class="material-symbols-outlined text-on-surface-variant text-[18px]">login</span> Login</a>
+</div>
+</div>
+</div>
 </div>
 <div class="flex items-center gap-4 relative" id="settingsContainer">
 <span class="text-secondary font-hud-timer text-hud-timer flex items-center gap-1">
@@ -413,6 +445,14 @@ Logout
             if (confirm('Terminate session?')) {
                 window.location.reload();
             }
+        }
+        // Nav dropdown
+        const navBtn = document.getElementById('navDropdownBtn');
+        const navDropdown = document.getElementById('navDropdown');
+        if (navBtn && navDropdown) {
+            navBtn.addEventListener('click', (e) => { e.stopPropagation(); navDropdown.classList.toggle('open'); });
+            document.addEventListener('click', (e) => { if (!navDropdown.contains(e.target) && e.target !== navBtn) navDropdown.classList.remove('open'); });
+            navDropdown.querySelectorAll('a').forEach(a => a.addEventListener('click', () => navDropdown.classList.remove('open')));
         }
     </script>
 </body></html>

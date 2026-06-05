@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>NYC Fleet Demo | KINETIC_FLEET</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+</script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0c0e12; color: #e2e2e8; font-family: 'Inter', sans-serif; overflow: hidden; height: 100vh; }
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
+  .glass { background: rgba(17,19,23,0.88); backdrop-filter: blur(18px); border: 1px solid rgba(255,255,255,0.1); }
+  .glass-light { background: rgba(26,29,35,0.82); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); }
+
+  .nav-dropdown { position: absolute; top: calc(100% + 8px); left: 0; min-width: 200px; z-index: 70; opacity: 0; transform: translateY(-8px) scale(0.95); pointer-events: none; transition: opacity 0.2s ease, transform 0.2s ease; }
+  .nav-dropdown.open { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+
+  #map { position: fixed; inset: 0; z-index: 0; }
+  #map .leaflet-control-zoom a { background: rgba(26,29,35,0.85); color: #e2e2e8; border-color: rgba(255,255,255,0.1); }
+  #map .leaflet-control-zoom a:hover { background: rgba(255,55,95,0.2); }
+  .leaflet-popup-content-wrapper { background: rgba(17,19,23,0.95) !important; backdrop-filter: blur(18px) !important; color: #e2e2e8 !important; border: 1px solid rgba(255,255,255,0.12) !important; border-radius: 12px !important; }
+  .leaflet-popup-tip { background: rgba(17,19,23,0.95) !important; border: 1px solid rgba(255,255,255,0.12) !important; }
+  .leaflet-popup-close-button { color: #e5bdbe !important; }
+
+  #header { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
+  #header .brand { display: flex; align-items: center; gap: 10px; }
+  #header .brand h1 { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700; color: #ffb2b7; letter-spacing: 0.15em; text-transform: uppercase; }
+
+  #controlPanel { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 1000; padding: 12px 20px; border-radius: 14px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; justify-content: center; }
+  #controlPanel .stat { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-family: 'JetBrains Mono', monospace; }
+  #controlPanel .stat .num { font-size: 18px; font-weight: 700; }
+  #controlPanel button { padding: 8px 18px; border: none; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0.05em; cursor: pointer; text-transform: uppercase; transition: all 0.15s; display: flex; align-items: center; gap: 6px; }
+  #controlPanel button:active { transform: scale(0.96); }
+  #controlPanel button.primary { background: #ff375f; color: #fff; }
+  #controlPanel button.primary:hover { background: #ff506c; }
+  #controlPanel button.secondary { background: rgba(255,255,255,0.08); color: #e2e2e8; }
+  #controlPanel button.secondary:hover { background: rgba(255,255,255,0.14); }
+  #controlPanel button.secondary.active { background: rgba(74,225,131,0.15); color: #4ae183; border: 1px solid rgba(74,225,131,0.3); }
+
+  #statsPanel { position: fixed; top: 68px; right: 16px; z-index: 1000; padding: 14px 16px; border-radius: 12px; min-width: 160px; }
+  #statsPanel .title { font-size: 10px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,178,183,0.6); margin-bottom: 10px; }
+  #statsPanel .row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 12px; }
+  #statsPanel .row .label { color: rgba(226,226,232,0.6); }
+  #statsPanel .row .val { font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+  #statsPanel .divider { height: 1px; background: rgba(255,255,255,0.06); margin: 6px 0; }
+  #statsPanel .status-row { display: flex; align-items: center; gap: 6px; font-size: 11px; margin-top: 8px; }
+  #statsPanel .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+
+  #telemetryPanel { position: fixed; top: 68px; left: 16px; z-index: 1000; padding: 10px 14px; border-radius: 12px; max-height: 320px; width: 200px; overflow: hidden; }
+  #telemetryPanel .title { font-size: 10px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,178,183,0.6); margin-bottom: 8px; }
+  #telemetryLog { display: flex; flex-direction: column; gap: 2px; overflow-y: auto; max-height: 260px; padding-right: 4px; }
+  #telemetryLog::-webkit-scrollbar { width: 3px; }
+  #telemetryLog::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+  #telemetryLog .entry { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: rgba(226,226,232,0.5); padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.03); white-space: nowrap; }
+  #telemetryLog .entry .t { color: rgba(74,225,131,0.5); }
+  #telemetryLog .entry .msg { color: rgba(226,226,232,0.7); }
+
+  #driverPopup { position: fixed; top: 68px; left: 50%; transform: translateX(-50%); z-index: 1001; padding: 14px 20px; border-radius: 12px; display: none; min-width: 260px; text-align: center; }
+  #driverPopup.show { display: block; }
+  #driverPopup h3 { font-size: 14px; margin-bottom: 4px; }
+  #driverPopup .info { font-size: 11px; color: rgba(226,226,232,0.6); margin-bottom: 10px; }
+  #driverPopup .actions { display: flex; gap: 8px; justify-content: center; }
+  #driverPopup .actions button { padding: 6px 16px; border: none; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.15s; text-transform: uppercase; letter-spacing: 0.05em; }
+  #driverPopup .actions button:active { transform: scale(0.95); }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  #driverPopup.show { animation: fadeIn 0.2s ease; }
+
+  @media (max-width: 640px) {
+    #telemetryPanel { display: none; }
+    #statsPanel { right: 8px; min-width: 120px; }
+    #controlPanel { bottom: 12px; padding: 10px 14px; gap: 8px; }
+    #controlPanel .stat .num { font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<!-- Header -->
+<header id="header" class="glass">
+  <div class="brand" style="position:relative" id="navDropdownWrap">
+    <span class="material-symbols-outlined" style="color:#ffb2b7;cursor:pointer" id="navDropdownBtn">monitoring</span>
+    <div class="nav-dropdown glass" style="border-radius:12px;overflow:hidden" id="navDropdown">
+      <div style="padding:4px 0">
+        <a href="onboarding.html" style="display:flex;align-items:center;gap:8px;padding:8px 14px;text-decoration:none;color:#e2e2e8;font-size:13px;transition:background 0.15s"><span class="material-symbols-outlined" style="font-size:18px;color:#ffb2b7">flight_takeoff</span> Onboarding</a>
+        <a href="command_center.html" style="display:flex;align-items:center;gap:8px;padding:8px 14px;text-decoration:none;color:#e2e2e8;font-size:13px;transition:background 0.15s"><span class="material-symbols-outlined" style="font-size:18px;color:#ffb2b7">dashboard</span> Command Center</a>
+        <a href="missioncontroll.html" style="display:flex;align-items:center;gap:8px;padding:8px 14px;text-decoration:none;color:#e2e2e8;font-size:13px;transition:background 0.15s"><span class="material-symbols-outlined" style="font-size:18px;color:#ffb2b7">explore</span> Mission Control</a>
+        <a href="dispatch.html" style="display:flex;align-items:center;gap:8px;padding:8px 14px;text-decoration:none;color:#e2e2e8;font-size:13px;transition:background 0.15s"><span class="material-symbols-outlined" style="font-size:18px;color:#ffb2b7">send</span> Dispatch</a>
+        <a href="runtime.html" style="display:flex;align-items:center;gap:8px;padding:8px 14px;text-decoration:none;color:#e2e2e8;font-size:13px;transition:background 0.15s"><span class="material-symbols-outlined" style="font-size:18px;color:#ffb2b7">tune</span> Runtime</a>
+        <a href="driverprofile.html" style="display:flex;align-items:center;gap:8px;padding:8px 14px;text-decoration:none;color:#e2e2e8;font-size:13px;transition:background 0.15s"><span class="material-symbols-outlined" style="font-size:18px;color:#ffb2b7">person</span> Driver Profile</a>
+        <a href="plans.html" style="display:flex;align-items:center;gap:8px;padding:8px 14px;text-decoration:none;color:#e2e2e8;font-size:13px;transition:background 0.15s"><span class="material-symbols-outlined" style="font-size:18px;color:#ffb2b7">workspace_premium</span> Plans</a>
+        <a href="nyc-demo.html" style="display:flex;align-items:center;gap:8px;padding:8px 14px;text-decoration:none;color:#e2e2e8;font-size:13px;transition:background 0.15s"><span class="material-symbols-outlined" style="font-size:18px;color:#ffb2b7">map</span> NYC Demo</a>
+        <div style="height:1px;background:rgba(255,255,255,0.08);margin:4px 0"></div>
+        <a href="login.html" style="display:flex;align-items:center;gap:8px;padding:8px 14px;text-decoration:none;color:rgba(226,226,232,0.5);font-size:13px;transition:background 0.15s"><span class="material-symbols-outlined" style="font-size:18px;color:rgba(226,226,232,0.5)">login</span> Login</a>
+      </div>
+    </div>
+    <h1>KINETIC_FLEET</h1>
+    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:rgba(255,178,183,0.5);letter-spacing:0.1em;margin-left:4px">NYC DEMO</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;display:flex;align-items:center;gap:4px" id="connStatus">
+      <span class="dot" style="background:#4ae183" id="statusDot"></span>
+      <span style="color:#4ae183" id="statusText">CONNECTED</span>
+    </span>
+  </div>
+</header>
+
+<!-- Stats Panel -->
+<div id="statsPanel" class="glass-light">
+  <div class="title">FLEET STATUS</div>
+  <div class="row"><span class="label">Total</span><span class="val" id="statTotal" style="color:#ffb2b7">0</span></div>
+  <div class="row"><span class="label">Available</span><span class="val" style="color:#4ae183" id="statAvail">0</span></div>
+  <div class="row"><span class="label">En Route</span><span class="val" style="color:#ffd166" id="statEnRoute">0</span></div>
+  <div class="row"><span class="label">Delivering</span><span class="val" style="color:#6cc3ff" id="statDelivering">0</span></div>
+  <div class="divider"></div>
+  <div class="row"><span class="label">Orders</span><span class="val" style="color:#ffb2b7" id="statOrders">0</span></div>
+  <div class="status-row"><span class="dot" style="background:#4ae183" id="wsDot"></span><span id="wsStatus" style="color:rgba(226,226,232,0.6)">WebSocket LIVE</span></div>
+</div>
+
+<!-- Telemetry Panel -->
+<div id="telemetryPanel" class="glass-light">
+  <div class="title">TELEMETRY STREAM</div>
+  <div id="telemetryLog"></div>
+</div>
+
+<!-- Driver Popup -->
+<div id="driverPopup" class="glass-light"></div>
+
+<!-- Control Panel -->
+<div id="controlPanel" class="glass">
+  <div class="stat" style="background:rgba(74,225,131,0.1)"><span class="num" style="color:#4ae183" id="ctrlAvail">0</span><span style="color:rgba(226,226,232,0.5)">available</span></div>
+  <div class="stat" style="background:rgba(255,209,102,0.1)"><span class="num" style="color:#ffd166" id="ctrlEnRoute">0</span><span style="color:rgba(226,226,232,0.5)">en route</span></div>
+  <div class="stat" style="background:rgba(108,195,255,0.1)"><span class="num" style="color:#6cc3ff" id="ctrlDelivering">0</span><span style="color:rgba(226,226,232,0.5)">delivering</span></div>
+  <button class="primary" id="btnAssign"><span class="material-symbols-outlined" style="font-size:16px">send</span> Assign Random Order</button>
+  <button class="secondary" id="btnRecenter"><span class="material-symbols-outlined" style="font-size:16px">my_location</span> Recenter</button>
+</div>
+
+<script>
+// ─── Configuration ──────────────────────────────────────────────────────────
+const WS_URL = 'ws://127.0.0.1:8080/ws';
+const API_BASE = 'http://127.0.0.1:8080';
+const NYC_CENTER = [40.7580, -73.9855];
+const ZOOM = 12;
+const DRIVER_COLORS = { available: '#4ae183', en_route: '#ffd166', delivering: '#6cc3ff' };
+
+// ─── State ───────────────────────────────────────────────────────────────────
+let drivers = {};              // id -> DriverState
+let markers = {};              // id -> L.circleMarker
+let prevPositions = {};        // id -> [lat, lng] for interpolation
+let targetPositions = {};      // id -> [lat, lng]
+let ws = null;
+let wsReconnectTimer = null;
+let animFrameId = null;
+let telemetryEntries = 0;
+let orderCount = 0;
+
+// ─── Leaflet Map ────────────────────────────────────────────────────────────
+const map = L.map('map', {
+  center: NYC_CENTER,
+  zoom: ZOOM,
+  zoomControl: true,
+  attributionControl: false,
+});
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  maxZoom: 19,
+}).addTo(map);
+
+// ─── Create / Update Markers ────────────────────────────────────────────────
+function ensureMarker(id, lat, lng, status) {
+  if (markers[id]) {
+    targetPositions[id] = [lat, lng];
+    if (markers[id].status !== status) {
+      markers[id].status = status;
+      markers[id].setStyle({ fillColor: DRIVER_COLORS[status] || '#4ae183' });
+    }
+    return;
+  }
+  prevPositions[id] = [lat, lng];
+  targetPositions[id] = [lat, lng];
+  const color = DRIVER_COLORS[status] || '#4ae183';
+  const m = L.circleMarker([lat, lng], {
+    radius: 5,
+    fillColor: color,
+    color: color,
+    weight: 1.5,
+    opacity: 0.8,
+    fillOpacity: 0.7,
+  }).addTo(map);
+  m.status = status;
+  m.driverId = id;
+  m.bindPopup(() => buildPopup(id));
+  m.on('click', () => showDriverPopup(id));
+  markers[id] = m;
+  drivers[id] = { status, lat, lng, id };
+}
+
+function removeStaleMarkers(activeIds) {
+  const active = new Set(activeIds);
+  for (const id of Object.keys(markers)) {
+    if (!active.has(id)) {
+      map.removeLayer(markers[id]);
+      delete markers[id];
+      delete drivers[id];
+      delete prevPositions[id];
+      delete targetPositions[id];
+    }
+  }
+}
+
+// ─── Smooth Animation Loop ──────────────────────────────────────────────────
+function animateDrivers() {
+  const speed = 0.12;
+  let moved = false;
+  for (const id of Object.keys(markers)) {
+    const cur = prevPositions[id];
+    const tgt = targetPositions[id];
+    if (!cur || !tgt) continue;
+    const dlat = tgt[0] - cur[0];
+    const dlng = tgt[1] - cur[1];
+    const dist = Math.sqrt(dlat * dlat + dlng * dlng);
+    if (dist < 0.000001) continue;
+    const step = Math.min(speed / dist, 1);
+    const newLat = cur[0] + dlat * step;
+    const newLng = cur[1] + dlng * step;
+    markers[id].setLatLng([newLat, newLng]);
+    prevPositions[id] = [newLat, newLng];
+    moved = true;
+  }
+  if (moved) animFrameId = requestAnimationFrame(animateDrivers);
+}
+
+function kickAnimation() {
+  if (animFrameId) cancelAnimationFrame(animFrameId);
+  animFrameId = requestAnimationFrame(animateDrivers);
+}
+
+// ─── Popup ───────────────────────────────────────────────────────────────────
+function buildPopup(id) {
+  const d = drivers[id] || {};
+  const status = d.status || 'unknown';
+  const lat = prevPositions[id] ? prevPositions[id][0].toFixed(4) : '—';
+  const lng = prevPositions[id] ? prevPositions[id][1].toFixed(4) : '—';
+  const color = DRIVER_COLORS[status] || '#4ae183';
+  return `
+    <div style="font-family:'Inter',sans-serif;min-width:150px">
+      <div style="font-weight:600;font-size:13px;margin-bottom:2px;color:#e2e2e8">${id}</div>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color}"></span>
+        <span style="font-size:11px;text-transform:capitalize;color:${color}">${status}</span>
+      </div>
+      <div style="font-size:10px;color:rgba(226,226,232,0.4);font-family:'JetBrains Mono',monospace">${lat}, ${lng}</div>
+      <button onclick="assignToDriver('${id}')" style="margin-top:8px;padding:4px 12px;background:#ff375f;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;width:100%">Assign Order</button>
+    </div>`;
+}
+
+function showDriverPopup(id) {
+  const el = document.getElementById('driverPopup');
+  const d = drivers[id] || {};
+  const status = d.status || 'unknown';
+  const color = DRIVER_COLORS[status] || '#4ae183';
+  el.innerHTML = `
+    <h3 style="color:#e2e2e8">${id}</h3>
+    <div class="info">
+      <span style="display:inline-flex;align-items:center;gap:4px;color:${color}">
+        <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${color}"></span> ${status}
+      </span>
+    </div>
+    <div class="actions">
+      <button onclick="assignToDriver('${id}')" style="background:#ff375f;color:#fff">Assign Order</button>
+      <button onclick="document.getElementById('driverPopup').classList.remove('show')" style="background:rgba(255,255,255,0.08);color:#e2e2e8">Close</button>
+    </div>`;
+  el.classList.add('show');
+  setTimeout(() => { const p = markers[id]; if (p) map.setView(p.getLatLng(), map.getZoom(), { animate: true }); }, 100);
+}
+
+function hideDriverPopup() {
+  document.getElementById('driverPopup').classList.remove('show');
+}
+
+// ─── API Calls ──────────────────────────────────────────────────────────────
+async function assignToDriver(driverId) {
+  hideDriverPopup();
+  try {
+    const resp = await fetch(API_BASE + '/api/assign', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ driver_id: driverId }),
+    });
+    if (resp.ok) {
+      orderCount++;
+      updateStats();
+      logTelemetry('ORDER', `Assigned to ${driverId}`);
+      drivers[driverId].status = 'en_route';
+      if (markers[driverId]) {
+        markers[driverId].status = 'en_route';
+        markers[driverId].setStyle({ fillColor: DRIVER_COLORS.en_route, color: DRIVER_COLORS.en_route });
+      }
+    } else {
+      logTelemetry('FAIL', `Assign failed for ${driverId}: ${resp.status}`);
+    }
+  } catch (e) {
+    logTelemetry('ERR', `Assign error: ${e.message}`);
+  }
+}
+
+async function assignRandomOrder() {
+  const avail = Object.values(drivers).filter(d => d.status === 'available');
+  if (avail.length === 0) { logTelemetry('INFO', 'No available drivers'); return; }
+  const picked = avail[Math.floor(Math.random() * avail.length)];
+  await assignToDriver(picked.id);
+}
+
+async function fetchDrivers() {
+  try {
+    const resp = await fetch(API_BASE + '/api/drivers');
+    if (!resp.ok) return;
+    const data = await resp.json();
+    if (data.drivers) {
+      for (const d of data.drivers) {
+        drivers[d.id] = drivers[d.id] || {};
+        drivers[d.id].status = d.status || 'available';
+        drivers[d.id].lat = d.lat;
+        drivers[d.id].lng = d.lng;
+        drivers[d.id].id = d.id;
+        ensureMarker(d.id, d.lat, d.lng, d.status || 'available');
+      }
+      removeStaleMarkers(data.drivers.map(d => d.id));
+      updateStats();
+    }
+  } catch (e) { /* ignore */ }
+}
+
+// ─── Stats ───────────────────────────────────────────────────────────────────
+function updateStats() {
+  const vals = Object.values(drivers);
+  const total = vals.length;
+  const avail = vals.filter(d => d.status === 'available').length;
+  const enRoute = vals.filter(d => d.status === 'en_route').length;
+  const delivering = vals.filter(d => d.status === 'delivering').length;
+
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statAvail').textContent = avail;
+  document.getElementById('statEnRoute').textContent = enRoute;
+  document.getElementById('statDelivering').textContent = delivering;
+  document.getElementById('statOrders').textContent = orderCount;
+
+  document.getElementById('ctrlAvail').textContent = avail;
+  document.getElementById('ctrlEnRoute').textContent = enRoute;
+  document.getElementById('ctrlDelivering').textContent = delivering;
+}
+
+// ─── Telemetry Log ───────────────────────────────────────────────────────────
+function logTelemetry(type, msg) {
+  const el = document.getElementById('telemetryLog');
+  const now = new Date();
+  const ts = now.toISOString().substr(11, 8);
+  const entry = document.createElement('div');
+  entry.className = 'entry';
+  entry.innerHTML = `<span class="t">[${ts}]</span> <span style="color:rgba(255,178,183,0.6)">${type}</span> <span class="msg">${msg}</span>`;
+  el.appendChild(entry);
+  telemetryEntries++;
+  if (telemetryEntries > 80) { el.removeChild(el.firstChild); telemetryEntries--; }
+  el.scrollTop = el.scrollHeight;
+}
+
+// ─── WebSocket ──────────────────────────────────────────────────────────────
+function connectWS() {
+  if (ws && ws.readyState === WebSocket.OPEN) return;
+  try { ws = new WebSocket(WS_URL); } catch (e) { scheduleReconnect(); return; }
+
+  ws.onopen = () => {
+    document.getElementById('statusDot').style.background = '#4ae183';
+    document.getElementById('statusText').textContent = 'CONNECTED';
+    document.getElementById('wsDot').style.background = '#4ae183';
+    document.getElementById('wsStatus').textContent = 'WebSocket LIVE';
+    logTelemetry('WS', 'Connected');
+    fetchDrivers();
+  };
+
+  ws.onmessage = (e) => {
+    try {
+      const data = JSON.parse(e.data);
+      if (data.type === 'init' && data.drivers) {
+        for (const d of data.drivers) {
+          drivers[d.id] = drivers[d.id] || {};
+          drivers[d.id].status = d.status || 'available';
+          drivers[d.id].id = d.id;
+          ensureMarker(d.id, d.lat, d.lng, d.status || 'available');
+        }
+        removeStaleMarkers(data.drivers.map(d => d.id));
+        updateStats();
+        logTelemetry('INIT', `${data.drivers.length} drivers loaded`);
+      } else if (data.type === 'update' && data.drivers) {
+        for (const d of data.drivers) {
+          drivers[d.id] = drivers[d.id] || {};
+          drivers[d.id].status = d.status || 'available';
+          drivers[d.id].lat = d.lat;
+          drivers[d.id].lng = d.lng;
+          drivers[d.id].id = d.id;
+          ensureMarker(d.id, d.lat, d.lng, d.status || 'available');
+        }
+        removeStaleMarkers(data.drivers.map(d => d.id));
+        updateStats();
+        kickAnimation();
+      } else if (data.type === 'assignment' && data.driver) {
+        const d = data.driver;
+        if (markers[d.id]) {
+          markers[d.id].status = d.status || 'en_route';
+          markers[d.id].setStyle({ fillColor: DRIVER_COLORS[d.status] || '#ffd166', color: DRIVER_COLORS[d.status] || '#ffd166' });
+        }
+        if (drivers[d.id]) drivers[d.id].status = d.status || 'en_route';
+        logTelemetry('ASSIGN', `${d.id} → ${d.status}`);
+        updateStats();
+      }
+    } catch (err) { /* ignore parse errors */ }
+  };
+
+  ws.onclose = () => {
+    document.getElementById('statusDot').style.background = '#ff375f';
+    document.getElementById('statusText').textContent = 'DISCONNECTED';
+    document.getElementById('wsDot').style.background = '#ff375f';
+    document.getElementById('wsStatus').textContent = 'WebSocket OFFLINE';
+    logTelemetry('WS', 'Disconnected');
+    scheduleReconnect();
+  };
+
+  ws.onerror = () => { ws.close(); };
+}
+
+function scheduleReconnect() {
+  if (wsReconnectTimer) clearTimeout(wsReconnectTimer);
+  wsReconnectTimer = setTimeout(() => { logTelemetry('WS', 'Reconnecting...'); connectWS(); }, 3000);
+}
+
+// ─── Nav Dropdown ───────────────────────────────────────────────────────────
+(function() {
+  const btn = document.getElementById('navDropdownBtn');
+  const dd = document.getElementById('navDropdown');
+  if (btn && dd) {
+    btn.addEventListener('click', function(e) { e.stopPropagation(); dd.classList.toggle('open'); });
+    document.addEventListener('click', function(e) { if (!dd.contains(e.target) && e.target !== btn) dd.classList.remove('open'); });
+    dd.querySelectorAll('a').forEach(function(a) { a.addEventListener('click', function() { dd.classList.remove('open'); }); });
+  }
+})();
+
+// ─── UI Events ──────────────────────────────────────────────────────────────
+document.getElementById('btnAssign').addEventListener('click', assignRandomOrder);
+document.getElementById('btnRecenter').addEventListener('click', () => {
+  map.setView(NYC_CENTER, ZOOM, { animate: true });
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'a' || e.key === 'A') assignRandomOrder();
+  if (e.key === 'r' || e.key === 'R') map.setView(NYC_CENTER, ZOOM, { animate: true });
+});
+
+// ─── Init ───────────────────────────────────────────────────────────────────_
+logTelemetry('SYS', 'NYC Demo initializing');
+connectWS();
+
+// Periodic stats fetch as backup
+setInterval(fetchDrivers, 10000);
+
+// Recenter after map loads
+setTimeout(() => map.setView(NYC_CENTER, ZOOM), 200);
+</script>
+</body>
+</html>

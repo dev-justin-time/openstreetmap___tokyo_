@@ -198,7 +198,23 @@
 <div class="w-8 h-8 rounded-full bg-surface-container-high border border-white/10 overflow-hidden">
 <img alt="Driver Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCTCbbrMUCJjtf8tJPQ5UjievzSqkQ2VIP4E933ZHK0mnA0l1SDelVGVtDQbHTvNqen0MPUBdpxKKnybZlmxmxEDhBytPhsIXFo74wOZizips992oCWEhEyO20HadxFBQoPKxa9mX-RcTrrc3g7i53IIDgcEILdDwvvOYOtHxkm9-zrXfLECB14pB7I8mKOaEG_osndQGosVja9aSJXBLsBxsC7FWTEWaKDh6ob4nWPjNwO6G6mCK1B3KmqloZGMJQ7SaP6F_jkJttP"/>
 </div>
-<h1 class="text-label-caps font-label-caps tracking-widest text-primary uppercase">MISSION CONTROL</h1>
+<div class="relative" id="navDropdownWrap">
+<h1 class="text-label-caps font-label-caps tracking-widest text-primary uppercase cursor-pointer" id="navDropdownBtn">MISSION CONTROL</h1>
+<div class="nav-dropdown glass-panel rounded-xl border border-white/15 shadow-2xl overflow-hidden" id="navDropdown">
+<div class="p-2 space-y-1">
+<a href="onboarding.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]">flight_takeoff</span> Onboarding</a>
+<a href="command_center.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]">dashboard</span> Command Center</a>
+<a href="missioncontroll.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]">explore</span> Mission Control</a>
+<a href="dispatch.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]">send</span> Dispatch</a>
+<a href="runtime.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]">tune</span> Runtime</a>
+<a href="driverprofile.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]">person</span> Driver Profile</a>
+        <a href="plans.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]">workspace_premium</span> Plans</a>
+        <a href="nyc-demo.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]">map</span> NYC Demo</a>
+        <div class="border-t border-white/10 my-1"></div>
+        <a href="login.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-variant/30 transition-colors text-body-sm text-on-surface"><span class="material-symbols-outlined text-on-surface-variant text-[18px]">login</span> Login</a>
+</div>
+</div>
+</div>
 </div>
 <div class="flex items-center gap-2 relative" id="settingsContainer">
 <button class="material-symbols-outlined text-primary hover:bg-surface-bright/20 transition-colors p-2 rounded-full active:scale-95 duration-100" id="settingsGear">settings</button>
@@ -607,6 +623,14 @@ Logout
         if (confirm('Terminate session?')) {
             window.location.reload();
         }
+    }
+    // Nav dropdown
+    const navBtn = document.getElementById('navDropdownBtn');
+    const navDropdown = document.getElementById('navDropdown');
+    if (navBtn && navDropdown) {
+        navBtn.addEventListener('click', (e) => { e.stopPropagation(); navDropdown.classList.toggle('open'); });
+        document.addEventListener('click', (e) => { if (!navDropdown.contains(e.target) && e.target !== navBtn) navDropdown.classList.remove('open'); });
+        navDropdown.querySelectorAll('a').forEach(a => a.addEventListener('click', () => navDropdown.classList.remove('open')));
     }
 </script>
 </body></html>

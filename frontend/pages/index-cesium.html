@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tokyo Logistics — Cesium 3D Globe</title>
+    <!-- CesiumJS -->
+    <script src="https://cesium.com/downloads/cesiumjs/releases/1.115/Build/Cesium/Cesium.js"></script>
+    <link href="https://cesium.com/downloads/cesiumjs/releases/1.115/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+    <style>
+        body, html, #cesiumContainer { width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; background: #000; }
+        #hud {
+            position: absolute; top: 20px; left: 20px; z-index: 999;
+            background: rgba(10, 15, 30, 0.85); backdrop-filter: blur(10px);
+            color: #4fc3f7; padding: 15px; border-radius: 8px;
+            border: 1px solid rgba(79, 195, 247, 0.3); font-family: monospace;
+        }
+        .cesium-viewer-bottom { display: none; } /* Hide default credits for clean UI */
+    each { margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <div id="cesiumContainer"></div>
+    <div id="hud">
+        <h3>🗼 Tokyo 3D Command</h3>
+        <div>Active Drivers: <span id="driver-count" style="color:#fff">0</span></div>
+        <div>Simulation Speed: <span id="sim-speed" style="color:#fff">1x</span></div>
+        <button onclick="flyToTokyoStation()" style="margin-top:10px; padding:5px 10px; background:#4fc3f7; border:none; border-radius:4px; cursor:pointer;">📍 Tokyo Station</button>
+    </div>
+
+    <script src="cesium-app.js"></script>
+</body>
+</html>
